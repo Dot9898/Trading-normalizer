@@ -1,33 +1,32 @@
 
 
-from time import sleep
 import streamlit as st
-from graph import generate_graph
+from graph import generate_graph_in_fragment
 import MetaTrader5 as mt5
-from get_live_data import Bars
 
 
 st.set_page_config(layout = 'wide')
 
+if 'bars_data' not in st.session_state:
+    st.session_state['bars_data'] = None
+if 'reload_Bars' not in st.session_state:
+    st.session_state['reload_Bars'] = True
+
+
 update_delay = 0.5
-symbol = 'BTCUSD' #weekend test
+symbol = 'US500'
 timeframe = mt5.TIMEFRAME_M5
 left_shift_hours = 0
-range_in_hours = 12 #13.5
+range_in_hours = 4 #13.5
 graph_colors = 'black_and_white'
 
-if 'bars' not in st.session_state:
-    st.session_state['bars'] = Bars(symbol, timeframe, range_in_hours, left_shift_hours)
 
-st.session_state['bars'].update()
-bars = st.session_state['bars'].bars
-current_prices = (st.session_state['bars'].current_bid, st.session_state['bars'].current_ask)
-graph = generate_graph(bars, colors = graph_colors, timeframe = timeframe, current_prices = current_prices)
-st.altair_chart(graph, width = 'stretch')#, height = GRAPH_HEIGHT)#, key = 'Gráfico')
-st.write(bars.iloc[::-1])
-sleep(update_delay)
+columns = st.columns([1, 1])
+with columns[0]:
+    generate_graph_in_fragment(symbol, timeframe, left_shift_hours, range_in_hours, graph_colors)
+with columns[1]:
+    st.text_input('test')
 
-st.rerun()
 
 
 

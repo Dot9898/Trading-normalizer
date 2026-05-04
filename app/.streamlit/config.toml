@@ -3,20 +3,16 @@
 showErrorDetails = 'full'
 
 [theme]
-base = 'light'
+base = 'dark'
 
 primaryColor = '#a1cae4'
-backgroundColor = 'aliceblue'
+backgroundColor = '#1f1f1f'
 secondaryBackgroundColor = '#a1cae4'
-
-#primaryColor = '#1F84B5'
-#secondaryBackgroundColor = '#66c6f3fa'
 
 
 
 baseFontSize = 16
 baseFontWeight = 500
-
 
 
 

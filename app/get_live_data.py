@@ -13,7 +13,8 @@ class Bars:
         self.bar_quantity = self.get_bar_quantity(range_in_hours)
         self.shift = round(left_shift_hours * 3600)
         self.is_connected = self.initialize_MetaTrader()
-        self.spread = self.get_spread()
+        self.digits = mt5.symbol_info(self.symbol).digits
+        self.spread = round(mt5.symbol_info(self.symbol).spread / (10 ** self.digits), self.digits)
         self.is_static = False if self.shift == 0 else True
         self.old_bar_timestamp = self.get_current_bar()['time'][0]
         self.bars = self.get_bars()
@@ -23,11 +24,6 @@ class Bars:
 
     def initialize_MetaTrader(self):
         return(mt5.initialize('D:/Dot/FX/Pepperstone MT5/terminal64.exe'))
-    
-    def get_spread(self):
-        digits = mt5.symbol_info(self.symbol).digits
-        spread = round(mt5.symbol_info(self.symbol).spread / (10 ** digits), digits)
-        return(spread)
 
     def get_bar_quantity(self, range_in_hours):
         bar_quantity = round(range_in_hours * BARS_PER_HOUR[self.timeframe])
