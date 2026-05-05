@@ -3,20 +3,19 @@
 import pandas as pd
 import streamlit as st
 import altair as alt
-from constants import CHART_COLORS, CHART_AXIS_TIME_FORMAT, POLLING_INTERVAL
+from constants import CHART_COLORS, POLLING_INTERVAL, TIMEZONE_LABEL
 from get_live_data import Bars
 
-X_AXE_TITLE = 'Time (MT5 server)'
 Y_AXE_TITLE = 'Price (absolute)'
-SYMBOL = 'US500'
 
 def altair_candlestick_graph(bars_data, colors):
 
     bars = bars_data.bars
-    timeframe = bars_data.timeframe
+    symbol = bars_data.symbol
+    timezone = bars_data.timezone
+    digits = bars_data.digits
     bid = bars_data.current_bid
     ask = bars_data.current_ask
-    digits = bars_data.digits
 
 
     candlestick_color = (
@@ -37,8 +36,8 @@ def altair_candlestick_graph(bars_data, colors):
         legend = None)
 
     candlesticks_tooltips = [
-        alt.Tooltip('datetime:T', format = '%-d %b %Y', title = 'Date'),
-        alt.Tooltip('datetime:T', format = '%-H:%M', title = 'Time'),
+        alt.Tooltip('date_label:N', title = 'Date'),
+        alt.Tooltip('time_label:N', title = 'Time'),
         alt.Tooltip('open:Q', title = 'Open'),
         alt.Tooltip('high:Q', title = 'High'),
         alt.Tooltip('low:Q', title = 'Low'),
@@ -50,11 +49,10 @@ def altair_candlestick_graph(bars_data, colors):
 
 
     base = alt.Chart(bars).encode(
-        alt.X('datetime:O', 
-              axis = alt.Axis(labelAngle = 0, 
-                              title = X_AXE_TITLE, 
-                              labelExpr = f'timeFormat(datum.value, "{CHART_AXIS_TIME_FORMAT[timeframe]}")'), 
-              scale = alt.Scale(paddingInner = 0.35, paddingOuter = 0.5)), 
+        alt.X('axis_label:O', 
+            axis = alt.Axis(labelAngle = 0, title = f'Time ({TIMEZONE_LABEL[timezone]})'), 
+            scale = alt.Scale(paddingInner = 0.35, paddingOuter = 0.5), 
+            sort = alt.SortField('time', order = 'ascending')), 
         color = candlestick_color, 
         stroke = stroke_color
     ).transform_calculate(
@@ -83,16 +81,15 @@ def altair_candlestick_graph(bars_data, colors):
     
     #TODO: BACKGROUND COLOR BASED ON MARKET HOURS OR CLOSED MARKET
 
-    chart = (sticks + candles + price_lines).properties(title = alt.TitleParams(text = SYMBOL, anchor = 'middle'))
+    chart = (sticks + candles + price_lines).properties(title = alt.TitleParams(text = symbol, anchor = 'middle'))
 
     return(chart)
 
-
 @st.fragment(run_every = POLLING_INTERVAL)
-def generate_graph_in_fragment(symbol, timeframe, left_shift_hours, range_in_hours, graph_colors):
+def generate_graph_in_fragment(symbol, timeframe, left_shift_hours, range_in_hours, timezone, data_scale, graph_colors):
 
     if st.session_state['reload_Bars']:
-        st.session_state['bars_data'] = Bars(symbol, timeframe, range_in_hours, left_shift_hours)
+        st.session_state['bars_data'] = Bars(symbol, timeframe, range_in_hours, left_shift_hours, timezone, data_scale)
         st.session_state['reload_Bars'] = False
 
     bars_data = st.session_state['bars_data']

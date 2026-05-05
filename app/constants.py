@@ -1,9 +1,25 @@
 
 
+from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 import MetaTrader5 as mt5
 
 
 POLLING_INTERVAL = 0.5
+
+TIMEZONES = {'server': None, 
+             'local': datetime.now().astimezone().tzinfo, 
+             'UTC': timezone.utc, 
+             'NY': ZoneInfo('America/New_York'), 
+             'Chile': ZoneInfo('America/Santiago'), 
+             'France': ZoneInfo('Europe/Paris')}
+
+TIMEZONE_LABEL = {'server': 'MT5 server', 
+                  'local': 'local', 
+                  'UTC': 'UTC', 
+                  'NY': 'New York', 
+                  'Chile': 'Chile', 
+                  'France': 'France'}
 
 BLACK = '#1f1f1f'
 WHITE = '#E6E6E6'
@@ -17,12 +33,12 @@ CHART_COLORS = {'fill': {'green_and_red': {'positive': GREEN, 'negative': RED},
                         'black_and_white': {'positive': WHITE, 'negative': WHITE}}, 
                 'price_lines': {'bid': BLUE, 'ask': RED}}
 
-CHART_AXIS_TIME_FORMAT = {mt5.TIMEFRAME_M1: '%-H:%M', 
-                          mt5.TIMEFRAME_M5: '%-H:%M', 
-                          mt5.TIMEFRAME_M15: '%-H:%M', 
-                          mt5.TIMEFRAME_H1: '%-d/%-m %-H:%M', 
-                          mt5.TIMEFRAME_H4: '%-d/%-m %-H:%M', 
-                          mt5.TIMEFRAME_D1: '%-d %b', 
+CHART_AXIS_TIME_FORMAT = {mt5.TIMEFRAME_M1: '%H:%M', 
+                          mt5.TIMEFRAME_M5: '%H:%M', 
+                          mt5.TIMEFRAME_M15: '%H:%M', 
+                          mt5.TIMEFRAME_H1: '%e %b %H:%M', 
+                          mt5.TIMEFRAME_H4: '%e %b %H:%M', 
+                          mt5.TIMEFRAME_D1: '%e %b', 
                           mt5.TIMEFRAME_W1: '%b %Y', 
                           mt5.TIMEFRAME_MN1: '%b %Y'}
 
