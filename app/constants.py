@@ -7,6 +7,9 @@ import MetaTrader5 as mt5
 
 POLLING_INTERVAL = 0.5
 
+HOUR = 3600
+DAY = 86400
+
 TIMEZONES = {'server': None, 
              'local': datetime.now().astimezone().tzinfo, 
              'UTC': timezone.utc, 

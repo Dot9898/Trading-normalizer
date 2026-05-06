@@ -11,7 +11,7 @@ Y_AXE_TITLE = 'Price (absolute)'
 def altair_candlestick_graph(bars_data, colors):
 
     bars = bars_data.bars
-    symbol = bars_data.symbol
+    name = bars_data.name
     timezone = bars_data.timezone
     digits = bars_data.digits
     bid = bars_data.current_bid
@@ -81,15 +81,15 @@ def altair_candlestick_graph(bars_data, colors):
     
     #TODO: BACKGROUND COLOR BASED ON MARKET HOURS OR CLOSED MARKET
 
-    chart = (sticks + candles + price_lines).properties(title = alt.TitleParams(text = symbol, anchor = 'middle'))
+    chart = (sticks + candles + price_lines).properties(title = alt.TitleParams(text = name, anchor = 'middle'))
 
     return(chart)
 
 @st.fragment(run_every = POLLING_INTERVAL)
-def generate_graph_in_fragment(symbol, timeframe, left_shift_hours, range_in_hours, timezone, data_scale, graph_colors):
+def generate_graph_in_fragment(symbol, timeframe, left_shift_hours, range_type, range, timezone, data_scale, graph_colors):
 
     if st.session_state['reload_Bars']:
-        st.session_state['bars_data'] = Bars(symbol, timeframe, range_in_hours, left_shift_hours, timezone, data_scale)
+        st.session_state['bars_data'] = Bars(symbol, timeframe, left_shift_hours, range_type, range, timezone, data_scale)
         st.session_state['reload_Bars'] = False
 
     bars_data = st.session_state['bars_data']
