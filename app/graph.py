@@ -86,10 +86,10 @@ def altair_candlestick_graph(bars_data, colors):
     return(chart)
 
 @st.fragment(run_every = POLLING_INTERVAL)
-def generate_graph_in_fragment(symbol, timeframe, left_shift_hours, range_type, range, timezone, data_scale, graph_colors):
+def generate_graph_in_fragment(symbol, timeframe, graph_range, timezone, data_scale, graph_colors):
 
     if st.session_state['reload_Bars']:
-        st.session_state['bars_data'] = Bars(symbol, timeframe, left_shift_hours, range_type, range, timezone, data_scale)
+        st.session_state['bars_data'] = Bars(symbol, timeframe, graph_range, timezone, data_scale)
         st.session_state['reload_Bars'] = False
 
     bars_data = st.session_state['bars_data']

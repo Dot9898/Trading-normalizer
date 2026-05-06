@@ -10,6 +10,9 @@ POLLING_INTERVAL = 0.5
 HOUR = 3600
 DAY = 86400
 
+SHIFT = {'shift_hours': HOUR, 
+         'shift_days': DAY}
+
 TIMEZONES = {'server': None, 
              'local': datetime.now().astimezone().tzinfo, 
              'UTC': timezone.utc, 
