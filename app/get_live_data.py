@@ -4,7 +4,7 @@ import pandas as pd
 from datetime import datetime
 from numpy import log10
 import MetaTrader5 as mt5
-from constants import SECONDS, TIMEZONES, CHART_AXIS_TIME_FORMAT, HOUR, DAY, EMPTY_SPACE, EMPTY_SPACE_2
+from constants import SECONDS, TIMEZONES, CHART_AXIS_TIME_FORMAT, HOUR, DAY, WEEK, OFFSET_SECONDS, EMPTY_SPACE, EMPTY_SPACE_2, MAX_BARS_IN_GRAPH, NORMALIZATION_PRECISION, NORMALIZATION_DATA, DEFAULTS
 
 
 class Graph_range:
@@ -24,12 +24,10 @@ class Graph_range:
     
     @staticmethod
     def get_offset(shift, unit, timeframe):
-        if unit == 'hours':
-            offset = shift * HOUR
-        if unit == 'days':
-            offset = shift * DAY
         if unit == 'bars':
             offset = shift * SECONDS[timeframe]
+        else:
+            offset = shift * OFFSET_SECONDS[unit]
         offset = int(round(offset))
         return(offset)
 
@@ -64,7 +62,8 @@ class Bars:
         self.is_connected = self.initialize_MetaTrader()
         self.name = mt5.symbol_info(self.symbol).description
         self.digits = mt5.symbol_info(self.symbol).digits
-        self.shown_digits = 3 if data_scale == 'normalized' else 6 if data_scale == 'logarithmic' else self.digits
+        self.shown_digits = self.get_shown_digits()
+        self.normalization_factor = self.get_normalization_factor()
         #self.spread = round(mt5.symbol_info(self.symbol).spread / (10 ** self.digits), self.digits) #absolute
 
         self.first_bar_time = None
@@ -78,6 +77,7 @@ class Bars:
         self.date_label = None
         self.current_bid = None
         self.current_ask = None
+        self.too_many_bars = False
         self.full_update()
 
     def initialize_MetaTrader(self):
@@ -94,14 +94,25 @@ class Bars:
 
         server_day_start = current_server_time - current_server_time % DAY
         NY_day_start = server_day_start + 7 * HOUR
+        server_week_start = current_server_time - current_server_time % WEEK + 4 * DAY
+        NY_week_start = server_week_start + 7 * HOUR
 
         server_time_of['market_open'] = NY_day_start + int(9.5 * HOUR)
         server_time_of['market_close'] = NY_day_start + 16 * HOUR
         server_time_of['server_1:00'] = server_day_start + 1 * HOUR
+        server_time_of['NY_day_start'] = NY_day_start
 
-        for key, time in server_time_of.items():
-            if time > current_server_time:
-                server_time_of[key] = time - DAY
+        for key in ['market_open', 'market_close', 'server_1:00', 'NY_day_start']:
+            if server_time_of[key] > current_server_time:
+                server_time_of[key] = server_time_of[key] - DAY
+        
+        server_time_of['week_market_open'] = NY_week_start + int(9.5 * HOUR)
+        server_time_of['server_week_1:00'] = server_week_start + 1 * HOUR
+        server_time_of['NY_week_start'] = NY_week_start
+
+        for key in ['week_market_open', 'server_week_1:00', 'NY_week_start']:
+            if server_time_of[key] > current_server_time:
+                server_time_of[key] = server_time_of[key] - WEEK
         
         server_time_of['now'] = current_server_time
 
@@ -111,10 +122,12 @@ class Bars:
         if self.normalization_base_name is None:
             self.normalization_base = None
             return
+        
         elif self.normalization_base_name == 'first_bar':
             normalization_base_time = self.first_bar_time
         elif self.normalization_base_name == 'last_bar':
             normalization_base_time = self.last_bar_time
+            
         else:
             normalization_base_time = self.get_server_times_of_interest()[self.normalization_base_name]
         
@@ -122,8 +135,23 @@ class Bars:
                                                                   self.timeframe, 
                                                                   normalization_base_time, 
                                                                   1))
-        self.normalization_base = normalization_base_bar['open'][0]
+        if not normalization_base_bar.empty:
+            self.normalization_base = normalization_base_bar['open'][0]
 
+    def get_shown_digits(self):
+        if self.data_scale == 'absolute':
+            return(self.digits)
+        elif self.data_scale == 'normalized':
+            return(NORMALIZATION_DATA[self.symbol]['digits'] if self.symbol in NORMALIZATION_DATA else DEFAULTS['digits'])
+        elif self.data_scale == 'logarithmic':
+            return(6)
+
+    def get_normalization_factor(self):
+        if self.data_scale == 'normalized':
+            power = NORMALIZATION_DATA[self.symbol]['power'] if self.symbol in NORMALIZATION_DATA else DEFAULTS['power']
+            return(10 ** power)
+        else:
+            return(None)
 
     def update_range(self):
         fixed_times = self.get_server_times_of_interest()
@@ -139,7 +167,7 @@ class Bars:
             self.shows_current_bar = True
         else:
             self.shows_current_bar = False
-        
+    
     @staticmethod
     def get_actual_timestamp(server_time):
 
@@ -187,28 +215,33 @@ class Bars:
             empty_spaces = [EMPTY_SPACE_2] #Avoids current bar label colliding with the first bar label when they have the same HH:MM.
         bars['axis_label'] = bars['datetime'].dt.strftime(CHART_AXIS_TIME_FORMAT[timeframe]) + empty_spaces
 
-    @staticmethod
-    def scale_point(point, scale, digits, base = None):
-        if scale == 'absolute':
-            return(round(point, digits))
-        if scale == 'normalized':
-            if base is None:
+    def scale_point(self, value):
+
+        if self.data_scale == 'absolute':
+            return(round(value, self.shown_digits))
+        
+        if self.data_scale == 'normalized':
+            if self.normalization_base is None:
                 return
-            return(round(point / base * 100, digits))
-        if scale == 'logarithmic':
-            return(round(log10(point), digits))
+            return(round(((value / self.normalization_base) - 1) * self.normalization_factor, self.shown_digits))
+        
+        if self.data_scale == 'logarithmic':
+            return(round(log10(value), self.shown_digits))
     
-    @staticmethod
-    def scale_data(bars: pd.DataFrame, scale, digits, base = None):
-        for column in ['open', 'high', 'low', 'close']:
-            if scale == 'absolute':
-                bars[column] = round(bars[column], digits)
-            if scale == 'normalized':
-                if base is None:
-                    return
-                bars[column] = round(bars[column] / base * 100, digits)
-            if scale == 'logarithmic':
-                bars[column] = round(log10(bars[column]), digits)
+    def scale_data(self, bars: pd.DataFrame):
+        columns = ['open', 'high', 'low', 'close']
+
+        if self.data_scale == 'absolute':
+            bars[columns] = bars[columns].round(self.shown_digits)
+
+        elif self.data_scale == 'normalized':
+            if self.normalization_base is None:
+                return
+            #bars[f'true_{column}'] = round(bars[column] / self.normalization_base, NORMALIZATION_PRECISION)
+            bars[columns] = ((bars[columns] / self.normalization_base - 1) * self.normalization_factor).round(self.shown_digits)
+
+        elif self.data_scale == 'logarithmic':
+            bars[columns] = (log10(bars[columns])).round(self.shown_digits)
 
     def get_bars(self):
         bars = pd.DataFrame(mt5.copy_rates_range(self.symbol, 
@@ -217,10 +250,16 @@ class Bars:
                                                  self.last_bar_time))
         if bars.empty:
             return(bars)
+        if len(bars) > MAX_BARS_IN_GRAPH:
+            self.too_many_bars = True
+            return(pd.DataFrame())
+        else:
+            self.too_many_bars = False
+        
         bars['timestamp'] = bars['time'].apply(self.get_actual_timestamp)
         self.create_datetime_column(bars, self.timezone)
         self.create_label_columns(bars, self.timeframe)
-        self.scale_data(bars, self.data_scale, self.shown_digits, self.normalization_base)
+        self.scale_data(bars)
         self.max_price = bars['high'].max()
         self.min_price = bars['low'].min()
         self.date_label = f'{bars['date_label'].iloc[0]} - {bars['date_label'].iloc[-1]}'
@@ -234,7 +273,7 @@ class Bars:
         current_bar['timestamp'] = current_bar['time'].apply(self.get_actual_timestamp)
         self.create_datetime_column(current_bar, self.timezone)
         self.create_label_columns(current_bar, self.timeframe)
-        self.scale_data(current_bar, self.data_scale, self.shown_digits, self.normalization_base)
+        self.scale_data(current_bar)
         return(current_bar)
 
     def get_current_bar_open_time(self):
@@ -244,8 +283,8 @@ class Bars:
     
     def update_current_prices(self):
         current_symbol_info = mt5.symbol_info_tick(self.symbol)
-        self.current_bid = self.scale_point(current_symbol_info.bid, self.data_scale, self.shown_digits, self.normalization_base)
-        self.current_ask = self.scale_point(current_symbol_info.ask, self.data_scale, self.shown_digits, self.normalization_base)
+        self.current_bid = self.scale_point(current_symbol_info.bid)
+        self.current_ask = self.scale_point(current_symbol_info.ask)
 
     def full_update(self):
         self.update_range()
@@ -255,6 +294,9 @@ class Bars:
         self.update_current_prices()
     
     def update(self): #Soft updates with only the last bar. If the candlestick just closed, updates all bars.
+        
+        self.update_current_prices()
+        
         if self.bars.empty:
             return
         
@@ -267,11 +309,6 @@ class Bars:
             self.full_update()
             self.last_current_bar_open_time = current_bar_open_time
         
-        self.update_current_prices()
-
-
-
-
 
 
 

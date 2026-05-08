@@ -7,15 +7,16 @@ from constants import CHART_COLORS, POLLING_INTERVAL, TIMEZONE_LABEL
 from get_live_data import Bars
 
 GRAPH_HEIGHT = 600
-Y_AXE_TITLE = 'Price (absolute)'
 
-def altair_candlestick_graph(bars_data, colors):
+def altair_candlestick_graph(bars_data: Bars, price_range, colors):
 
     bars = bars_data.bars
     name = bars_data.name
     timezone = bars_data.timezone
-    digits = bars_data.digits
-    price_range = [bars_data.min_price, bars_data.max_price]
+    shown_digits = bars_data.shown_digits
+    data_scale = bars_data.data_scale
+    if price_range == 'auto':
+        price_range = [bars_data.min_price, bars_data.max_price]
     date_label = '' if bars_data.date_label is None else bars_data.date_label
     bid = bars_data.current_bid
     ask = bars_data.current_ask
@@ -47,8 +48,8 @@ def altair_candlestick_graph(bars_data, colors):
         alt.Tooltip('close:Q', title = 'Close')]
     
     price_lines_tooltips = [
-        alt.Tooltip('ask:Q', format = f'.{digits}f', title = 'Ask'), 
-        alt.Tooltip('bid:Q', format = f'.{digits}f', title = 'Bid')]
+        alt.Tooltip('ask:Q', format = f'.{shown_digits}f', title = 'Ask'), 
+        alt.Tooltip('bid:Q', format = f'.{shown_digits}f', title = 'Bid')]
 
 
     base = alt.Chart(bars).encode(
@@ -61,14 +62,14 @@ def altair_candlestick_graph(bars_data, colors):
     ).transform_calculate(
         is_positive = 'datum.open <= datum.close')
     
-    candles = base.mark_bar().encode(
+    candles = base.mark_bar(clip = True).encode(
         alt.Y('open:Q', 
-            axis = alt.Axis(title = Y_AXE_TITLE), 
+            axis = alt.Axis(title = f'Price ({data_scale})'), 
             scale = alt.Scale(domain = price_range, zero = False)), 
         alt.Y2('close:Q'), 
         tooltip = candlesticks_tooltips)
 
-    sticks = base.mark_rule().encode(
+    sticks = base.mark_rule(clip = True).encode(
         alt.Y('high:Q'),
         alt.Y2('low:Q'), 
         tooltip = candlesticks_tooltips)
@@ -91,7 +92,7 @@ def altair_candlestick_graph(bars_data, colors):
     return(chart)
 
 @st.fragment(run_every = POLLING_INTERVAL)
-def generate_graph_in_fragment(symbol, timeframe, graph_range, timezone, data_scale, graph_colors, normalization_base_name = None):
+def generate_graph_in_fragment(symbol, timeframe, graph_range, timezone, data_scale, normalization_base_name, price_range, graph_colors):
 
     if st.session_state['reload_Bars']:
         st.session_state['bars_data'] = Bars(symbol, timeframe, graph_range, timezone, data_scale, normalization_base_name)
@@ -99,9 +100,16 @@ def generate_graph_in_fragment(symbol, timeframe, graph_range, timezone, data_sc
 
     bars_data = st.session_state['bars_data']
     bars_data.update()
-    graph = altair_candlestick_graph(bars_data, graph_colors)
-    st.altair_chart(graph, width = 'stretch', height = GRAPH_HEIGHT)#, key = 'graph')
-    #st.write(bars_data.bars.iloc[::-1])
+    if bars_data.too_many_bars:
+        st.subheader('')
+        st.subheader('')
+        st.subheader('Candlestick count is too big to load', text_alignment = 'center')
+        st.subheader('Please select a smaller window or a larger timeframe', text_alignment = 'center')
+    else:
+        graph = altair_candlestick_graph(bars_data, price_range, graph_colors)
+        st.altair_chart(graph, width = 'stretch', height = GRAPH_HEIGHT)#, key = 'graph')
+        #st.write(bars_data.bars.iloc[::-1])
+
 
 
 

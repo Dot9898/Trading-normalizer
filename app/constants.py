@@ -6,9 +6,18 @@ import MetaTrader5 as mt5
 
 
 POLLING_INTERVAL = 0.5
+MAX_BARS_IN_GRAPH = 1000
+
+NORMALIZATION_DATA = {'US500': {'display': 'basis', 'digits': 1, 'power': 4},    #The ideal values are dependent on average daily movement
+                      'BTCUSD': {'display': 'percent', 'digits': 2, 'power': 2}}
+
+DEFAULTS = {'display': 'percent', 'digits': 2, 'power': 2}
+NORMALIZATION_PRECISION = 5
 
 HOUR = 3600
-DAY = 86400
+DAY = 3600 * 24
+WEEK = 3600 * 24 * 7
+MONTH = 3600 * 24 * 30
 
 EMPTY_SPACE = '\u200b'
 EMPTY_SPACE_2 = '\u200c'
@@ -18,6 +27,11 @@ WHITE = '#E6E6E6'
 RED = '#FF4D4D'
 BLUE = '#3B82F6'
 GREEN = '#4CAF50'
+
+OFFSET_SECONDS = {'hours': HOUR, 
+                  'days': DAY, 
+                  'weeks': WEEK, 
+                  'months': MONTH}
 
 CHART_COLORS = {'fill': {'green_and_red': {'positive': GREEN, 'negative': RED}, 
                         'black_and_white': {'positive': WHITE, 'negative': BLACK}}, 
