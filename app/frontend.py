@@ -44,6 +44,8 @@ def print_prices_test():
         st.header(0 if bid is None else bid, text_alignment = 'center')
     with acol:
         st.header(0 if ask is None else ask, text_alignment = 'center')
+    
+    st.subheader(bars.remaining_candle_time) #Server time and thus remaining candle time only updates when server time updates, that is, when a new tick is recieved
 
 def generate_timezone_dropdown():
     st.selectbox('Time zone', 

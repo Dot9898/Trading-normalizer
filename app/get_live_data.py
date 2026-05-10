@@ -52,6 +52,8 @@ class Graph_range:
 class Bars:
 
     def __init__(self, symbol, timeframe, graph_range: Graph_range, timezone, data_scale, normalization_base_name = None):
+        
+        #Data set by the user
         self.symbol = symbol
         self.timeframe = timeframe
         self.graph_range = graph_range
@@ -60,37 +62,44 @@ class Bars:
         self.normalization_base_name = normalization_base_name
 
         self.is_connected = self.initialize_MetaTrader()
+
+        #Fixed data
         self.name = mt5.symbol_info(self.symbol).description
         self.digits = mt5.symbol_info(self.symbol).digits
         self.shown_digits = self.get_shown_digits()
         self.normalization_factor = self.get_normalization_factor()
         #self.spread = round(mt5.symbol_info(self.symbol).spread / (10 ** self.digits), self.digits) #absolute
 
+        #Data updated on full update
         self.first_bar_time = None
         self.last_bar_time = None
         self.shows_current_bar = None
         self.normalization_base = None
-        self.last_current_bar_open_time = self.get_current_bar()['time'][0]
+        self.server_times_of_interest = None
+        self.last_current_bar_open_time = None
         self.bars = None
         self.max_price = None
         self.min_price = None
         self.date_label = None
+
+        #Data updated on soft update
+        self.current_server_time = None
+        self.current_bar = None
+        self.current_bar_open_time = None
+        self.current_candle_time = None
+        self.remaining_candle_time = None
         self.current_bid = None
         self.current_ask = None
         self.too_many_bars = False
+
         self.full_update()
 
     def initialize_MetaTrader(self):
         return(mt5.initialize('D:/Dot/FX/Pepperstone MT5/terminal64.exe'))
-    
-    def get_current_server_time(self):
-        current_symbol_info = mt5.symbol_info_tick(self.symbol)
-        current_server_time = current_symbol_info.time
-        return(current_server_time)
-    
-    def get_server_times_of_interest(self):
+
+    def update_server_times_of_interest(self):
         server_time_of = {}
-        current_server_time = self.get_current_server_time()
+        current_server_time = self.current_server_time
 
         server_day_start = current_server_time - current_server_time % DAY
         NY_day_start = server_day_start + 7 * HOUR
@@ -116,7 +125,7 @@ class Bars:
         
         server_time_of['now'] = current_server_time
 
-        return(server_time_of)
+        self.server_times_of_interest = server_time_of
 
     def set_normalization_base(self):
         if self.normalization_base_name is None:
@@ -129,7 +138,7 @@ class Bars:
             normalization_base_time = self.last_bar_time
             
         else:
-            normalization_base_time = self.get_server_times_of_interest()[self.normalization_base_name]
+            normalization_base_time = self.server_times_of_interest[self.normalization_base_name]
         
         normalization_base_bar = pd.DataFrame(mt5.copy_rates_from(self.symbol, 
                                                                   self.timeframe, 
@@ -154,7 +163,7 @@ class Bars:
             return(None)
 
     def update_range(self):
-        fixed_times = self.get_server_times_of_interest()
+        fixed_times = self.server_times_of_interest
         self.graph_range.set_first_and_last_bar_time(fixed_times, self.timeframe)
         self.first_bar_time = self.graph_range.first_bar_time
         self.last_bar_time = self.graph_range.last_bar_time
@@ -163,7 +172,7 @@ class Bars:
         if self.first_bar_time is None or self.last_bar_time is None:
             return
         
-        if self.get_current_bar_open_time() <= self.last_bar_time:
+        if self.current_bar_open_time <= self.last_bar_time:
             self.shows_current_bar = True
         else:
             self.shows_current_bar = False
@@ -260,54 +269,54 @@ class Bars:
         self.create_datetime_column(bars, self.timezone)
         self.create_label_columns(bars, self.timeframe)
         self.scale_data(bars)
-        self.max_price = bars['high'].max()
-        self.min_price = bars['low'].min()
-        self.date_label = f'{bars['date_label'].iloc[0]} - {bars['date_label'].iloc[-1]}'
         return(bars)
 
     def get_current_bar(self):
         current_bar = pd.DataFrame(mt5.copy_rates_from(self.symbol, 
                                                        self.timeframe, 
-                                                       self.get_current_server_time(), 
+                                                       self.current_server_time,
                                                        1))
         current_bar['timestamp'] = current_bar['time'].apply(self.get_actual_timestamp)
         self.create_datetime_column(current_bar, self.timezone)
         self.create_label_columns(current_bar, self.timeframe)
         self.scale_data(current_bar)
         return(current_bar)
-
-    def get_current_bar_open_time(self):
-        current_bar = self.get_current_bar()
-        open_time = current_bar['time'][0]
-        return(open_time)
     
-    def update_current_prices(self):
+    def update_current_data(self):
         current_symbol_info = mt5.symbol_info_tick(self.symbol)
+        self.current_server_time = current_symbol_info.time
+        self.current_candle_time = self.current_server_time%SECONDS[self.timeframe]
+        self.remaining_candle_time = SECONDS[self.timeframe] - self.current_candle_time
         self.current_bid = self.scale_point(current_symbol_info.bid)
         self.current_ask = self.scale_point(current_symbol_info.ask)
+        self.current_bar = self.get_current_bar()
+        self.current_bar_open_time = self.current_bar['time'][0]
 
     def full_update(self):
+        self.update_current_data()
+        self.update_server_times_of_interest()
         self.update_range()
-        self.update_current_bar_visibility()
         self.set_normalization_base()
+        self.update_current_bar_visibility()
         self.bars = self.get_bars()
-        self.update_current_prices()
+        if not self.bars.empty:
+            self.max_price = self.bars['high'].max()
+            self.min_price = self.bars['low'].min()
+            self.date_label = f'{self.bars['date_label'].iloc[0]} - {self.bars['date_label'].iloc[-1]}'
+        self.last_current_bar_open_time = self.current_bar_open_time
     
     def update(self): #Soft updates with only the last bar. If the candlestick just closed, updates all bars.
         
-        self.update_current_prices()
+        self.update_current_data()
         
         if self.bars.empty:
             return
         
-        current_bar = self.get_current_bar()
         if self.shows_current_bar:
-            self.bars.iloc[-1] = current_bar.iloc[0]
+            self.bars.iloc[-1] = self.current_bar.iloc[0]
 
-        current_bar_open_time = self.get_current_bar_open_time()
-        if current_bar_open_time >= self.last_current_bar_open_time + SECONDS[self.timeframe] - 1:
+        if self.current_bar_open_time >= self.last_current_bar_open_time + SECONDS[self.timeframe] - 1:
             self.full_update()
-            self.last_current_bar_open_time = current_bar_open_time
         
 
 
