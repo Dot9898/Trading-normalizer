@@ -14,6 +14,15 @@ NORMALIZATION_DATA = {'US500': {'display': 'basis', 'digits': 1, 'power': 4},   
 DEFAULTS = {'display': 'percent', 'digits': 2, 'power': 2}
 NORMALIZATION_PRECISION = 5
 
+SETTINGS_OF_NOW = {'selected_timeframe': mt5.TIMEFRAME_M5, 
+                   'first_bar': 'market_open', 
+                   'last_bar': 'now', 
+                   'left_shift': 0, 
+                   'right_shift': 0, 
+                   'extra_shift': 0, 
+                   'custom_y_range': False, 
+                   'selected_normalization_base_name': 'first_bar'}
+
 HOUR = 3600
 DAY = 3600 * 24
 WEEK = 3600 * 24 * 7
@@ -72,6 +81,15 @@ CHART_AXIS_TIME_FORMAT = {mt5.TIMEFRAME_M1: '%H:%M',
                           mt5.TIMEFRAME_D1: '%e %b', 
                           mt5.TIMEFRAME_W1: '%b %Y', 
                           mt5.TIMEFRAME_MN1: '%b %Y'}
+
+REMAINING_CANDLE_TIME_FORMAT = {mt5.TIMEFRAME_M1: '%M:%S', 
+                                mt5.TIMEFRAME_M5: '%M:%S', 
+                                mt5.TIMEFRAME_M15: '%M:%S', 
+                                mt5.TIMEFRAME_H1: '%M:%S', 
+                                mt5.TIMEFRAME_H4: '%H:%M:%S', 
+                                mt5.TIMEFRAME_D1: '%H:%M:%S', 
+                                mt5.TIMEFRAME_W1: '%ed, %Hh', 
+                                mt5.TIMEFRAME_MN1: '%ed, %Hh'}
 
 BARS_PER_HOUR = {mt5.TIMEFRAME_M1: 60, 
                  mt5.TIMEFRAME_M5: 12, 

@@ -3,13 +3,18 @@
 from numpy import log10
 import streamlit as st
 import MetaTrader5 as mt5
-from get_live_data import Graph_range
+from get_live_data import Graph_range, is_dst, get_remaining_candle_time
 from graph import generate_graph_in_fragment
-from constants import TIMEZONE_LABEL, TIMEFRAMES, TIMEFRAME_LABEL, POLLING_INTERVAL, NORMALIZATION_DATA, DEFAULTS
+from constants import TIMEZONE_LABEL, TIMEFRAMES, TIMEFRAME_LABEL, POLLING_INTERVAL, NORMALIZATION_DATA, DEFAULTS, SETTINGS_OF_NOW
 
 
 def reload_graph(): #Callback
     st.session_state['reload_Bars'] = True
+
+def goto_now():
+    for key, setting in SETTINGS_OF_NOW.items():
+        st.session_state[key] = setting
+    reload_graph()
 
 def get_y_step():
     if st.session_state['selected_scale'] == 'logarithmic':
@@ -45,7 +50,7 @@ def print_prices_test():
     with acol:
         st.header(0 if ask is None else ask, text_alignment = 'center')
     
-    st.subheader(bars.remaining_candle_time) #Server time and thus remaining candle time only updates when server time updates, that is, when a new tick is recieved
+    st.subheader(get_remaining_candle_time(bars.timeframe, st.session_state['is_dst']), text_alignment = 'center')
 
 def generate_timezone_dropdown():
     st.selectbox('Time zone', 
@@ -160,6 +165,8 @@ if 'bars_data' not in st.session_state:
     st.session_state['bars_data'] = None
 if 'reload_Bars' not in st.session_state:
     st.session_state['reload_Bars'] = True
+if 'is_dst' not in st.session_state:
+    st.session_state['is_dst'] = is_dst()
 
 
 
@@ -197,6 +204,9 @@ with widgets_column:
         st.button('reload graph', 
                   width = 'stretch', 
                   on_click = reload_graph)
+        st.button('goto now', 
+                  width = 'stretch', 
+                  on_click = goto_now)
     
 
     

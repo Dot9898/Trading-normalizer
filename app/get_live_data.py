@@ -1,10 +1,11 @@
 
 
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 from numpy import log10
+from time import time
 import MetaTrader5 as mt5
-from constants import SECONDS, TIMEZONES, CHART_AXIS_TIME_FORMAT, HOUR, DAY, WEEK, OFFSET_SECONDS, EMPTY_SPACE, EMPTY_SPACE_2, MAX_BARS_IN_GRAPH, NORMALIZATION_PRECISION, NORMALIZATION_DATA, DEFAULTS
+from constants import SECONDS, TIMEZONES, CHART_AXIS_TIME_FORMAT, HOUR, DAY, WEEK, OFFSET_SECONDS, EMPTY_SPACE, EMPTY_SPACE_2, MAX_BARS_IN_GRAPH, NORMALIZATION_PRECISION, NORMALIZATION_DATA, DEFAULTS, REMAINING_CANDLE_TIME_FORMAT
 
 
 class Graph_range:
@@ -183,7 +184,7 @@ class Bars:
         """
         This possibly fails in the DST boundary.
         Pepperstone server time is defined as UTC+3 if there's DST in NY and UTC+2 otherwise.
-                                                 
+
         The 'time' column provided by mt5.copy_rates_from is NOT a timestamp but instead a shifted timestamp.
         
         To use the 'time' column we need to know the shift, 
@@ -197,7 +198,7 @@ class Bars:
         and get the actual unix timestamp of the instant.
         """
 
-        #Check if the server timestamp is UTC +3 (if NY is in DST)
+        #Check if the server time is UTC +3 (if NY is in DST)
         timestamp_if_DST = server_time - 3 * HOUR
         NY_datetime_if_DST = datetime.fromtimestamp(timestamp_if_DST, TIMEZONES['NY'])
         if NY_datetime_if_DST.dst():
@@ -285,7 +286,7 @@ class Bars:
     def update_current_data(self):
         current_symbol_info = mt5.symbol_info_tick(self.symbol)
         self.current_server_time = current_symbol_info.time
-        self.current_candle_time = self.current_server_time%SECONDS[self.timeframe]
+        self.current_candle_time = self.current_server_time % SECONDS[self.timeframe]
         self.remaining_candle_time = SECONDS[self.timeframe] - self.current_candle_time
         self.current_bid = self.scale_point(current_symbol_info.bid)
         self.current_ask = self.scale_point(current_symbol_info.ask)
@@ -317,7 +318,33 @@ class Bars:
 
         if self.current_bar_open_time >= self.last_current_bar_open_time + SECONDS[self.timeframe] - 1:
             self.full_update()
-        
+
+
+def is_dst():
+    current_NY_date = datetime.now(TIMEZONES['NY'])
+    return(current_NY_date.dst())
+
+def get_current_server_time(is_dst):
+    current_timestamp = int(time())
+    if is_dst:
+        return(current_timestamp + 3 * HOUR)
+    else:
+        return(current_timestamp + 2 * HOUR)
+
+def format_seconds(seconds, timeframe):
+    dt = datetime.fromtimestamp(seconds, tz = TIMEZONES['UTC'])
+    formatted = dt.strftime(REMAINING_CANDLE_TIME_FORMAT[timeframe])
+    return(formatted)
+
+def get_remaining_candle_time(timeframe, is_dst):
+    current_server_time = get_current_server_time(is_dst)
+    current_candle_time =  current_server_time % SECONDS[timeframe]
+    remaining_candle_time = SECONDS[timeframe] - current_candle_time
+    return(format_seconds(remaining_candle_time, timeframe))
+
+
+
+
 
 
 
