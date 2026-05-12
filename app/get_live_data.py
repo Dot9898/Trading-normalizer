@@ -71,7 +71,7 @@ class Bars:
         self.normalization_factor = self.get_normalization_factor()
         #self.spread = round(mt5.symbol_info(self.symbol).spread / (10 ** self.digits), self.digits) #absolute
 
-        #Data updated on full update
+        #Data updated on full update, when a new bar appears
         self.first_bar_time = None
         self.last_bar_time = None
         self.shows_current_bar = None
@@ -83,7 +83,7 @@ class Bars:
         self.min_price = None
         self.date_label = None
 
-        #Data updated on soft update
+        #Data updated on soft update, every tick
         self.current_server_time = None
         self.current_bar = None
         self.current_bar_open_time = None
@@ -110,17 +110,17 @@ class Bars:
         server_time_of['market_open'] = NY_day_start + int(9.5 * HOUR)
         server_time_of['market_close'] = NY_day_start + 16 * HOUR
         server_time_of['server_1:00'] = server_day_start + 1 * HOUR
-        server_time_of['NY_day_start'] = NY_day_start
+        server_time_of['New_York_day_start'] = NY_day_start
 
-        for key in ['market_open', 'market_close', 'server_1:00', 'NY_day_start']:
+        for key in ['market_open', 'market_close', 'server_1:00', 'New_York_day_start']:
             if server_time_of[key] > current_server_time:
                 server_time_of[key] = server_time_of[key] - DAY
         
         server_time_of['week_market_open'] = NY_week_start + int(9.5 * HOUR)
         server_time_of['server_week_1:00'] = server_week_start + 1 * HOUR
-        server_time_of['NY_week_start'] = NY_week_start
+        server_time_of['New_York_week_start'] = NY_week_start
 
-        for key in ['week_market_open', 'server_week_1:00', 'NY_week_start']:
+        for key in ['week_market_open', 'server_week_1:00', 'New_York_week_start']:
             if server_time_of[key] > current_server_time:
                 server_time_of[key] = server_time_of[key] - WEEK
         
@@ -200,7 +200,7 @@ class Bars:
 
         #Check if the server time is UTC +3 (if NY is in DST)
         timestamp_if_DST = server_time - 3 * HOUR
-        NY_datetime_if_DST = datetime.fromtimestamp(timestamp_if_DST, TIMEZONES['NY'])
+        NY_datetime_if_DST = datetime.fromtimestamp(timestamp_if_DST, TIMEZONES['New York'])
         if NY_datetime_if_DST.dst():
             return(timestamp_if_DST)
         #Otherwise, it has to be UTC +2
@@ -321,7 +321,7 @@ class Bars:
 
 
 def is_dst():
-    current_NY_date = datetime.now(TIMEZONES['NY'])
+    current_NY_date = datetime.now(TIMEZONES['New York'])
     return(current_NY_date.dst())
 
 def get_current_server_time(is_dst):

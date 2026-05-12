@@ -1,23 +1,19 @@
 
 
-calcular lotsize, pppt, norm ppb, margen, en función del riesgo y req
 funciones condicionales 2 step (guardar entre sesiones?)
 alertas
 función dibujar un precio en el gráfico, por número o +- de base, dibujar la línea
 acciones de mercado: buy, sell, buy limit, sell limit, poner tp y sl
 info ordenes y posiciones existentes
-implementación trading range según la nota
-double y shift
-especificar custom last bar o no en x shift, hacer shifts mas intuitivos
-zoom level (botones hardcoded)
+
 aviso symbol no en mt5
 aviso? fin de los datos mt5
 move remaining candle time to price lines?
 colores open n closed market
 ticker navigation and naming
-frontend renaming and widgets positioning
-local h/l
 colores
+local h/l
+implementación trading range según la nota
 correr múltiples a la vez? para comparar gráficos normalizados
 
 weekend bugs

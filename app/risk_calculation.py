@@ -49,7 +49,7 @@ def get_current_ppb_from_lotsize(lotsize, current_price, equity):
 
 def get_available_fraction_of_account(open_trades_data):
     base = 1
-    #to get ppb use lotsize
+    #to get used ppb use lotsize of open trades
     for used_ppb, margin_req in open_trades_data:
         base = base - used_ppb * margin_req
     return(base)
@@ -71,6 +71,8 @@ def get_max_usable_ppb(open_trades_data, margin_req):
 #ppb of selected risk
 #max ppb available for the given stock
 #used fraction of account
+
+#absolute equivalents? just show lotsize and max lotsize prob
 
 
 

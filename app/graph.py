@@ -3,10 +3,10 @@
 import pandas as pd
 import streamlit as st
 import altair as alt
-from constants import CHART_COLORS, POLLING_INTERVAL, TIMEZONE_LABEL
+from constants import CHART_COLORS, POLLING_INTERVAL, GRAPH_HEIGHT
 from get_live_data import Bars
+from format_functions import timezone_format
 
-GRAPH_HEIGHT = 600
 
 def altair_candlestick_graph(bars_data: Bars, price_range, colors):
 
@@ -54,7 +54,7 @@ def altair_candlestick_graph(bars_data: Bars, price_range, colors):
 
     base = alt.Chart(bars).encode(
         alt.X('axis_label:O', 
-            axis = alt.Axis(labelAngle = 0, title = [date_label, f'{TIMEZONE_LABEL[timezone]} time']), 
+            axis = alt.Axis(labelAngle = 0, title = [date_label, f'{timezone_format(timezone)} time']), 
             scale = alt.Scale(paddingInner = 0.35, paddingOuter = 0.5), 
             sort = alt.SortField('time', order = 'ascending')), 
         color = candlestick_color, 
@@ -108,7 +108,6 @@ def generate_graph_in_fragment(symbol, timeframe, graph_range, timezone, data_sc
     else:
         graph = altair_candlestick_graph(bars_data, price_range, graph_colors)
         st.altair_chart(graph, width = 'stretch', height = GRAPH_HEIGHT)#, key = 'graph')
-        #st.write(bars_data.bars.iloc[::-1])
 
 
 
