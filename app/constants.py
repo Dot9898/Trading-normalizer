@@ -25,7 +25,7 @@ TIMEZONES = {'server': None,
              'France': ZoneInfo('Europe/Paris')}
 SHOWN_TIMEZONES = ['Chile', 'New York', 'server', 'France', 'server']
 SCALES = ['absolute', 'normalized', 'logarithmic']
-NORMALIZATION_BASES = ['first_bar', 'market_open', 'week_market_open', 'now']
+NORMALIZATION_BASES = ['first_bar', 'market_open', 'week_market_open', 'server_1:00', 'now']
 
 INTERESTING_TIMES = ['now', 
                      'market_open', 
@@ -37,7 +37,7 @@ INTERESTING_TIMES = ['now',
                      'server_week_1:00']
 SHIFT_UNITS = ['bars', 'hours', 'days', 'weeks', 'months']
 
-RR = [(1, 1), (2, 3), (1, 2), (1, 3), None]
+RR = [(1, 1), (2, 3), (1, 2), (1, 3), 'custom']
 
 
 #Labels
@@ -122,8 +122,7 @@ ZOOM_FIXED_SETTINGS = {'first_bar': 'now',
                        'last_bar': 'now', 
                        'right_shift': 0, 
                        'extra_shift': 0, 
-                       'custom_y_range': False, 
-                       'selected_normalization_base_name': 'first_bar'}
+                       'custom_y_range': False}
 
 ZOOM_VARIABLE_SETTINGS = {'selected_timeframe': {'hour': mt5.TIMEFRAME_M1, 
                                                 'now': mt5.TIMEFRAME_M5, 
@@ -158,7 +157,14 @@ ZOOM_VARIABLE_SETTINGS = {'selected_timeframe': {'hour': mt5.TIMEFRAME_M1,
                                             'day': 'hours', 
                                             'week': 'days', 
                                             'month': 'weeks', 
-                                            'year': 'months'}}
+                                            'year': 'months'}, 
+                        
+                        'selected_normalization_base_name': {'hour': 'market_open', 
+                                                            'now': 'market_open', 
+                                                            'day': 'market_open', 
+                                                            'week': 'first_bar', 
+                                                            'month': 'first_bar', 
+                                                            'year': 'first_bar'}}
 
 
 #Others

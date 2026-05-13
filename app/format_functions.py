@@ -8,10 +8,10 @@ def timezone_format(timezone):
         return(timezone.title())
 
 def RR_format(rr):
-    if rr == None:
+    if rr == 'custom':
         return('Custom')
     else:
         risk, reward = rr
-        return(f'{risk}:{reward} ({round(risk/reward), 2})')
+        return(f'{risk}:{reward}') #({round(risk / (risk + reward), 2)})')
 
 

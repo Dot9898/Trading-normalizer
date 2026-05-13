@@ -1,7 +1,7 @@
 
 
 def get_entry(TP, SL, risk, reward): #Scale independent
-    entry = (SL * risk + TP * reward) / (risk + reward)
+    entry = SL + (risk / (risk + reward)) * (TP - SL)
     return(entry)
 
 def get_lotsize_from_ppb_or_pppt(current_price, equity, pppt = None, ppb = None):
@@ -35,6 +35,8 @@ def get_lotsize_from_ppb_or_pppt(current_price, equity, pppt = None, ppb = None)
     return(lotsize)
 
 def get_ppb_from_trade_risk(max_loss, TP, SL, rr): #ppb = (maxwin - maxloss) / (TP - SL)
+    if TP == SL or rr == 0:
+        return(0)
     ppb = -max_loss * (1 + 1/rr) / abs(TP - SL)
     return(ppb)
 

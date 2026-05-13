@@ -1,10 +1,14 @@
 
 
+acciones de mercado: buy, sell, buy limit, sell limit
 funciones condicionales 2 step (guardar entre sesiones?)
 alertas
-función dibujar un precio en el gráfico, por número o +- de base, dibujar la línea
-acciones de mercado: buy, sell, buy limit, sell limit, poner tp y sl
 info ordenes y posiciones existentes
+poner tp y sl, cambiar precio, eliminar
+cuando trade es cerrada, guardarla y mostrar info (% etc)
+función dibujar un precio en el gráfico, por número o +- de base, dibujar la línea
+show sltp en el gráfico checkbox?
+confirmation of b/s in dialog box. checkbox for confirmation on/off
 
 aviso symbol no en mt5
 aviso? fin de los datos mt5
@@ -18,3 +22,5 @@ correr múltiples a la vez? para comparar gráficos normalizados
 
 weekend bugs
 
+cambiar x shift según timeframe (flechitas)
+now and zoom first bar -> 1:00 or market_open

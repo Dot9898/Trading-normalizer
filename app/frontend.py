@@ -7,6 +7,16 @@ from get_live_data import Graph_range, is_dst
 from graph import generate_graph_in_fragment
 
 
+
+from get_live_data import get_remaining_candle_time
+from constants import POLLING_INTERVAL
+@st.fragment(run_every = POLLING_INTERVAL)
+def print_remaining_time_test():
+    st.subheader(get_remaining_candle_time(st.session_state['bars_data'].timeframe, st.session_state['is_dst']), text_alignment = 'center')
+
+
+
+
 def add_vertical_spacing(pixels):
     st.markdown(f"<div style='height: {pixels}px;'></div>", unsafe_allow_html = True)
 
@@ -81,10 +91,6 @@ with graph_column:
 
 
 
-
-
-
-
 ##########Frontend done until here
 
 
@@ -113,18 +119,36 @@ with graph_spot:
                                price_range = price_range,
                                graph_colors = graph_colors)
 
-
-
-
-
-
 #############
 
+
+
 with trade_column:
-    st.header('')
-    st.header('')
-    with st.columns([1, 1])[0]:
-        widgets.print_prices_test()
+
+    orders_column, info_column = st.columns(2)
+    
+    with orders_column:
+        widgets.RR_and_maxloss_widgets()
+        prices_container = st.container()
+        with prices_container:
+            widgets.print_prices_test()
+        widgets.market_order_buttons()
+        widgets.SL_and_TP_input()
+        widgets.limit_order_buttons()
+        widgets.entry_display()
+
+    with info_column:
+        ppb_column, max_ppb_column = st.columns(2)
+        with ppb_column:
+            widgets.ppb_display()
+
+        print_remaining_time_test()
+    
+
+
+
+
+
 
 
 

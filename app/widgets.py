@@ -5,7 +5,6 @@ import constants
 import format_functions
 import callbacks
 from numpy import log10
-from get_live_data import get_remaining_candle_time
 
 
 def timezone_dropdown():
@@ -49,7 +48,7 @@ def X_range_widgets(what_widgets):
                     key = 'first_bar', 
                     index = 1, 
                     format_func = lambda name: name.capitalize().replace('_', ' '), 
-                    on_change = callbacks.reload_graph)
+                    on_change = callbacks.reset_X_shifts)
         
         shift_column, unit_column = st.columns([1, 2])
         with shift_column:
@@ -72,7 +71,7 @@ def X_range_widgets(what_widgets):
                     constants.INTERESTING_TIMES, 
                     key = 'last_bar', 
                     format_func = lambda name: name.capitalize().replace('_', ' '), 
-                    on_change = callbacks.reload_graph)
+                    on_change = callbacks.reset_X_shifts)
         
         shift_column, unit_column = st.columns([1, 2])
         with shift_column:
@@ -233,6 +232,81 @@ def zoom_buttons():
                   width = 'stretch')
 
 
+def max_loss_input():
+    st.number_input('Max loss (%)', 
+                    key = 'maxloss', 
+                    min_value = -100.0, 
+                    max_value = float(0), 
+                    value = -10.0, 
+                    step = 0.5, 
+                    on_change = callbacks.reload_graph)
+
+def RR_dropdown():
+    st.selectbox('RR ratio', 
+                constants.RR, 
+                key = 'RR', 
+                index = 2, 
+                format_func = format_functions.RR_format, 
+                on_change = callbacks.reload_graph)
+
+#From here, check every callback again
+
+def RR_and_maxloss_widgets():
+    risk_column, reward_column = st.columns(2)
+    
+    with risk_column:
+        max_loss_input()
+    with reward_column:
+        RR_dropdown()
+
+
+    if st.session_state['RR'] != 'custom': #Make this a callback
+        st.session_state['risk'] = st.session_state['RR'][0]
+        st.session_state['reward'] = st.session_state['RR'][1]
+    
+    else:
+        with risk_column:
+            st.number_input('Risk', 
+                            key = 'risk', 
+                            min_value = 0.1, 
+                            value = 1.0, 
+                            step = 0.1, 
+                            on_change = callbacks.reload_graph)
+        
+        with reward_column:
+            st.number_input('Reward', 
+                            key = 'reward', 
+                            min_value = 0.1, 
+                            value = 1.0, 
+                            step = 0.1, 
+                            on_change = callbacks.reload_graph)
+
+
+def market_order_buttons():
+    sell_column, buy_column = st.columns(2)
+    with sell_column:
+        st.button('Sell', 
+                  key = 'sell_button', 
+                  #on_click = pass, 
+                  width = 'stretch')
+    with buy_column:
+        st.button('Buy', 
+                  key = 'buy_button', 
+                  #on_click = pass, 
+                  width = 'stretch')
+
+def limit_order_buttons():
+    sell_limit_column, buy_limit_column = st.columns(2)
+    with sell_limit_column:
+        st.button('Sell limit\n\nSell stop', 
+                  key = 'limit_sell_button', 
+                  #on_click = pass,
+                  width = 'stretch')
+    with buy_limit_column:
+        st.button('Buy limit\n\nBuy stop', 
+                  key = 'limit_buy_button', 
+                  #on_click = pass,
+                  width = 'stretch')
 
 def get_SLTP_step():
     if st.session_state['selected_scale'] == 'logarithmic':
@@ -250,58 +324,43 @@ def get_SLTP_step():
     return(float(step))
 
 def SL_and_TP_input():
-    bid = 0 if st.session_state['bars_data'] is None else st.session_state['bars_data']
+    bid = 0 if st.session_state['bars_data'] is None else st.session_state['bars_data'].current_bid
     step = get_SLTP_step()
     SL_column, TP_column = st.columns([1, 1])
 
     with SL_column:
         st.number_input('SL', 
-                        key = 'chosen_SL', 
-                        value = bid, 
+                        key = 'SL', 
+                        value = float(bid), 
                         step = step, 
                         on_change = callbacks.reload_graph)
     
     with TP_column:
-        st.number_input('Top', 
-                        key = 'chosen_TP', 
+        st.number_input('TP', 
+                        key = 'TP', 
                         value = bid, 
                         step = step, 
                         on_change = callbacks.reload_graph)
 
-def RR_widgets():
-    st.selectbox('RR ratio', 
-                constants.RR, 
-                key = 'selected_rr', 
-                index = 2, 
-                format_func = format_functions.RR_format, 
-                on_change = callbacks.reload_graph)
-    
-    if st.session_state['selected_rr'] is not None: #Make this a callback
-        st.session_state['chosen_risk'] = st.session_state['selected_rr'][0]
-        st.session_state['chosen_risk'] = st.session_state['selected_rr'][1]
-    
-    else:
-        risk_column, reward_column = st.columns([1, 1])
-        
-        with risk_column:
-            st.number_input('Risk', 
-                            key = 'chosen_risk', 
-                            value = 1, 
-                            step = 0.1, 
-                            on_change = reload_graph)
-        
-        with reward_column:
-            st.number_input('Reward', 
-                            key = 'chosen_reward', 
-                            value = 1, 
-                            step = 0.1, 
-                            on_change = reload_graph)
-    
-def max_loss_input():
-    st.number_input('Max loss', 
-                    key = 'chosen_maxloss', 
-                    value = 10, 
-                    step = 0.5, 
+def entry_display():
+    bid = 0 if st.session_state['bars_data'] is None else st.session_state['bars_data'].current_bid
+    step = get_SLTP_step()
+    callbacks.update_entry()
+    st.number_input('Entry', 
+                    key = 'entry', 
+                    value = bid, 
+                    step = step, 
+                    disabled = True, 
+                    on_change = callbacks.reload_graph)
+
+
+def ppb_display():
+    callbacks.update_ppb() #######################
+    st.number_input('ppb', 
+                    key = 'ppb', 
+                    value = 0.0, 
+                    step = 0.01, 
+                    disabled = True, 
                     on_change = callbacks.reload_graph)
 
 
@@ -314,9 +373,6 @@ def print_prices_test():
         st.header(0 if bid is None else bid, text_alignment = 'center')
     with acol:
         st.header(0 if ask is None else ask, text_alignment = 'center')
-    
-    st.subheader(get_remaining_candle_time(bars.timeframe, st.session_state['is_dst']), text_alignment = 'center')
-
 
 
 
