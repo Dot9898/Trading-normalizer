@@ -1,11 +1,11 @@
 
 
 import pandas as pd
-from datetime import datetime, timedelta
+from datetime import datetime
 from numpy import log10
 from time import time
 import MetaTrader5 as mt5
-from constants import SECONDS, TIMEZONES, CHART_AXIS_TIME_FORMAT, HOUR, DAY, WEEK, OFFSET_SECONDS, EMPTY_SPACE, EMPTY_SPACE_2, MAX_BARS_IN_GRAPH, NORMALIZATION_PRECISION, NORMALIZATION_DATA, DEFAULTS, REMAINING_CANDLE_TIME_FORMAT
+from constants import SECONDS, TIMEZONES, CHART_AXIS_TIME_FORMAT, HOUR, DAY, WEEK, OFFSET_SECONDS, EMPTY_SPACE, EMPTY_SPACE_2, MAX_BARS_IN_GRAPH, NORMALIZATION_PRECISION, SYMBOL_DATA, DEFAULTS, REMAINING_CANDLE_TIME_FORMAT
 
 
 class Graph_range:
@@ -62,7 +62,8 @@ class Bars:
         self.data_scale = data_scale
         self.normalization_base_name = normalization_base_name
 
-        self.is_connected = self.initialize_MetaTrader()
+        self.initialize_MetaTrader()
+        self.include_symbol()
 
         #Fixed data
         self.name = mt5.symbol_info(self.symbol).description
@@ -96,7 +97,10 @@ class Bars:
         self.full_update()
 
     def initialize_MetaTrader(self):
-        return(mt5.initialize('D:/Dot/FX/Pepperstone MT5/terminal64.exe'))
+        mt5.initialize('D:/Dot/FX/Pepperstone MT5/terminal64.exe')
+
+    def include_symbol(self):
+        mt5.symbol_select(self.symbol, True)
 
     def update_server_times_of_interest(self):
         server_time_of = {}
@@ -152,13 +156,13 @@ class Bars:
         if self.data_scale == 'absolute':
             return(self.digits)
         elif self.data_scale == 'normalized':
-            return(NORMALIZATION_DATA[self.symbol]['digits'] if self.symbol in NORMALIZATION_DATA else DEFAULTS['digits'])
+            return(SYMBOL_DATA[self.symbol]['digits'] if self.symbol in SYMBOL_DATA else DEFAULTS['digits'])
         elif self.data_scale == 'logarithmic':
             return(6)
 
     def get_normalization_factor(self):
         if self.data_scale == 'normalized':
-            power = NORMALIZATION_DATA[self.symbol]['power'] if self.symbol in NORMALIZATION_DATA else DEFAULTS['power']
+            power = SYMBOL_DATA[self.symbol]['power'] if self.symbol in SYMBOL_DATA else DEFAULTS['power']
             return(10 ** power)
         else:
             return(None)
@@ -341,7 +345,6 @@ def get_remaining_candle_time(timeframe, is_dst):
     current_candle_time =  current_server_time % SECONDS[timeframe]
     remaining_candle_time = SECONDS[timeframe] - current_candle_time
     return(format_seconds(remaining_candle_time, timeframe))
-
 
 
 

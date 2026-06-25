@@ -1,6 +1,7 @@
 
 
 import streamlit as st
+import MetaTrader5 as mt5
 import constants
 import format_functions
 import callbacks
@@ -29,13 +30,13 @@ def scale_dropdown():
                 key = 'selected_scale', 
                 index = 1, 
                 format_func = str.title, 
-                on_change = callbacks.reload_graph)
-
+                on_change = callbacks.full_update)
+    
 def normalization_base_name_dropdown():
     st.selectbox('Zero', 
                 constants.NORMALIZATION_BASES, 
                 key = 'selected_normalization_base_name', 
-                index = 0, 
+                index = 1 if callbacks.is_0930_to_1800() else 3, 
                 format_func = lambda name: name.capitalize().replace('_', ' '), 
                 on_change = callbacks.reload_graph)
 
@@ -108,8 +109,8 @@ def X_range_widgets(what_widgets):
 
 def get_y_step():
 
-    display = (constants.NORMALIZATION_DATA[st.session_state['selected_symbol']]['display'] if 
-               st.session_state['selected_symbol'] in constants.NORMALIZATION_DATA else 
+    display = (constants.SYMBOL_DATA[st.session_state['selected_symbol']]['display'] if 
+               st.session_state['selected_symbol'] in constants.SYMBOL_DATA else 
                constants.DEFAULTS['display'])
     
     if st.session_state['selected_scale'] == 'logarithmic':
@@ -232,55 +233,12 @@ def zoom_buttons():
                   width = 'stretch')
 
 
-def max_loss_input():
-    st.number_input('Max loss (%)', 
-                    key = 'maxloss', 
-                    min_value = -100.0, 
-                    max_value = float(0), 
-                    value = -10.0, 
-                    step = 0.5, 
-                    on_change = callbacks.reload_graph)
-
-def RR_dropdown():
-    st.selectbox('RR ratio', 
-                constants.RR, 
-                key = 'RR', 
-                index = 2, 
-                format_func = format_functions.RR_format, 
-                on_change = callbacks.reload_graph)
-
-#From here, check every callback again
-
-def RR_and_maxloss_widgets():
-    risk_column, reward_column = st.columns(2)
-    
-    with risk_column:
-        max_loss_input()
-    with reward_column:
-        RR_dropdown()
-
-
-    if st.session_state['RR'] != 'custom': #Make this a callback
-        st.session_state['risk'] = st.session_state['RR'][0]
-        st.session_state['reward'] = st.session_state['RR'][1]
-    
-    else:
-        with risk_column:
-            st.number_input('Risk', 
-                            key = 'risk', 
-                            min_value = 0.1, 
-                            value = 1.0, 
-                            step = 0.1, 
-                            on_change = callbacks.reload_graph)
-        
-        with reward_column:
-            st.number_input('Reward', 
-                            key = 'reward', 
-                            min_value = 0.1, 
-                            value = 1.0, 
-                            step = 0.1, 
-                            on_change = callbacks.reload_graph)
-
+def symbol_dropdown():
+    st.selectbox('Ticker', 
+                constants.SYMBOL_DATA.keys(),  
+                key = 'selected_symbol', 
+                index = 0, 
+                on_change = callbacks.full_update)
 
 def market_order_buttons():
     sell_column, buy_column = st.columns(2)
@@ -313,55 +271,141 @@ def get_SLTP_step():
         step = 0.00001
     
     elif st.session_state['selected_scale'] == 'normalized':
-        display = (constants.NORMALIZATION_DATA[st.session_state['selected_symbol']]['display'] 
-                   if st.session_state['selected_symbol'] in constants.NORMALIZATION_DATA 
+        display = (constants.SYMBOL_DATA[st.session_state['selected_symbol']]['display'] 
+                   if st.session_state['selected_symbol'] in constants.SYMBOL_DATA 
                    else constants.DEFAULTS['display'])
         step = 0.1 if display == 'basis' else 0.01
-    
+
     elif st.session_state['selected_scale'] == 'absolute':
         step = st.session_state['bars_data'].digits
 
     return(float(step))
 
 def SL_and_TP_input():
-    bid = 0 if st.session_state['bars_data'] is None else st.session_state['bars_data'].current_bid
+    bid = st.session_state['bars_data'].current_bid
     step = get_SLTP_step()
-    SL_column, TP_column = st.columns([1, 1])
+    digits = st.session_state['bars_data'].shown_digits
+    format = f'%0.{digits}f'
+    SL_column, TP_column = st.columns(2)
 
     with SL_column:
         st.number_input('SL', 
                         key = 'SL', 
                         value = float(bid), 
                         step = step, 
-                        on_change = callbacks.reload_graph)
+                        format = format, 
+                        on_change = callbacks.update_risk)
     
     with TP_column:
         st.number_input('TP', 
                         key = 'TP', 
                         value = bid, 
                         step = step, 
-                        on_change = callbacks.reload_graph)
+                        format = format, 
+                        on_change = callbacks.update_risk)
 
 def entry_display():
-    bid = 0 if st.session_state['bars_data'] is None else st.session_state['bars_data'].current_bid
+    bid = 0.0 if st.session_state['bars_data'].current_bid is None else st.session_state['bars_data'].current_bid
     step = get_SLTP_step()
-    callbacks.update_entry()
     st.number_input('Entry', 
                     key = 'entry', 
                     value = bid, 
                     step = step, 
-                    disabled = True, 
-                    on_change = callbacks.reload_graph)
+                    disabled = True)
 
 
 def ppb_display():
-    callbacks.update_ppb() #######################
-    st.number_input('ppb', 
+    symbol = st.session_state['selected_symbol']
+    warning_number = constants.SYMBOL_DATA[symbol]['ideal_ppb'] if symbol in constants.SYMBOL_DATA else None
+    if warning_number is None:
+        label = '(ideal is unknown)'
+    else:
+        label = f'({warning_number} is reasonable)'
+    
+    st.number_input(f'PPB {label}', 
                     key = 'ppb', 
                     value = 0.0, 
-                    step = 0.01, 
-                    disabled = True, 
-                    on_change = callbacks.reload_graph)
+                    step = 0.00001, 
+                    format = '%0.2f', 
+                    disabled = True)
+
+def max_ppb_display():
+    st.number_input('Max PPB', 
+                    key = 'max_ppb', 
+                    value = 0.0, 
+                    step = 0.00001, 
+                    format = '%0.2f', 
+                    disabled = True)
+
+def pppt_display():
+    st.number_input('PPPT', 
+                    key = 'pppt', 
+                    value = 0.0, 
+                    step = 0.00001, 
+                    format = '%0.2f', 
+                    disabled = True)
+
+def get_lotsize_step():
+    symbol = st.session_state['selected_symbol']
+    step = mt5.symbol_info(symbol).volume_step
+    return(step)
+
+def lotsize_display():
+    st.number_input('Lotsize', 
+                    key = 'lotsize', 
+                    value = 0.0, 
+                    step = get_lotsize_step(), 
+                    format = '%0.2f', 
+                    disabled = True)
+
+def max_lotsize_display():
+    st.number_input('Max lotsize', 
+                    key = 'max_lotsize', 
+                    value = 0.0, 
+                    step = get_lotsize_step(), 
+                    format = '%0.2f', 
+                    disabled = True)
+
+def max_loss_input():
+    st.number_input('Max loss (%)', 
+                    key = 'maxloss', 
+                    min_value = -100.0, 
+                    max_value = float(0), 
+                    value = -10.0, 
+                    step = 0.5, 
+                    on_change = callbacks.update_risk)
+
+def RR_dropdown():
+    st.selectbox('RR ratio', 
+                constants.RR, 
+                key = 'RR', 
+                index = 2, 
+                format_func = format_functions.RR_format, 
+                on_change = callbacks.update_risk)
+    
+def RR_and_maxloss_widgets():
+    risk_column, reward_column = st.columns(2)
+    
+    with risk_column:
+        max_loss_input()
+    with reward_column:
+        RR_dropdown()
+    
+    if st.session_state['RR'] == 'custom':
+        with risk_column:
+            st.number_input('Risk', 
+                            key = 'risk', 
+                            min_value = 0.0, 
+                            value = 0.0, 
+                            step = 0.1, 
+                            on_change = callbacks.update_risk)
+        with reward_column:
+            st.number_input('Reward', 
+                            key = 'reward', 
+                            min_value = 0.0, 
+                            value = 0.0, 
+                            step = 0.1, 
+                            on_change = callbacks.update_risk)
 
 
 @st.fragment(run_every = constants.POLLING_INTERVAL)
@@ -373,7 +417,6 @@ def print_prices_test():
         st.header(0 if bid is None else bid, text_alignment = 'center')
     with acol:
         st.header(0 if ask is None else ask, text_alignment = 'center')
-
 
 
 

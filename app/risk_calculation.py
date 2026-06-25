@@ -1,6 +1,8 @@
 
 
 def get_entry(TP, SL, risk, reward): #Scale independent
+    if risk + reward == 0:
+        return(0)
     entry = SL + (risk / (risk + reward)) * (TP - SL)
     return(entry)
 
@@ -34,7 +36,7 @@ def get_lotsize_from_ppb_or_pppt(current_price, equity, pppt = None, ppb = None)
 
     return(lotsize)
 
-def get_ppb_from_trade_risk(max_loss, TP, SL, rr): #ppb = (maxwin - maxloss) / (TP - SL)
+def get_ppb_from_trade_risk(max_loss, TP, SL, rr): #ppb = (maxwin - maxloss) / (TP - SL) #TP and SL in basis points
     if TP == SL or rr == 0:
         return(0)
     ppb = -max_loss * (1 + 1/rr) / abs(TP - SL)
@@ -57,7 +59,7 @@ def get_available_fraction_of_account(open_trades_data):
     return(base)
 
 def get_max_ppb(margin_req):
-    return(1/margin_req)
+    return(0.01/margin_req)
 
 def get_max_usable_ppb(open_trades_data, margin_req):
     return(get_available_fraction_of_account(open_trades_data) * get_max_ppb(margin_req))
@@ -75,7 +77,6 @@ def get_max_usable_ppb(open_trades_data, margin_req):
 #used fraction of account
 
 #absolute equivalents? just show lotsize and max lotsize prob
-
 
 
 

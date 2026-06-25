@@ -1,12 +1,12 @@
 
 
 import MetaTrader5 as mt5
-from constants import NORMALIZATION_DATA, DEFAULTS
+from constants import SYMBOL_DATA, DEFAULTS
 from math import floor
 
 
 def get_deviation(symbol):
-    display = (NORMALIZATION_DATA[symbol]['display'] if symbol in NORMALIZATION_DATA else DEFAULTS['display'])
+    display = (SYMBOL_DATA[symbol]['display'] if symbol in SYMBOL_DATA else DEFAULTS['display'])
     max_deviation_percentage = 0.05 if display == 'basis' else 0.5
     current_price = mt5.symbol_info_tick(symbol).bid
     absolute_deviation = current_price * max_deviation_percentage * 0.01
@@ -15,52 +15,54 @@ def get_deviation(symbol):
     return(deviation_in_points)
 
 def market_order(symbol, lots, direction, SL = None, TP = None):
-    type = None
+    order_type = None
     if direction == 'buy':
-        type = mt5.ORDER_TYPE_BUY
+        order_type = mt5.ORDER_TYPE_BUY
     elif direction == 'sell':
-        type = mt5.ORDER_TYPE_SELL
+        order_type = mt5.ORDER_TYPE_SELL
     
     request = {'action': mt5.TRADE_ACTION_DEAL, 
                'symbol': symbol, 
                'volume': lots, 
-               'type': type, 
-               'type_filling': mt5.ORDER_FILLING_FOK}
+               'type': order_type, 
+               'type_filling': mt5.ORDER_FILLING_IOC}
     
     if SL is not None:
-        request['sl'] = SL
+        request['sl'] = float(SL)
     if TP is not None:
-        request['tp'] = TP
+        request['tp'] = float(TP)
 
     return(mt5.order_send(request))
 
-def limit_or_stop_order(symbol, lots, direction, execution_price, current_price, SL = None, TP = None):
-    type = None
+def limit_or_stop_order(symbol, lots, direction, execution_price, SL = None, TP = None):
+    order_type = None
+    execution_price = float(execution_price)
+    current_price = mt5.symbol_info_tick(symbol).ask
     
     if direction == 'buy':
         if execution_price > current_price:
-            type = mt5.ORDER_TYPE_BUY_STOP
+            order_type = mt5.ORDER_TYPE_BUY_STOP
         else:
-            type = mt5.ORDER_TYPE_BUY_LIMIT
+            order_type = mt5.ORDER_TYPE_BUY_LIMIT
    
     elif direction == 'sell':
         if execution_price > current_price:
-            type = mt5.ORDER_TYPE_SELL_LIMIT
+            order_type = mt5.ORDER_TYPE_SELL_LIMIT
         else:
-            type = mt5.ORDER_TYPE_SELL_STOP
+            order_type = mt5.ORDER_TYPE_SELL_STOP
 
-    request = {'action': mt5.TRADE_ACTION_DEAL, 
+    request = {'action': mt5.TRADE_ACTION_PENDING, 
                'symbol': symbol, 
                'volume': lots, 
                'price': execution_price, 
                'deviation': get_deviation(symbol),
-               'type': type, 
-               'type_filling': mt5.ORDER_FILLING_FOK}
+               'type': order_type, 
+               'type_filling': mt5.ORDER_FILLING_IOC}
     
     if SL is not None:
-        request['sl'] = SL
+        request['sl'] = float(SL)
     if TP is not None:
-        request['tp'] = TP
+        request['tp'] = float(TP)
 
     return(mt5.order_send(request))
 

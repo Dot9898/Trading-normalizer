@@ -11,8 +11,17 @@ POLLING_INTERVAL = 0.5
 MAX_BARS_IN_GRAPH = 1000
 GRAPH_HEIGHT = 450
 
-NORMALIZATION_DATA = {'US500': {'display': 'basis', 'digits': 1, 'power': 4},    #The ideal values are dependent on average range
-                      'BTCUSD': {'display': 'percent', 'digits': 2, 'power': 2}}
+SYMBOL_DATA = {'US500': {'ideal_ppb': 0.75, 
+                         'margin_req': 0.005, 
+                         'display': 'basis', 
+                         'digits': 1, 
+                         'power': 4},
+                         
+               'BTCUSD': {'ideal_ppb': None,
+                          'margin_req': 0.05, 
+                          'display': 'percent', 
+                          'digits': 2, 
+                          'power': 2}}
 
 
 #Groups
@@ -159,8 +168,8 @@ ZOOM_VARIABLE_SETTINGS = {'selected_timeframe': {'hour': mt5.TIMEFRAME_M1,
                                             'month': 'weeks', 
                                             'year': 'months'}, 
                         
-                        'selected_normalization_base_name': {'hour': 'market_open', 
-                                                            'now': 'market_open', 
+                        'selected_normalization_base_name': {'hour': 'market_open', #Overwritten in callback
+                                                            'now': 'market_open', #Overwritten in callback
                                                             'day': 'market_open', 
                                                             'week': 'first_bar', 
                                                             'month': 'first_bar', 
@@ -170,7 +179,10 @@ ZOOM_VARIABLE_SETTINGS = {'selected_timeframe': {'hour': mt5.TIMEFRAME_M1,
 #Others
 
 NORMALIZATION_PRECISION = 5
-DEFAULTS = {'display': 'percent', 'digits': 2, 'power': 2}
+DEFAULTS = {'ideal_ppb': None, 
+            'display': 'basis', 
+            'digits': 1, 
+            'power': 4}
 
 EMPTY_SPACE = '\u200b'
 EMPTY_SPACE_2 = '\u200c'

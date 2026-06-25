@@ -1,17 +1,28 @@
 
 
+from datetime import datetime
 import streamlit as st
+import MetaTrader5 as mt5
 import constants
-from risk_calculation import get_ppb_from_trade_risk, get_entry
+import risk_calculation
+from get_live_data import Bars
 
 def reload_graph():
     st.session_state['reload_Bars'] = True
+
+def is_0930_to_1800():
+    ny_time = datetime.now(tz = constants.TIMEZONES['New York'])
+    if (10 <= ny_time.hour <= 18) or ny_time.hour == 9 and ny_time.minute > 30:
+        return(True)
+    return(False)
 
 def goto(when):
     for key, setting in constants.ZOOM_FIXED_SETTINGS.items():
         st.session_state[key] = setting
     for key, settings_dict in constants.ZOOM_VARIABLE_SETTINGS.items():
         st.session_state[key] = settings_dict[when]
+    if when in ['now', 'hour']:
+        st.session_state['selected_normalization_base_name'] = 'market_open' if is_0930_to_1800() else 'server_1:00'
     reload_graph()
 
 def reset_X_shifts():
@@ -44,34 +55,109 @@ def update_entry():
     sl = st.session_state['SL']
     risk = st.session_state['risk']
     reward = st.session_state['reward']
-    entry = get_entry(tp, sl, risk, reward)
+    entry = risk_calculation.get_entry(tp, sl, risk, reward)
     st.session_state['entry'] = entry
 
+
+def unscale_point(value, original_scale, original_normalization_base, original_normalization_factor):
+
+    if original_scale == 'absolute':
+        return(value)
+    
+    if original_scale == 'normalized':
+        return((value/original_normalization_factor + 1) * original_normalization_base)
+
+    if original_scale == 'logarithmic':
+        if value > 9:
+            return(None) #Prevents overflow
+        return(10 ** value)
+
+def normalize_point_wrt_current_price(value):
+    bars: Bars = st.session_state['bars_data']
+
+    original_scale = bars.data_scale
+    base = bars.normalization_base
+    factor = bars.normalization_factor
+    current_scaled_price = bars.current_bid
+    
+    original_absolute_value = unscale_point(value, original_scale, base, factor)
+    current_absolute_price = unscale_point(current_scaled_price, original_scale, base, factor)
+    if original_absolute_value is None:
+        return(None)
+    
+    new_normalized_value = ((original_absolute_value / current_absolute_price) - 1) * 10000 #In basis points from current price
+    
+    return(new_normalized_value)
+
 def update_ppb():
+    displayed_tp, displayed_sl = st.session_state['TP'], st.session_state['SL']
+    tp, sl = normalize_point_wrt_current_price(displayed_tp), normalize_point_wrt_current_price(displayed_sl)
     max_loss = st.session_state['maxloss']
-    tp = st.session_state['TP']
-    sl = st.session_state['SL']
-    rr = st.session_state['risk'] / st.session_state['reward']
-    ppb = get_ppb_from_trade_risk(max_loss, tp, sl, rr)
+    risk, reward = st.session_state['risk'], st.session_state['reward']
+    if tp is None or sl is None or risk == 0 or reward == 0:
+        ppb = 0
+    else:
+        rr = risk/reward
+        ppb = risk_calculation.get_ppb_from_trade_risk(max_loss, tp, sl, rr)
+
     st.session_state['ppb'] = ppb
 
+def update_pppt(): #Always used right after update_ppb
+    ppb = st.session_state['ppb']
+    current_price = st.session_state['bars_data'].current_bid
+    if ppb == 0 or current_price in [0, None]:
+        pppt = 0
+    else:
+        pppt = (10000 / current_price) * ppb
+    st.session_state['pppt'] = pppt
 
+def update_max_ppb():
+    symbol = st.session_state['selected_symbol']
+    margin_req = constants.SYMBOL_DATA[symbol]['margin_req'] if symbol in constants.SYMBOL_DATA else None
+    if margin_req in [0, None]:
+        max_ppb = 0
+    else:
+        max_ppb = risk_calculation.get_max_ppb(margin_req)
+    st.session_state['max_ppb'] = max_ppb
 
+def update_lotsize(): #Always used right after update_ppb
+    current_price = st.session_state['bars_data'].current_bid
+    equity = mt5.account_info().equity
+    ppb = st.session_state['ppb']
+    if ppb == 0 or current_price in [0, None]:
+        lotsize = 0
+    else:
+        lotsize = risk_calculation.get_lotsize_from_ppb_or_pppt(current_price, equity, ppb)
+    st.session_state['lotsize'] = lotsize
 
+def update_max_lotsize():
+    update_max_ppb()
+    current_price = st.session_state['bars_data'].current_bid
+    equity = mt5.account_info().equity
+    max_ppb = st.session_state['max_ppb']
+    if max_ppb == 0 or current_price in [0, None]:
+        max_lotsize = 0
+    else:
+        max_lotsize = risk_calculation.get_lotsize_from_ppb_or_pppt(current_price, equity, max_ppb)
+    st.session_state['max_lotsize'] = max_lotsize
 
+def set_rr():
+    if st.session_state['RR'] != 'custom':
+        st.session_state['risk'] = st.session_state['RR'][0]
+        st.session_state['reward'] = st.session_state['RR'][1]
 
+def update_risk():
+    set_rr()
+    update_entry()
+    update_ppb()
+    update_pppt()
+    update_lotsize()
+    update_max_lotsize()
+    update_max_ppb()
 
-
-
-
-
-
-
-
-
-
-
-
+def full_update():
+    update_risk()
+    reload_graph()
 
 
 
