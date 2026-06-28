@@ -27,3 +27,56 @@ weekend bugs
 cambiar x shift según timeframe (flechitas)
 now and zoom first bar -> 1:00 or market_open
 add option to show absolute values or not
+
+
+
+
+
+
+formato trade data:
+
+guardar en un df, al editar el df usar un callback para guardarlo en el archivo
+al cargar la app en una nueva sesión, revisar con el server las que se pudieron haber perdido?
+
+
+
+
+
+
+
+
+			       {'status': 'string', 
+                                'ticket': int, 
+                                'symbol': 'string', 
+                                'volume': 'Float64', 
+                                'set_price': 'Float64', 
+                                'direction': 'string', 
+                                'order_type': 'string', 
+                                'SL_abs': 'Float64', 
+                                'TP_abs': 'Float64', 
+                                'SL_bp': 'Float64', 
+                                'TP_bp': 'Float64', 
+                                'balance_at_set': 'Float64',
+                                'equity_at_set': 'Float64', 
+                                
+                                'open_server_time': 'Int64', 
+                                'open_timestamp': 'Int64', 
+                                'open_price_abs': 'Float64', 
+                                'balance_at_open': 'Float64', 
+                                'equity_at_open': 'Float64', 
+                                'SL_acc_percent': 'Float64', 
+                                'TP_acc_percent': 'Float64', 
+                                
+                                'close_reason': 'string', 
+                                'close_price_abs': 'Float64', 
+                                'close_price_bp': 'Float64', 
+                                'points_abs': 'Float64', 
+                                'points_bp': 'Float64', 
+                                'balance_at_close': 'Float64', 
+                                'equity_at_close': 'Float64', 
+                                'P/L_abs': 'Float64', 
+                                'P/L_acc_percent_balance': 'Float64', 
+
+                                'is_shown': 'boolean'}
+
+

@@ -328,9 +328,9 @@ def is_dst():
     current_NY_date = datetime.now(TIMEZONES['New York'])
     return(current_NY_date.dst())
 
-def get_current_server_time(is_dst):
+def get_current_server_time():
     current_timestamp = int(time())
-    if is_dst:
+    if is_dst():
         return(current_timestamp + 3 * HOUR)
     else:
         return(current_timestamp + 2 * HOUR)
@@ -340,8 +340,8 @@ def format_seconds(seconds, timeframe):
     formatted = dt.strftime(REMAINING_CANDLE_TIME_FORMAT[timeframe])
     return(formatted)
 
-def get_remaining_candle_time(timeframe, is_dst):
-    current_server_time = get_current_server_time(is_dst)
+def get_remaining_candle_time(timeframe):
+    current_server_time = get_current_server_time()
     current_candle_time =  current_server_time % SECONDS[timeframe]
     remaining_candle_time = SECONDS[timeframe] - current_candle_time
     return(format_seconds(remaining_candle_time, timeframe))

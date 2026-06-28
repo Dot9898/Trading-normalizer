@@ -3,9 +3,10 @@
 import streamlit as st
 from constants import LABEL_SPACING
 import widgets
-from get_live_data import Graph_range, is_dst
+from get_live_data import Graph_range
 from graph import generate_graph_in_fragment
 from callbacks import is_0930_to_1800
+from trades_data import load_trades_data
 
 
 
@@ -13,7 +14,7 @@ from get_live_data import get_remaining_candle_time
 from constants import POLLING_INTERVAL
 @st.fragment(run_every = POLLING_INTERVAL)
 def print_remaining_time_test():
-    st.subheader(get_remaining_candle_time(st.session_state['bars_data'].timeframe, st.session_state['is_dst']), text_alignment = 'center')
+    st.subheader(get_remaining_candle_time(st.session_state['bars_data'].timeframe), text_alignment = 'center')
 
 
 
@@ -31,12 +32,12 @@ graph_colors = 'black_and_white'
 
 st.set_page_config(layout = 'wide')
 
+if 'trades_data' not in st.session_state:
+    st.session_state['trades_data'] = load_trades_data()
 if 'bars_data' not in st.session_state:
     st.session_state['bars_data'] = None
 if 'reload_Bars' not in st.session_state:
     st.session_state['reload_Bars'] = True
-if 'is_dst' not in st.session_state:
-    st.session_state['is_dst'] = is_dst()
 if 'selected_scale' not in st.session_state:
     st.session_state['selected_scale'] = 'normalized'
 if 'selected_normalization_base_name' not in st.session_state:
@@ -180,9 +181,11 @@ with info_column:
     
 
 
+
+
 from order_execution import limit_or_stop_order
 def lmocallback():
-    st.session_state['order_return'] = limit_or_stop_order('US500', 0.1, 'buy', execution_price = 7900.0, TP = 8000)
+    st.session_state['order_return'] = limit_or_stop_order('BTCUSD', 0.01, 'buy', execution_price = 49000, TP = 68000)
 
 st.button('LIMIT ORDER TEST', 
           on_click = lmocallback)

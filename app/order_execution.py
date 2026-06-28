@@ -3,6 +3,7 @@
 import MetaTrader5 as mt5
 from constants import SYMBOL_DATA, DEFAULTS
 from math import floor
+from trades_data import get_trade_data_to_edit, edit_trade_data
 
 
 def get_deviation(symbol):
@@ -32,7 +33,14 @@ def market_order(symbol, lots, direction, SL = None, TP = None):
     if TP is not None:
         request['tp'] = float(TP)
 
-    return(mt5.order_send(request))
+    result = mt5.order_send(request)
+
+    if result.retcode == mt5.TRADE_RETCODE_DONE:
+        ticket = result.order
+        data = get_trade_data_to_edit('market', result, symbol = symbol, lots = lots, direction = direction, SL = SL, TP = TP)
+        edit_trade_data(ticket, data)
+
+    return(result)
 
 def limit_or_stop_order(symbol, lots, direction, execution_price, SL = None, TP = None):
     order_type = None
@@ -64,8 +72,14 @@ def limit_or_stop_order(symbol, lots, direction, execution_price, SL = None, TP 
     if TP is not None:
         request['tp'] = float(TP)
 
-    return(mt5.order_send(request))
+    result = mt5.order_send(request)
 
+    if result.retcode == mt5.TRADE_RETCODE_DONE:
+        ticket = result.order
+        data = get_trade_data_to_edit('pending', result, symbol = symbol, lots = lots, direction = direction, SL = SL, TP = TP, order_type = order_type, set_price = execution_price)
+        edit_trade_data(ticket, data)
+
+    return(result)
 
 
 

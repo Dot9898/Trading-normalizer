@@ -5,7 +5,8 @@ import streamlit as st
 import MetaTrader5 as mt5
 import constants
 import risk_calculation
-from get_live_data import Bars
+from backend import normalize_point_wrt_current_price
+
 
 def reload_graph():
     st.session_state['reload_Bars'] = True
@@ -15,6 +16,7 @@ def is_0930_to_1800():
     if (10 <= ny_time.hour <= 18) or ny_time.hour == 9 and ny_time.minute > 30:
         return(True)
     return(False)
+
 
 def goto(when):
     for key, setting in constants.ZOOM_FIXED_SETTINGS.items():
@@ -50,6 +52,7 @@ def Y_shift(quantity):
     st.session_state['y_min'] += quantity
     st.session_state['y_max'] += quantity
 
+
 def update_entry():
     tp = st.session_state['TP']
     sl = st.session_state['SL']
@@ -57,37 +60,6 @@ def update_entry():
     reward = st.session_state['reward']
     entry = risk_calculation.get_entry(tp, sl, risk, reward)
     st.session_state['entry'] = entry
-
-
-def unscale_point(value, original_scale, original_normalization_base, original_normalization_factor):
-
-    if original_scale == 'absolute':
-        return(value)
-    
-    if original_scale == 'normalized':
-        return((value/original_normalization_factor + 1) * original_normalization_base)
-
-    if original_scale == 'logarithmic':
-        if value > 9:
-            return(None) #Prevents overflow
-        return(10 ** value)
-
-def normalize_point_wrt_current_price(value):
-    bars: Bars = st.session_state['bars_data']
-
-    original_scale = bars.data_scale
-    base = bars.normalization_base
-    factor = bars.normalization_factor
-    current_scaled_price = bars.current_bid
-    
-    original_absolute_value = unscale_point(value, original_scale, base, factor)
-    current_absolute_price = unscale_point(current_scaled_price, original_scale, base, factor)
-    if original_absolute_value is None:
-        return(None)
-    
-    new_normalized_value = ((original_absolute_value / current_absolute_price) - 1) * 10000 #In basis points from current price
-    
-    return(new_normalized_value)
 
 def update_ppb():
     displayed_tp, displayed_sl = st.session_state['TP'], st.session_state['SL']

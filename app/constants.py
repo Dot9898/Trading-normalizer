@@ -1,5 +1,6 @@
 
 
+from pathlib import Path
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 import MetaTrader5 as mt5
@@ -10,7 +11,6 @@ import MetaTrader5 as mt5
 POLLING_INTERVAL = 0.5
 MAX_BARS_IN_GRAPH = 1000
 GRAPH_HEIGHT = 450
-
 SYMBOL_DATA = {'US500': {'ideal_ppb': 0.75, 
                          'margin_req': 0.005, 
                          'display': 'basis', 
@@ -47,6 +47,40 @@ INTERESTING_TIMES = ['now',
 SHIFT_UNITS = ['bars', 'hours', 'days', 'weeks', 'months']
 
 RR = [(1, 1), (2, 3), (1, 2), (1, 3), 'custom']
+
+TRADE_DATA_COLUMNS_TO_TYPES = {'status': 'string', 
+                                'ticket': int, 
+                                'symbol': 'string', 
+                                'volume': 'Float64', 
+                                'set_price': 'Float64', 
+                                'direction': 'string', 
+                                'order_type': 'string', 
+                                'SL_abs': 'Float64', 
+                                'TP_abs': 'Float64', 
+                                'SL_bp': 'Float64', 
+                                'TP_bp': 'Float64', 
+                                'balance_at_set': 'Float64',
+                                'equity_at_set': 'Float64', 
+                                
+                                'open_server_time': 'Int64', 
+                                'open_timestamp': 'Int64', 
+                                'open_price_abs': 'Float64', 
+                                'balance_at_open': 'Float64', 
+                                'equity_at_open': 'Float64', 
+                                'SL_acc_percent': 'Float64', 
+                                'TP_acc_percent': 'Float64', 
+                                
+                                'close_reason': 'string', 
+                                'close_price_abs': 'Float64', 
+                                'close_price_bp': 'Float64', 
+                                'points_abs': 'Float64', 
+                                'points_bp': 'Float64', 
+                                'balance_at_close': 'Float64', 
+                                'equity_at_close': 'Float64', 
+                                'P/L_abs': 'Float64', 
+                                'P/L_acc_percent_balance': 'Float64', 
+
+                                'is_shown': 'boolean'}
 
 
 #Labels
@@ -177,6 +211,10 @@ ZOOM_VARIABLE_SETTINGS = {'selected_timeframe': {'hour': mt5.TIMEFRAME_M1,
 
 
 #Others
+
+
+ROOT_PATH = Path(__file__).resolve().parent.parent
+DATA_PATH = ROOT_PATH / 'data'
 
 NORMALIZATION_PRECISION = 5
 DEFAULTS = {'ideal_ppb': None, 
