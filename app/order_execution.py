@@ -16,7 +16,6 @@ def get_deviation(symbol):
     return(deviation_in_points)
 
 def market_order(symbol, lots, direction, SL = None, TP = None):
-    order_type = None
     if direction == 'buy':
         order_type = mt5.ORDER_TYPE_BUY
     elif direction == 'sell':
@@ -37,13 +36,12 @@ def market_order(symbol, lots, direction, SL = None, TP = None):
 
     if result.retcode == mt5.TRADE_RETCODE_DONE:
         ticket = result.order
-        data = get_trade_data_to_edit('market', result, symbol = symbol, lots = lots, direction = direction, SL = SL, TP = TP)
+        data = get_trade_data_to_edit(ticket, 'market', symbol = symbol, lots = lots, direction = direction, SL = SL, TP = TP)
         edit_trade_data(ticket, data)
 
     return(result)
 
 def limit_or_stop_order(symbol, lots, direction, execution_price, SL = None, TP = None):
-    order_type = None
     execution_price = float(execution_price)
     current_price = mt5.symbol_info_tick(symbol).ask
     
@@ -76,12 +74,82 @@ def limit_or_stop_order(symbol, lots, direction, execution_price, SL = None, TP 
 
     if result.retcode == mt5.TRADE_RETCODE_DONE:
         ticket = result.order
-        data = get_trade_data_to_edit('pending', result, symbol = symbol, lots = lots, direction = direction, SL = SL, TP = TP, order_type = order_type, set_price = execution_price)
+        data = get_trade_data_to_edit(ticket, 'pending', symbol = symbol, lots = lots, direction = direction, SL = SL, TP = TP, order_type = order_type, set_price = execution_price)
         edit_trade_data(ticket, data)
 
     return(result)
 
+def change_SLTP_open(ticket, symbol, SL = None, TP = None):
+    request = {'action': mt5.TRADE_ACTION_SLTP, 
+               'position': ticket, 
+               'symbol': symbol}
+    
+    if SL is not None:
+        request['sl'] = float(SL)
+    if TP is not None:
+        request['tp'] = float(TP)
 
+    result = mt5.order_send(request)
+
+    if result.retcode == mt5.TRADE_RETCODE_DONE:
+        data = get_trade_data_to_edit(ticket, 'sltp_open', symbol = symbol, SL = SL, TP = TP)
+        edit_trade_data(ticket, data)
+
+    return(result)
+
+def change_price_and_SLTP_pending(ticket, symbol, execution_price, SL = None, TP = None):
+    
+    request = {'action': mt5.TRADE_ACTION_MODIFY, 
+               'order': ticket, 
+               'symbol': symbol}
+    #deviation?
+    if execution_price is not None:
+        request['price'] = float(execution_price)
+    if SL is not None:
+        request['sl'] = float(SL)
+    if TP is not None:
+        request['tp'] = float(TP)
+
+    result = mt5.order_send(request)
+
+    if result.retcode == mt5.TRADE_RETCODE_DONE:
+        data = get_trade_data_to_edit(ticket, 'price_sltp_pending', symbol = symbol, set_price = execution_price, SL = SL, TP = TP)
+        edit_trade_data(ticket, data)
+
+    return(result)
+
+def delete_pending_order(ticket):
+
+    request = {'action': mt5.TRADE_ACTION_REMOVE, 
+               'order': ticket}
+
+    result = mt5.order_send(request)
+
+    if result.retcode == mt5.TRADE_RETCODE_DONE:
+        edit_trade_data(ticket, delete = True)
+    
+    return(result)
+
+def close_position(ticket, symbol, lots, original_direction):
+    if original_direction == 'buy':
+        order_type = mt5.ORDER_TYPE_SELL
+    elif original_direction == 'sell':
+        order_type = mt5.ORDER_TYPE_BUY
+
+    request = {'action': mt5.TRADE_ACTION_DEAL, 
+               'position': ticket, 
+               'symbol': symbol, 
+               'volume': lots, 
+               'type': order_type, 
+               'type_filling': mt5.ORDER_FILLING_IOC}
+    
+    result = mt5.order_send(request)
+
+    if result.retcode == mt5.TRADE_RETCODE_DONE:
+        data = get_trade_data_to_edit(ticket, 'close', symbol = symbol)
+        edit_trade_data(ticket, data)
+
+    return(result)
 
 
 #lotsize symbol.volume_min

@@ -182,15 +182,32 @@ with info_column:
 
 
 
+import MetaTrader5 as mt5
+from order_execution import change_SLTP_open, market_order, close_position, delete_pending_order, change_price_and_SLTP_pending, limit_or_stop_order
+from get_live_data import get_current_server_time
 
-from order_execution import limit_or_stop_order
 def lmocallback():
-    st.session_state['order_return'] = limit_or_stop_order('BTCUSD', 0.01, 'buy', execution_price = 49000, TP = 68000)
+    #st.session_state['order_return'] = market_order('BTCUSD', 0.01, 'buy', TP = 79000)
+    #st.session_state['order_return'] = change_SLTP_open(301305456, 'US500', TP = 8000)
+    st.session_state['order_return'] = limit_or_stop_order('US500', 0.1, 'buy', 7700, TP = 7900)
+    #st.session_state['order_return'] = change_price_and_SLTP_pending(301759772, 'US500', 7752, SL = 7000)
+    #st.session_state['order_return'] = delete_pending_order(301768498)
+    #st.session_state['order_return'] = close_position(301786074, 'BTCUSD', 0.01, 'buy')
 
 st.button('LIMIT ORDER TEST', 
           on_click = lmocallback)
 if 'order_return' in st.session_state:
+    #positions = mt5.positions_get()
+    current_time = get_current_server_time()
+    ord = mt5.history_orders_get(current_time - 300, current_time)
+    dls = mt5.history_deals_get(current_time - 300, current_time)
     st.write(st.session_state['order_return'])
+    st.write('ttttttt')
+    for i in ord:
+        st.write(i)
+    st.write('ttttttt2')
+    for i in dls:
+        st.write(i)
 
 
 

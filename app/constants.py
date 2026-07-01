@@ -32,7 +32,7 @@ TIMEZONES = {'server': None,
              'New York': ZoneInfo('America/New_York'), 
              'Chile': ZoneInfo('America/Santiago'), 
              'France': ZoneInfo('Europe/Paris')}
-SHOWN_TIMEZONES = ['Chile', 'New York', 'server', 'France', 'server']
+SHOWN_TIMEZONES = ['Chile', 'New York', 'server', 'France']
 SCALES = ['absolute', 'normalized', 'logarithmic']
 NORMALIZATION_BASES = ['first_bar', 'market_open', 'week_market_open', 'server_1:00', 'now']
 
@@ -55,31 +55,37 @@ TRADE_DATA_COLUMNS_TO_TYPES = {'status': 'string',
                                 'set_price': 'Float64', 
                                 'direction': 'string', 
                                 'order_type': 'string', 
+                                'volume': 'Float64', 
                                 'SL_abs': 'Float64', 
                                 'TP_abs': 'Float64', 
                                 'SL_bp': 'Float64', 
                                 'TP_bp': 'Float64', 
-                                'balance_at_set': 'Float64',
+                                'balance_at_set': 'Float64', 
                                 'equity_at_set': 'Float64', 
+                                'SL_acc_percent_at_set_(equity)': 'Float64', 
+                                'TP_acc_percent_at_set_(equity)': 'Float64', 
                                 
                                 'open_server_time': 'Int64', 
                                 'open_timestamp': 'Int64', 
-                                'open_price_abs': 'Float64', 
+                                'open_price': 'Float64', 
                                 'balance_at_open': 'Float64', 
                                 'equity_at_open': 'Float64', 
-                                'SL_acc_percent': 'Float64', 
-                                'TP_acc_percent': 'Float64', 
+                                'SL_acc_percent_at_open_(equity)': 'Float64', 
+                                'TP_acc_percent_at_open_(equity)': 'Float64', 
                                 
+                                'close_server_time': 'Int64', 
+                                'close_timestamp': 'Int64', 
                                 'close_reason': 'string', 
-                                'close_price_abs': 'Float64', 
-                                'close_price_bp': 'Float64', 
+                                'close_price': 'Float64', 
                                 'points_abs': 'Float64', 
                                 'points_bp': 'Float64', 
                                 'balance_at_close': 'Float64', 
                                 'equity_at_close': 'Float64', 
                                 'P/L_abs': 'Float64', 
-                                'P/L_acc_percent_balance': 'Float64', 
-
+                                'P/L_acc_percent_(equity)': 'Float64', 
+                                'P/L_acc_percent_(balance)': 'Float64', 
+                                
+                                'display': 'string', 
                                 'is_shown': 'boolean'}
 
 
