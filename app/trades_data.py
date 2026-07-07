@@ -219,6 +219,108 @@ def get_trade_data_to_edit(ticket,
 
     return(data)
 
+def get_update_categories(from_server_time):
+    
+    trades_data = st.session_state['trades_data']
+    current_server_time = get_current_server_time()
+    current_orders = mt5.orders_get()
+    current_positions = mt5.positions_get()
+    orders_history = mt5.history_orders_get(from_server_time, current_server_time)
+    deals_history = mt5.history_deals_get(from_server_time, current_server_time)
+
+    pending_tickets = [ticket for ticket in trades_data.index 
+                       if trades_data.at[ticket, 'status'] == 'pending']
+    open_tickets = [ticket for ticket in trades_data.index 
+                    if trades_data.at[ticket, 'status'] == 'open']
+    current_orders_tickets = [order.ticket for order in current_orders]
+    current_positions_tickets = [position.ticket for position in current_positions]
+    deal_history_tickets = list(set([deal.position_id for deal in deals_history]))
+    order_history_tickets = list(set([order.position_id for order in orders_history]))
+    
+    category = {}
+
+    for ticket in current_orders_tickets:
+        if ticket in pending_tickets:
+            category[ticket] = 'modified'
+        else:
+            category[ticket] = 'set'
+    
+    for ticket in current_positions_tickets:
+        if ticket in pending_tickets:
+            category[ticket] = 'opened'
+        elif ticket in open_tickets:
+            category[ticket] = 'edited'
+        else:
+            category[ticket] = 'market_opened'
+    
+    for ticket in pending_tickets:
+        if ticket in category:
+            continue
+        if ticket in order_history_tickets: #Ya no está
+            if ticket in deal_history_tickets:
+                category[ticket] = 'opened_and_closed'
+            else:
+                category[ticket] = 'deleted'
+
+    for ticket in open_tickets:
+        if ticket in category:
+            continue
+
+        if ticket in deal_history_tickets:
+            for deal in deals_history:
+                if deal.position_id == ticket and deal.entry == mt5.DEAL_ENTRY_OUT:
+                    category[ticket] = 'closed'
+    
+    for ticket in deal_history_tickets:
+        if ticket in category:
+            continue
+
+        if ticket not in (pending_tickets + open_tickets) and ticket in order_history_tickets:
+            for deal in deals_history:
+                if deal.position_id == ticket and deal.entry == mt5.DEAL_ENTRY_OUT:
+                    for order in orders_history:
+                        if order.position_id == ticket:
+                            if (order.type in [mt5.ORDER_TYPE_BUY_LIMIT, 
+                                               mt5.ORDER_TYPE_SELL_LIMIT,
+                                               mt5.ORDER_TYPE_BUY_STOP, 
+                                               mt5.ORDER_TYPE_SELL_STOP]):
+                                category[ticket] == 'set_opened_and_closed'
+                                break
+                            if (order.type in [mt5.ORDER_TYPE_BUY, 
+                                               mt5.ORDER_TYPE_SELL]):
+                                category[ticket] == 'market_opened_and_closed'
+
+    for ticket in (pending_tickets + open_tickets):
+        if ticket not in category:
+            category[ticket] = 'unknown'
+    
+    return(category)
+
+def update_ticket_data(ticket, category):
+
+    if category == 'set':
+        pass
+
+#*set - no data + order data
+#*modified - pending data + order data
+
+#*opened - pending data + position data
+#*market opened - no data + position data
+#*edited - open data + position data
+
+#*deleted - pending data + order history data
+#*opened and closed - pending data + order history data + deal data
+#*closed - open data + deal history data
+#market opened and closed - no data + deal history data
+#set opened and closed - no data + order history data + deal history data
+
+
+
+
+def update_data(from_server_time):
+    categories = get_update_categories(from_server_time)
+    for ticket, category in categories.items():
+        update_ticket_data(ticket, category)
 
 
 

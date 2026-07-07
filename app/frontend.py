@@ -199,8 +199,8 @@ st.button('LIMIT ORDER TEST',
 if 'order_return' in st.session_state:
     #positions = mt5.positions_get()
     current_time = get_current_server_time()
-    ord = mt5.history_orders_get(current_time - 300, current_time)
-    dls = mt5.history_deals_get(current_time - 300, current_time)
+    ord = mt5.history_orders_get(current_time - 6000, current_time)
+    dls = mt5.history_deals_get(current_time - 6000, current_time)
     st.write(st.session_state['order_return'])
     st.write('ttttttt')
     for i in ord:
