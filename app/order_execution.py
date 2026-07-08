@@ -36,7 +36,7 @@ def market_order(symbol, lots, direction, SL = None, TP = None):
 
     if result.retcode == mt5.TRADE_RETCODE_DONE:
         ticket = result.order
-        data = get_trade_data_to_edit(ticket, 'market', symbol = symbol, lots = lots, direction = direction, SL = SL, TP = TP)
+        data = get_trade_data_to_edit(ticket, 'local', 'market', symbol = symbol, lots = lots, SL = SL, TP = TP, order_type = order_type)
         edit_trade_data(ticket, data)
 
     return(result)
@@ -74,7 +74,7 @@ def limit_or_stop_order(symbol, lots, direction, execution_price, SL = None, TP 
 
     if result.retcode == mt5.TRADE_RETCODE_DONE:
         ticket = result.order
-        data = get_trade_data_to_edit(ticket, 'pending', symbol = symbol, lots = lots, direction = direction, SL = SL, TP = TP, order_type = order_type, set_price = execution_price)
+        data = get_trade_data_to_edit(ticket, 'local', 'pending', symbol = symbol, lots = lots, SL = SL, TP = TP, order_type = order_type, set_price = execution_price)
         edit_trade_data(ticket, data)
 
     return(result)
@@ -113,7 +113,7 @@ def change_price_and_SLTP_pending(ticket, symbol, execution_price, SL = None, TP
     result = mt5.order_send(request)
 
     if result.retcode == mt5.TRADE_RETCODE_DONE:
-        data = get_trade_data_to_edit(ticket, 'price_sltp_pending', symbol = symbol, set_price = execution_price, SL = SL, TP = TP)
+        data = get_trade_data_to_edit(ticket, 'local', 'price_sltp_pending', symbol = symbol, set_price = execution_price, SL = SL, TP = TP)
         edit_trade_data(ticket, data)
 
     return(result)
@@ -146,7 +146,7 @@ def close_position(ticket, symbol, lots, original_direction):
     result = mt5.order_send(request)
 
     if result.retcode == mt5.TRADE_RETCODE_DONE:
-        data = get_trade_data_to_edit(ticket, 'close', symbol = symbol)
+        data = get_trade_data_to_edit(ticket, 'local', 'close', symbol = symbol)
         edit_trade_data(ticket, data)
 
     return(result)

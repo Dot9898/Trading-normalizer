@@ -50,10 +50,10 @@ def edit_trade_data(ticket, data_to_edit: dict | None = None, delete = False):
     save_trades_data_to_file()
 
 def get_trade_data_to_edit(ticket, 
+                           data_source, 
                            operation_type, 
                            symbol = None, 
                            lots = None, 
-                           direction = None, 
                            SL = None, 
                            TP = None, 
                            order_type = None, 
@@ -79,7 +79,7 @@ def get_trade_data_to_edit(ticket,
                 'symbol': symbol, 
                 'volume': lots, 
                 'set_price': open_price, 
-                'direction': direction, 
+                'direction': 'buy' if order_type == mt5.ORDER_TYPE_BUY else 'sell', 
                 'order_type': 'market', 
                 'balance_at_set': round(account_info.balance), 
                 'equity_at_set': round(account_info.equity), 
@@ -105,29 +105,27 @@ def get_trade_data_to_edit(ticket,
 
     if operation_type == 'pending':
 
-        if order_type in [mt5.ORDER_TYPE_BUY_LIMIT, mt5.ORDER_TYPE_SELL_LIMIT]:
-            order_type = 'limit'
-        if order_type in [mt5.ORDER_TYPE_BUY_STOP, mt5.ORDER_TYPE_SELL_STOP]:
-            order_type = 'stop'
-
         data = {'status': 'pending', 
                 'symbol': symbol, 
                 'volume': lots, 
                 'set_price': set_price, 
-                'direction': direction, 
-                'order_type': order_type, 
-                'balance_at_set': round(account_info.balance), 
-                'equity_at_set': round(account_info.equity)}
+                'direction': 'buy' if order_type in [mt5.ORDER_TYPE_BUY_LIMIT, mt5.ORDER_TYPE_BUY_STOP] else 'sell', 
+                'order_type': 'limit' if order_type in [mt5.ORDER_TYPE_BUY_LIMIT, mt5.ORDER_TYPE_SELL_LIMIT] else 'stop'}
+        if data_source == 'local':
+            data['balance_at_set'] = round(account_info.balance)
+            data['equity_at_set'] = round(account_info.equity)
 
         if SL is not None:
             data['SL_abs'] = SL
             data['SL_bp'] = round(scale_point(SL, 'normalized', set_price, symbol), 1)
-            data['SL_acc_percent_at_set_(equity)'] = round(100 * (SL - set_price) * lots / account_info.equity, 1)
+            if data_source == 'local':
+                data['SL_acc_percent_at_set_(equity)'] = round(100 * (SL - set_price) * lots / account_info.equity, 1)
 
         if TP is not None:
             data['TP_abs'] = TP
             data['TP_bp'] = round(scale_point(TP, 'normalized', set_price, symbol), 1)
-            data['TP_acc_percent_at_set_(equity)'] = round(100 * (TP - set_price) * lots / account_info.equity, 1)
+            if data_source == 'local':
+                data['TP_acc_percent_at_set_(equity)'] = round(100 * (TP - set_price) * lots / account_info.equity, 1)
 
 
     if operation_type == 'sltp_open':
@@ -221,6 +219,26 @@ def get_trade_data_to_edit(ticket,
 
 def get_update_categories(from_server_time):
     
+    """
+    When a ticket is changed server side, the local data must be edited to reflect it.
+    The possible edit categories are the following, each implies a different edit to the data:
+    
+    Modified: a pending order known by the client had its parameters modified by the server\n
+    Opened: a pending order known by the client was opened by the server\n
+    Opened and closed: a pending order known by the client was opened by the server, and was closed afterwards by the server\n
+    Deleted: a pending order known by the client was deleted by the server
+    
+    Edited: an open position known by the client had its parameters modified by the server\n
+    Closed: an open position known by the client was closed by the server
+
+    Market opened: a new position was opened by the server via a market order\n
+    Market opened and closed: a new position was opened by the server via a market order, and was closed afterwards by the server
+    
+    Set: a new pending order was set by the server and is still pending\n
+    Set and opened: a new pending order was set by the server, and was opened afterwards by the server\n
+    Set opened and closed: a new pending order was set by the server, was opened afterwards by the server, and was finally closed by the server.
+    """
+    
     trades_data = st.session_state['trades_data']
     current_server_time = get_current_server_time()
     current_orders = mt5.orders_get()
@@ -234,72 +252,75 @@ def get_update_categories(from_server_time):
                     if trades_data.at[ticket, 'status'] == 'open']
     current_orders_tickets = [order.ticket for order in current_orders]
     current_positions_tickets = [position.ticket for position in current_positions]
-    deal_history_tickets = list(set([deal.position_id for deal in deals_history]))
-    order_history_tickets = list(set([order.position_id for order in orders_history]))
+    deal_history_tickets = [deal.position_id for deal in deals_history]
+    history_pending_order_tickets = [order.position_id for order in orders_history 
+                                     if order.type in [mt5.ORDER_TYPE_BUY_LIMIT, 
+                                                       mt5.ORDER_TYPE_SELL_LIMIT,
+                                                       mt5.ORDER_TYPE_BUY_STOP, 
+                                                       mt5.ORDER_TYPE_SELL_STOP]]
     
     category = {}
 
-    for ticket in current_orders_tickets:
-        if ticket in pending_tickets:
-            category[ticket] = 'modified'
-        else:
-            category[ticket] = 'set'
-    
-    for ticket in current_positions_tickets:
-        if ticket in pending_tickets:
-            category[ticket] = 'opened'
-        elif ticket in open_tickets:
-            category[ticket] = 'edited'
-        else:
-            category[ticket] = 'market_opened'
-    
     for ticket in pending_tickets:
-        if ticket in category:
-            continue
-        if ticket in order_history_tickets: #Ya no está
+        if ticket in current_orders_tickets:
+            category[ticket] = 'modified'
+        elif ticket in current_positions_tickets:
+            category[ticket] = 'opened'
+        else:
             if ticket in deal_history_tickets:
-                category[ticket] = 'opened_and_closed'
+                category[ticket] = 'opened and closed'
             else:
                 category[ticket] = 'deleted'
-
+        
     for ticket in open_tickets:
-        if ticket in category:
-            continue
+        if ticket in current_positions_tickets:
+            category[ticket] = 'edited'
+        else:
+            category[ticket] = 'closed'
 
-        if ticket in deal_history_tickets:
-            for deal in deals_history:
-                if deal.position_id == ticket and deal.entry == mt5.DEAL_ENTRY_OUT:
-                    category[ticket] = 'closed'
+    for ticket in current_orders_tickets:
+        if ticket not in (pending_tickets + open_tickets): #open tickets kept for clarity
+            category[ticket] = 'set'
+
+    for ticket in current_positions_tickets:
+        if ticket not in (pending_tickets + open_tickets):
+            if ticket in history_pending_order_tickets:
+                category[ticket] = 'set_and_opened'
+            else:
+                category[ticket] = 'market_opened'
     
-    for ticket in deal_history_tickets:
-        if ticket in category:
-            continue
-
-        if ticket not in (pending_tickets + open_tickets) and ticket in order_history_tickets:
-            for deal in deals_history:
-                if deal.position_id == ticket and deal.entry == mt5.DEAL_ENTRY_OUT:
-                    for order in orders_history:
-                        if order.position_id == ticket:
-                            if (order.type in [mt5.ORDER_TYPE_BUY_LIMIT, 
-                                               mt5.ORDER_TYPE_SELL_LIMIT,
-                                               mt5.ORDER_TYPE_BUY_STOP, 
-                                               mt5.ORDER_TYPE_SELL_STOP]):
-                                category[ticket] == 'set_opened_and_closed'
-                                break
-                            if (order.type in [mt5.ORDER_TYPE_BUY, 
-                                               mt5.ORDER_TYPE_SELL]):
-                                category[ticket] == 'market_opened_and_closed'
-
-    for ticket in (pending_tickets + open_tickets):
-        if ticket not in category:
-            category[ticket] = 'unknown'
+    for deal in deals_history:
+        ticket = deal.position_id
+        if ticket not in (pending_tickets + open_tickets):
+            if deal.entry == mt5.DEAL_ENTRY_OUT:
+                if ticket in history_pending_order_tickets:
+                    category[ticket] = 'set_opened_and_closed'
+                else:
+                    category[ticket] = 'market_opened_and_closed'
     
     return(category)
 
 def update_ticket_data(ticket, category):
-
+    
     if category == 'set':
+        order = mt5.orders_get(ticket = ticket)[0]
+
+        data = get_trade_data_to_edit(ticket, 
+                                      'server', 
+                                      'pending', 
+                                      symbol = order.symbol, 
+                                      lots = order.volume_initial, 
+                                      SL = None if order.sl == 0 else order.sl, 
+                                      TP = None if order.tp == 0 else order.tp, 
+                                      order_type = order.type, 
+                                      set_price = order.price_open)
+    
+    if category == 'modified':
         pass
+    
+    
+    edit_trade_data(ticket, data)
+
 
 #*set - no data + order data
 #*modified - pending data + order data
@@ -315,12 +336,15 @@ def update_ticket_data(ticket, category):
 #set opened and closed - no data + order history data + deal history data
 
 
-
-
 def update_data(from_server_time):
     categories = get_update_categories(from_server_time)
+    #print('categories dict')
+    #print(categories)
     for ticket, category in categories.items():
         update_ticket_data(ticket, category)
+    
+    #if exito (no unknowns): actualizar la timestamp de last update
+    #este check antes o dps de ese último loop?
 
 
 

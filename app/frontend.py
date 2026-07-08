@@ -185,7 +185,7 @@ with info_column:
 import MetaTrader5 as mt5
 from order_execution import change_SLTP_open, market_order, close_position, delete_pending_order, change_price_and_SLTP_pending, limit_or_stop_order
 from get_live_data import get_current_server_time
-
+from trades_data import update_data
 def lmocallback():
     #st.session_state['order_return'] = market_order('BTCUSD', 0.01, 'buy', TP = 79000)
     #st.session_state['order_return'] = change_SLTP_open(301305456, 'US500', TP = 8000)
@@ -194,22 +194,32 @@ def lmocallback():
     #st.session_state['order_return'] = delete_pending_order(301768498)
     #st.session_state['order_return'] = close_position(301786074, 'BTCUSD', 0.01, 'buy')
 
+
 st.button('LIMIT ORDER TEST', 
           on_click = lmocallback)
-if 'order_return' in st.session_state:
-    #positions = mt5.positions_get()
-    current_time = get_current_server_time()
-    ord = mt5.history_orders_get(current_time - 6000, current_time)
-    dls = mt5.history_deals_get(current_time - 6000, current_time)
-    st.write(st.session_state['order_return'])
-    st.write('ttttttt')
-    for i in ord:
-        st.write(i)
-    st.write('ttttttt2')
-    for i in dls:
-        st.write(i)
 
+current_time = get_current_server_time()
+ord = mt5.orders_get()
+pos = mt5.positions_get()
+hord = mt5.history_orders_get(current_time - 300, current_time)
+hdls = mt5.history_deals_get(current_time - 300, current_time)
+st.write('orders')
+for i in ord:
+    st.write(i)
+#print(type(mt5.orders_get(ticket = 304078610)))
+st.write('positions')
+for i in pos:
+    st.write(i)
+st.write('orders history')
+for i in hord:
+    st.write(i)
+st.write('deals history')
+for i in hdls:
+    st.write(i)
 
+st.button('UPDATE DATA TEST', 
+          on_click = update_data, 
+          args = [get_current_server_time() - 300])
 
 
 
