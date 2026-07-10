@@ -7,7 +7,7 @@ from get_live_data import Bars
 
 
 
-def scale_point(value, data_scale, normalization_base = None, symbol = None):
+def scale_point(value, data_scale, normalization_base = None, symbol = None, true_normalization = False):
 
     if data_scale == 'absolute':
         return(value)
@@ -17,7 +17,10 @@ def scale_point(value, data_scale, normalization_base = None, symbol = None):
             return
         power = SYMBOL_DATA[symbol]['power'] if symbol in SYMBOL_DATA else DEFAULTS['power']
         normalization_factor = 10 ** power
-        return(((value / normalization_base) - 1) * normalization_factor)
+        unit = 1
+        if true_normalization:
+            unit = 0
+        return(((value / normalization_base) - unit) * normalization_factor)
     
     if data_scale == 'logarithmic':
         return(log10(value))

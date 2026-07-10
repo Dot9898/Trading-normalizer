@@ -185,7 +185,7 @@ with info_column:
 import MetaTrader5 as mt5
 from order_execution import change_SLTP_open, market_order, close_position, delete_pending_order, change_price_and_SLTP_pending, limit_or_stop_order
 from get_live_data import get_current_server_time
-from trades_data import update_data
+from trades_data import update_all_data
 def lmocallback():
     #st.session_state['order_return'] = market_order('BTCUSD', 0.01, 'buy', TP = 79000)
     #st.session_state['order_return'] = change_SLTP_open(301305456, 'US500', TP = 8000)
@@ -218,8 +218,9 @@ for i in hdls:
     st.write(i)
 
 st.button('UPDATE DATA TEST', 
-          on_click = update_data, 
-          args = [get_current_server_time() - 300])
+          on_click = update_all_data, 
+          args = [get_current_server_time() - 600])
+
 
 
 

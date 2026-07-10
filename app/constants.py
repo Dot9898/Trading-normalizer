@@ -84,9 +84,18 @@ TRADE_DATA_COLUMNS_TO_TYPES = {'status': 'string',
                                 'P/L_abs': 'Float64', 
                                 'P/L_acc_percent_(equity)': 'Float64', 
                                 'P/L_acc_percent_(balance)': 'Float64', 
+                                'P/L_acc_percent_(estimate)': 'Float64', 
                                 
                                 'display': 'string', 
                                 'is_shown': 'boolean'}
+
+OUT_DEAL_REASONS = {mt5.DEAL_REASON_CLIENT: 'manual', 
+                    mt5.DEAL_REASON_MOBILE: 'manual', 
+                    mt5.DEAL_REASON_WEB: 'manual', 
+                    mt5.DEAL_REASON_EXPERT: 'manual', 
+                    mt5.DEAL_REASON_SL: 'SL', 
+                    mt5.DEAL_REASON_TP: 'TP', 
+                    mt5.DEAL_REASON_SO: 'stop_out'}
 
 
 #Labels

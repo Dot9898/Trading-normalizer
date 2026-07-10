@@ -346,7 +346,8 @@ def get_remaining_candle_time(timeframe):
     remaining_candle_time = SECONDS[timeframe] - current_candle_time
     return(format_seconds(remaining_candle_time, timeframe))
 
-
+def get_actual_timestamp(server_time):
+    return(Bars.get_actual_timestamp(server_time))
 
 
 
