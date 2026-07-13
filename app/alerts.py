@@ -2,55 +2,29 @@
 
 import streamlit as st
 import MetaTrader5 as mt5
-from get_live_data import get_last_update_server_time, register_update_time, get_current_server_time
-from trades_data import update_all_data, edit_trade_data
-from constants import OUT_DEAL_REASONS
+from get_live_data import get_last_update_server_time, register_update_time
+from trades_data import update_all_data
+from constants import OUT_DEAL_REASONS, POLLING_INTERVAL
 from order_execution import limit_or_stop_order
-from backend import scale_point
-
-
+from backend import include_symbol
 
 
 class Alert:
 
-    def __init__(self, reason, symbol, price = None, ticket = None, more_or_less = None, conditional_trade_data = {}, new_conditional_trade = False):
+    def __init__(self, reason, symbol = None, price = None, ticket = None, more_or_less = None, conditional_trade_data = None):
         self.reason = reason
         self.symbol = symbol
         self.price = price
         self.ticket = ticket
         self.more_or_less = more_or_less
         self.conditional_trade_data = conditional_trade_data
-        if new_conditional_trade:
-            self.save_conditional_trade_data()
-    
-    def save_conditional_trade_data(self):
-        trade_data = self.conditional_trade_data
-        SL = trade_data['SL']
-        TP = trade_data['TP']
-        set_price = trade_data['set_price']
-        symbol = trade_data['symbol']
-        lots = trade_data['lots']
-        direction = trade_data['direction']
-
-        data = {'status': 'conditional', 
-                
-                'symbol': symbol, 
-                'volume': lots, 
-                'set_price': set_price, 
-                'direction': direction, 
-                'SL_abs': SL, 
-                'SL_bp': round(scale_point(SL, 'normalized', set_price, symbol), 1), 
-                'TP_abs': TP, 
-                'TP_bp': round(scale_point(TP, 'normalized', set_price, symbol), 1)}
         
-        ticket = get_current_server_time()
-
-        edit_trade_data(ticket, data)
-
+        include_symbol(symbol)
+        
     def check(self):
 
         if self.reason == 'manual':
-            current_price = mt5.symbol_info_tick.bid
+            current_price = mt5.symbol_info_tick(self.symbol).bid
             if self.more_or_less == 'more':
                 return(current_price >= self.price)
             elif self.more_or_less == 'less':
@@ -104,36 +78,28 @@ class Alert:
                                 trade_data['execution_price'], 
                                 trade_data['SL'], 
                                 trade_data['TP'])
-            
-            edit_trade_data(self.ticket, delete = True)
         
         update_all_data(get_last_update_server_time())
         register_update_time()
 
-        #alerts.remove
 
 def load_alerts():
+    alerts = set()
     trades_data = st.session_state['trades_data']
     for ticket, trade_data in trades_data.iterrows():
+        if trade_data['status'] in ['pending', 'open']:
+            alerts.add(Alert(trade_data['status'], ticket = ticket))
+    return(alerts)
 
-        if trade_data['status'] == 'conditional':
-            conditional_trade_data = {'symbol': trade_data['symbol'], 
-                                      'lots': trade_data['volume'], 
-                                      'set_price': trade_data['set_price'], 
-                                      'direction': trade_data['direction'], 
-                                      'SL': trade_data['SL_abs'], 
-                                      'TP': trade_data['TP_abs']}
-            alert = Alert('conditional', trade_data['symbol'], )
-
-st.fragment()
+st.fragment(run_every = POLLING_INTERVAL)
 def alert_check():
-
+    to_remove = []
     for alert in st.session_state['alerts']:
-
-        if alert.type == 'conditional_trade':
-            pass
-
-        #if alert.type == ''
+        if alert.check():
+            alert.execute()
+            to_remove.append(alert)
+    for alert in to_remove:
+        st.session_state['alerts'].discard(alert)
 
 
 

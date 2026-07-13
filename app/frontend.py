@@ -8,6 +8,7 @@ from get_live_data import Graph_range
 from graph import generate_graph_in_fragment
 from callbacks import is_0930_to_1800
 from trades_data import load_trades_data
+from alerts import load_alerts
 
 
 
