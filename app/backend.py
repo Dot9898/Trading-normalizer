@@ -62,7 +62,17 @@ def normalize_point_wrt_current_price(value):
     return(new_normalized_value)
 
 
-
+def no_tag_text(text, alignment, font_size, font_weight):
+    st.html(f"""
+    <h5 style="
+        margin:0;
+        font-size:{font_size};
+        font-weight:{font_weight};
+        text-align:{alignment};
+    ">
+        {text}
+    </h5>
+    """)
 
 
 

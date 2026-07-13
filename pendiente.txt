@@ -1,4 +1,6 @@
 
+
+diseñar muestra de trades y alertas
 alertas
 funciones condicionales 2 step (guardar entre sesiones)
 volume min y step en order execution

@@ -6,6 +6,7 @@ import MetaTrader5 as mt5
 import constants
 import risk_calculation
 from backend import normalize_point_wrt_current_price
+from alerts import Alert
 
 
 def reload_graph():
@@ -132,8 +133,47 @@ def full_update():
     reload_graph()
 
 
-#def set_alert(symbol, price, more_or_less, reason, ticket = None):
-#    st.session_state['alerts'].append()
+def set_alert():
+    price = st.session_state['alert_price']
+    bid = st.session_state['bars_data'].current_bid
+    more_or_less = 'more' if bid <= price else 'less'
+    alert = Alert('manual', price = price, more_or_less = more_or_less)
+    st.session_state['alerts'].add(alert)
+
+def set_conditional_trade(direction):
+    symbol = st.session_state['selected_symbol']
+    price = st.session_state['alert_price']
+    lots = 0.1   ################################################################################
+    execution_price = st.session_state['entry']
+    SL = st.session_state['SL']
+    TP = st.session_state['TP']
+    bid = st.session_state['bars_data'].current_bid
+    more_or_less = 'more' if bid <= price else 'less'
+
+    trade_data = {'symbol': symbol, 
+                  'lots': lots, 
+                  'direction': direction, 
+                  'execution_price': execution_price, 
+                  'SL': SL, 
+                  'TP': TP}
+
+    trade_alert = Alert('conditional_trade', symbol = symbol, price = price, more_or_less = more_or_less, conditional_trade_data = trade_data)
+    st.session_state['alerts'].add(trade_alert)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

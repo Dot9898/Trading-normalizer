@@ -23,17 +23,8 @@ class Alert:
         
     def check(self):
 
-        if self.reason == 'manual':
+        if self.reason in ['manual', 'conditional_trade']:
             current_price = mt5.symbol_info_tick(self.symbol).bid
-            if self.more_or_less == 'more':
-                return(current_price >= self.price)
-            elif self.more_or_less == 'less':
-                return(current_price <= self.price)
-        
-        if self.reason == 'conditional_trade':
-            order_type = self.conditional_trade_data['order_type']
-            bid_or_ask = 'ask' if order_type in [mt5.ORDER_TYPE_BUY_LIMIT, mt5.ORDER_TYPE_BUY_STOP] else 'bid'
-            current_price = getattr(mt5.symbol_info_tick(self.symbol), bid_or_ask)
             if self.more_or_less == 'more':
                 return(current_price >= self.price)
             elif self.more_or_less == 'less':

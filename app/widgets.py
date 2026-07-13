@@ -6,7 +6,7 @@ import constants
 import format_functions
 import callbacks
 from numpy import log10
-
+from backend import no_tag_text
 
 def timezone_dropdown():
     st.selectbox('Time zone', 
@@ -408,6 +408,77 @@ def RR_and_maxloss_widgets():
                             on_change = callbacks.update_risk)
 
 
+def alert_price_input():
+    bid = st.session_state['bars_data'].current_bid
+    step = get_SLTP_step()
+    digits = st.session_state['bars_data'].shown_digits
+    format = f'%0.{digits}f'
+
+    st.number_input('Price', 
+                    key = 'alert_price', 
+                    value = bid, 
+                    step = step, 
+                    format = format, 
+                    label_visibility = 'collapsed', 
+                    on_change = callbacks.reload_graph)
+
+def set_alert_button():
+    st.button('Set alert', 
+                key = 'alert_button', 
+                on_click = callbacks.set_alert(), 
+                width = 'stretch')
+
+def set_conditional_trade_button(direction):
+    if direction == 'buy':
+        st.button('Set BL/BS', 
+                    key = 'conditional_buy_button', 
+                    on_click = callbacks.set_conditional_trade, 
+                    args = ['buy'], 
+                    width = 'stretch')
+    if direction == 'sell':
+        st.button('Set SL/SS', 
+                    key = 'conditional_sell_button', 
+                    on_click = callbacks.set_conditional_trade, 
+                    args = ['sell'], 
+                    width = 'stretch')
+
+def conditionals_and_account_data_checkboxes():
+    conditionals_column, account_data_column = st.columns(2)
+    with conditionals_column:
+        st.checkbox('Set alert', 
+                    key = 'conditionals_checkbox')
+    with account_data_column:
+        st.checkbox('Show account data', 
+                    key = 'account_data_checkbox')
+
+def conditional_operations_widgets():
+    if st.session_state['conditionals_checkbox']:
+
+        text_column, price_column = st.columns(2)
+        with price_column:
+            alert_price_input()
+
+        price = st.session_state['alert_price']
+        bid = st.session_state['bars_data'].current_bid
+        sign = '≥' if bid <= price else '≤'
+
+        with text_column:
+            no_tag_text(f'If price {sign}', font_size = '1.5rem', font_weight = '600', alignment = 'center')
+
+        buy_column, alert_column, sell_column = st.columns(3)
+        with buy_column:
+            st.write()
+            set_conditional_trade_button('buy')
+        with alert_column:
+            set_alert_button()
+        with sell_column:
+            set_conditional_trade_button('sell')
+
+
+
+
+
+
 @st.fragment(run_every = constants.POLLING_INTERVAL)
 def print_prices_test():
     bars = st.session_state['bars_data']
@@ -417,10 +488,6 @@ def print_prices_test():
         st.header(0 if bid is None else bid, text_alignment = 'center')
     with acol:
         st.header(0 if ask is None else ask, text_alignment = 'center')
-
-
-
-
 
 
 

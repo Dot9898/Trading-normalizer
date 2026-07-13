@@ -179,6 +179,10 @@ with risk_spot:
             widgets.lotsize_display()
         with max_lotsize_column:
             widgets.max_lotsize_display()
+
+with info_column:
+    widgets.conditionals_and_account_data_checkboxes()
+    widgets.conditional_operations_widgets()
     
 
 with info_column:
@@ -186,6 +190,9 @@ with info_column:
     print_remaining_time_test()
     
 
+with trade_column:
+    pass
+    #PRINT AND TEST ALERTS
 
 
 import MetaTrader5 as mt5
