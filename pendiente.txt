@@ -1,14 +1,13 @@
 
-test order execution again
+alertas
+funciones condicionales 2 step (guardar entre sesiones)
+volume min y step en order execution
+infor ordenes y posiciones existentes (show, delete, and edit buttons)
 when to apply updates?
 
-info ordenes y posiciones existentes
-funciones condicionales 2 step (guardar entre sesiones?)
-alertas
-poner tp y sl, cambiar precio, eliminar
 cuando trade es cerrada, guardarla y mostrar info (% etc) (full trade local storage with checks for shown or not)
 función dibujar un precio en el gráfico, por número o +- de base, dibujar la línea
-show sltp en el gráfico checkbox?
+show sltp en el gráfico checkbox
 confirmation of b/s in dialog box. checkbox for confirmation on/off
 
 refactor graph (load all from backmost timestamp to now, reload on.. change of scale? change of timeframe? is it worth to re do it all?)
@@ -28,6 +27,5 @@ correr múltiples a la vez? para comparar gráficos normalizados
 weekend bugs
 
 cambiar x shift según timeframe (flechitas)
-now and zoom first bar -> 1:00 or market_open
 add option to show absolute values or not
 

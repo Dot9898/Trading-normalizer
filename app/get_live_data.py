@@ -5,7 +5,8 @@ from datetime import datetime
 from numpy import log10
 from time import time
 import MetaTrader5 as mt5
-from constants import SECONDS, TIMEZONES, CHART_AXIS_TIME_FORMAT, HOUR, DAY, WEEK, OFFSET_SECONDS, EMPTY_SPACE, EMPTY_SPACE_2, MAX_BARS_IN_GRAPH, NORMALIZATION_PRECISION, SYMBOL_DATA, DEFAULTS, REMAINING_CANDLE_TIME_FORMAT
+from backend import include_symbol
+from constants import SECONDS, TIMEZONES, CHART_AXIS_TIME_FORMAT, HOUR, DAY, WEEK, OFFSET_SECONDS, EMPTY_SPACE, EMPTY_SPACE_2, MAX_BARS_IN_GRAPH, NORMALIZATION_PRECISION, SYMBOL_DATA, DEFAULTS, REMAINING_CANDLE_TIME_FORMAT, DATA_PATH
 
 
 class Graph_range:
@@ -62,8 +63,7 @@ class Bars:
         self.data_scale = data_scale
         self.normalization_base_name = normalization_base_name
 
-        self.initialize_MetaTrader()
-        self.include_symbol()
+        include_symbol(self.symbol)
 
         #Fixed data
         self.name = mt5.symbol_info(self.symbol).description
@@ -95,12 +95,6 @@ class Bars:
         self.too_many_bars = False
 
         self.full_update()
-
-    def initialize_MetaTrader(self):
-        mt5.initialize('D:/Dot/FX/Pepperstone MT5/terminal64.exe')
-
-    def include_symbol(self):
-        mt5.symbol_select(self.symbol, True)
 
     def update_server_times_of_interest(self):
         server_time_of = {}
@@ -349,9 +343,18 @@ def get_remaining_candle_time(timeframe):
 def get_actual_timestamp(server_time):
     return(Bars.get_actual_timestamp(server_time))
 
+def get_last_update_server_time():
+    last_update_server_time_path = DATA_PATH / 'last_update_server_time.txt'
+    if last_update_server_time_path.exists():
+        last_update_server_time = int(last_update_server_time_path.read_text())
+    else:
+        last_update_server_time = get_current_server_time()
+    return(last_update_server_time)
 
-
-
+def register_update_time():
+    last_update_server_time_path = DATA_PATH / 'last_update_server_time.txt'
+    update_time = get_current_server_time()
+    last_update_server_time_path.write_text(str(update_time))
 
 
 

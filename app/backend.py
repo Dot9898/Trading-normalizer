@@ -2,9 +2,15 @@
 
 from numpy import log10
 import streamlit as st
-from constants import SYMBOL_DATA, DEFAULTS
-from get_live_data import Bars
+import MetaTrader5 as mt5
+from constants import SYMBOL_DATA, DEFAULTS, DATA_PATH
 
+
+def initialize_MetaTrader():
+    mt5.initialize('D:/Dot/FX/Pepperstone MT5/terminal64.exe')
+
+def include_symbol(symbol):
+    mt5.symbol_select(symbol, True)
 
 
 def scale_point(value, data_scale, normalization_base = None, symbol = None, true_normalization = False):
@@ -39,7 +45,7 @@ def unscale_point(value, original_scale, original_normalization_base, original_n
         return(10 ** value)
 
 def normalize_point_wrt_current_price(value):
-    bars: Bars = st.session_state['bars_data']
+    bars = st.session_state['bars_data']
 
     original_scale = bars.data_scale
     base = bars.normalization_base
@@ -54,14 +60,6 @@ def normalize_point_wrt_current_price(value):
     new_normalized_value = ((original_absolute_value / current_absolute_price) - 1) * 10000 #In basis points from current price
     
     return(new_normalized_value)
-
-
-
-
-
-
-
-
 
 
 

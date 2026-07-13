@@ -55,8 +55,8 @@ def get_update_categories(from_server_time):
     The possible edit categories are the following, each implies a different edit to the data:
     
     Modified: a pending order known by the client had its parameters modified by the server\n
-  +  Opened: a pending order known by the client was opened by the server\n
-  +  Opened and closed: a pending order known by the client was opened by the server, and was closed afterwards by the server\n
+    Opened: a pending order known by the client was opened by the server\n
+    Opened and closed: a pending order known by the client was opened by the server, and was closed afterwards by the server\n
     Deleted: a pending order known by the client was deleted by the server
     
     Edited: an open position known by the client had its parameters modified by the server\n
@@ -66,8 +66,8 @@ def get_update_categories(from_server_time):
     Market opened and closed: a new position was opened by the server via a market order, and was closed afterwards by the server
     
     Set: a new pending order was set by the server and is still pending\n
-  +  Set and opened: a new pending order was set by the server, and was opened afterwards by the server\n
-  +  Set opened and closed: a new pending order was set by the server, was opened afterwards by the server, and was finally closed by the server.
+    Set and opened: a new pending order was set by the server, and was opened afterwards by the server\n
+    Set opened and closed: a new pending order was set by the server, was opened afterwards by the server, and was finally closed by the server.
     """
     
     trades_data = st.session_state['trades_data']
@@ -479,8 +479,6 @@ def update_ticket_data(ticket, data_source, category):
 
 def update_all_data(from_server_time):
     categories = get_update_categories(from_server_time)
-    #print('categories dict')
-    #print(categories)
     for ticket, category in categories.items():
         update_ticket_data(ticket, 'server', category)
     #actualizar la timestamp de last update

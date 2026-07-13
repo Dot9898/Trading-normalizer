@@ -1,6 +1,7 @@
 
 
 import streamlit as st
+from backend import initialize_MetaTrader
 from constants import LABEL_SPACING
 import widgets
 from get_live_data import Graph_range
@@ -32,8 +33,12 @@ graph_colors = 'black_and_white'
 
 st.set_page_config(layout = 'wide')
 
+if 'mt5_initialized' not in st.session_state:
+    st.session_state['mt5_initialized'] = initialize_MetaTrader()
 if 'trades_data' not in st.session_state:
     st.session_state['trades_data'] = load_trades_data()
+if 'alerts' not in st.session_state:
+    st.session_state['alerts'] = load_alerts()
 if 'bars_data' not in st.session_state:
     st.session_state['bars_data'] = None
 if 'reload_Bars' not in st.session_state:
@@ -188,15 +193,19 @@ from get_live_data import get_current_server_time
 from trades_data import update_all_data
 def lmocallback():
     #st.session_state['order_return'] = market_order('BTCUSD', 0.01, 'buy', TP = 79000)
-    #st.session_state['order_return'] = change_SLTP_open(301305456, 'US500', TP = 8000)
-    st.session_state['order_return'] = limit_or_stop_order('US500', 0.1, 'buy', 7700, TP = 7900)
-    #st.session_state['order_return'] = change_price_and_SLTP_pending(301759772, 'US500', 7752, SL = 7000)
-    #st.session_state['order_return'] = delete_pending_order(301768498)
-    #st.session_state['order_return'] = close_position(301786074, 'BTCUSD', 0.01, 'buy')
+    #st.session_state['order_return'] = change_SLTP_open(304969852, TP = 80000)
+    #st.session_state['order_return'] = limit_or_stop_order('BTCUSD', 0.01, 'buy', 5000, TP = 200000)
+    #st.session_state['order_return'] = change_price_and_SLTP_pending(304970240, execution_price = 4000, TP = 30000)
+    #st.session_state['order_return'] = delete_pending_order(304969813)
+    #st.session_state['order_return'] = close_position(304969852)
+    pass
 
 
 st.button('LIMIT ORDER TEST', 
           on_click = lmocallback)
+
+if 'order_return' in st.session_state:
+    st.write(st.session_state['order_return'])
 
 current_time = get_current_server_time()
 ord = mt5.orders_get()
@@ -206,7 +215,6 @@ hdls = mt5.history_deals_get(current_time - 300, current_time)
 st.write('orders')
 for i in ord:
     st.write(i)
-#print(type(mt5.orders_get(ticket = 304078610)))
 st.write('positions')
 for i in pos:
     st.write(i)

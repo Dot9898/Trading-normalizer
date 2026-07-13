@@ -132,7 +132,8 @@ def full_update():
     reload_graph()
 
 
-
+#def set_alert(symbol, price, more_or_less, reason, ticket = None):
+#    st.session_state['alerts'].append()
 
 
 

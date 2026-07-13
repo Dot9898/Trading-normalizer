@@ -16,6 +16,7 @@ def get_deviation(symbol):
     return(deviation_in_points)
 
 def market_order(symbol, lots, direction, SL = None, TP = None):
+    
     if direction == 'buy':
         order_type = mt5.ORDER_TYPE_BUY
     elif direction == 'sell':
@@ -42,6 +43,7 @@ def market_order(symbol, lots, direction, SL = None, TP = None):
     return(result)
 
 def limit_or_stop_order(symbol, lots, direction, execution_price, SL = None, TP = None):
+    
     execution_price = float(execution_price)
     current_price = mt5.symbol_info_tick(symbol).ask
     
@@ -79,10 +81,13 @@ def limit_or_stop_order(symbol, lots, direction, execution_price, SL = None, TP 
 
     return(result)
 
-def change_SLTP_open(ticket, symbol, SL = None, TP = None):
+def change_SLTP_open(ticket, SL = None, TP = None):
+
+    position = mt5.positions_get(ticket = ticket)[0]
+    
     request = {'action': mt5.TRADE_ACTION_SLTP, 
                'position': ticket, 
-               'symbol': symbol}
+               'symbol': position.symbol}
     
     if SL is not None:
         request['sl'] = float(SL)
@@ -97,14 +102,18 @@ def change_SLTP_open(ticket, symbol, SL = None, TP = None):
 
     return(result)
 
-def change_price_and_SLTP_pending(ticket, symbol, execution_price = None, SL = None, TP = None):
+def change_price_and_SLTP_pending(ticket, execution_price = None, SL = None, TP = None):
+
+    order = mt5.orders_get(ticket = ticket)[0]
     
     request = {'action': mt5.TRADE_ACTION_MODIFY, 
                'order': ticket, 
-               'symbol': symbol}
+               'symbol': order.symbol}
     
-    if execution_price is not None:
-        request['price'] = float(execution_price)
+    if execution_price is None:
+        execution_price = order.price_open
+    request['price'] = float(execution_price)
+
     if SL is not None:
         request['sl'] = float(SL)
     if TP is not None:
@@ -130,23 +139,26 @@ def delete_pending_order(ticket):
     
     return(result)
 
-def close_position(ticket, symbol, lots, original_direction): ####
-    if original_direction == 'buy':
-        order_type = mt5.ORDER_TYPE_SELL
-    elif original_direction == 'sell':
-        order_type = mt5.ORDER_TYPE_BUY
+def close_position(ticket):
+
+    position = mt5.positions_get(ticket = ticket)[0]
+
+    if position.type == mt5.ORDER_TYPE_BUY:
+        close_order_type = mt5.ORDER_TYPE_SELL
+    elif position.type == mt5.ORDER_TYPE_SELL:
+        close_order_type = mt5.ORDER_TYPE_BUY
 
     request = {'action': mt5.TRADE_ACTION_DEAL, 
                'position': ticket, 
-               'symbol': symbol, 
-               'volume': lots, 
-               'type': order_type, 
+               'symbol': position.symbol, 
+               'volume': position.volume, 
+               'type': close_order_type, 
                'type_filling': mt5.ORDER_FILLING_IOC}
     
     result = mt5.order_send(request)
 
     if result.retcode == mt5.TRADE_RETCODE_DONE:
-        data = get_trade_data_to_edit(ticket, 'local', 'closed') #, ORDERTYPE?)
+        data = get_trade_data_to_edit(ticket, 'local', 'closed')
         edit_trade_data(ticket, data)
 
     return(result)
