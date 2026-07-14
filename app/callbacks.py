@@ -12,6 +12,9 @@ from alerts import Alert
 def reload_graph():
     st.session_state['reload_Bars'] = True
 
+def reload_table():
+    st.session_state['reload_table'] = True
+
 def is_0930_to_1800():
     ny_time = datetime.now(tz = constants.TIMEZONES['New York'])
     if (10 <= ny_time.hour <= 18) or ny_time.hour == 9 and ny_time.minute > 30:

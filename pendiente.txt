@@ -31,3 +31,27 @@ weekend bugs
 cambiar x shift según timeframe (flechitas)
 add option to show absolute values or not
 
+
+all
+status
+symbol
+direction?
+RR at open or set (equity)
+show
+
+open
+open time
+points bp (current)
+PL % (equity, current)
+
+closed
+close time
+close reason
+points bp
+PL % (equity or estimate)
+
+set
+
+status, time, direction + symbol + RR, close reason, points / TPSL+-, PL%, action, show
+
+edit df as needed considering shown or not and show all

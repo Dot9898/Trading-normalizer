@@ -6,9 +6,10 @@ from constants import LABEL_SPACING
 import widgets
 from get_live_data import Graph_range
 from graph import generate_graph_in_fragment
-from callbacks import is_0930_to_1800
+from callbacks import is_0930_to_1800, reload_table
 from trades_data import load_trades_data
 from alerts import load_alerts
+from data_table import set_data_table
 
 
 
@@ -44,6 +45,8 @@ if 'bars_data' not in st.session_state:
     st.session_state['bars_data'] = None
 if 'reload_Bars' not in st.session_state:
     st.session_state['reload_Bars'] = True
+if 'reload_table' not in st.session_state:
+    st.session_state['reload_table'] = True
 if 'selected_scale' not in st.session_state:
     st.session_state['selected_scale'] = 'normalized'
 if 'selected_normalization_base_name' not in st.session_state:
@@ -191,14 +194,14 @@ with info_column:
     
 
 with trade_column:
-    pass
-    #PRINT AND TEST ALERTS
+    set_data_table()
+    st.write(st.session_state['data_table'])
 
 
 import MetaTrader5 as mt5
 from order_execution import change_SLTP_open, market_order, close_position, delete_pending_order, change_price_and_SLTP_pending, limit_or_stop_order
 from get_live_data import get_current_server_time
-from trades_data import update_all_data
+from trades_data import update_all_trades_data
 def lmocallback():
     #st.session_state['order_return'] = market_order('BTCUSD', 0.01, 'buy', TP = 79000)
     #st.session_state['order_return'] = change_SLTP_open(304969852, TP = 80000)
@@ -208,6 +211,8 @@ def lmocallback():
     #st.session_state['order_return'] = close_position(304969852)
     pass
 
+st.button('reload table', 
+          on_click = reload_table)
 
 st.button('LIMIT ORDER TEST', 
           on_click = lmocallback)
@@ -234,9 +239,8 @@ for i in hdls:
     st.write(i)
 
 st.button('UPDATE DATA TEST', 
-          on_click = update_all_data, 
+          on_click = update_all_trades_data, 
           args = [get_current_server_time() - 600])
-
 
 
 

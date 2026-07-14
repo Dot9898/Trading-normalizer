@@ -2,8 +2,7 @@
 
 import streamlit as st
 import MetaTrader5 as mt5
-from get_live_data import get_last_update_server_time, register_update_time
-from trades_data import update_all_data
+from trades_data import update_all_trades_data
 from constants import OUT_DEAL_REASONS, POLLING_INTERVAL
 from order_execution import limit_or_stop_order
 from backend import include_symbol
@@ -18,9 +17,25 @@ class Alert:
         self.ticket = ticket
         self.more_or_less = more_or_less
         self.conditional_trade_data = conditional_trade_data
-        
+        self.order_type = None
+
+        if self.reason == 'conditional_trade':
+            self.set_order_type()
+
         include_symbol(symbol)
         
+    def set_order_type(self):
+        if self.conditional_trade_data['direction'] == 'buy':
+            if self.conditional_trade_data['execution_price'] > self.price:
+                self.order_type = 'stop'
+            else:
+                self.order_type = 'limit'
+        if self.conditional_trade_data['direction'] == 'sell':
+            if self.conditional_trade_data['execution_price'] > self.price:
+                self.order_type = 'limit'
+            else:
+                self.order_type = 'stop'
+
     def check(self):
 
         if self.reason in ['manual', 'conditional_trade']:
@@ -70,8 +85,7 @@ class Alert:
                                 trade_data['SL'], 
                                 trade_data['TP'])
         
-        update_all_data(get_last_update_server_time())
-        register_update_time()
+        update_all_trades_data()
 
 
 def load_alerts():

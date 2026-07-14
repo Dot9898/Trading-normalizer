@@ -5,7 +5,7 @@ import streamlit as st
 import MetaTrader5 as mt5
 from constants import DATA_PATH, TRADE_DATA_COLUMNS_TO_TYPES, SYMBOL_DATA, OUT_DEAL_REASONS
 from backend import scale_point
-from get_live_data import get_current_server_time, get_actual_timestamp
+from get_live_data import get_current_server_time, get_actual_timestamp, get_last_update_server_time, register_update_time
 
 
 def load_trades_data():
@@ -477,11 +477,12 @@ def update_ticket_data(ticket, data_source, category):
         data = get_trade_data_to_edit(ticket, data_source, category)
         edit_trade_data(ticket, data)
 
-def update_all_data(from_server_time):
+def update_all_trades_data():
+    from_server_time = get_last_update_server_time()
     categories = get_update_categories(from_server_time)
     for ticket, category in categories.items():
         update_ticket_data(ticket, 'server', category)
-    #actualizar la timestamp de last update
+    register_update_time()
 
 
 
