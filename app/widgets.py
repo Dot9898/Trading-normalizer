@@ -7,6 +7,8 @@ import format_functions
 import callbacks
 from numpy import log10
 from backend import no_tag_text
+from alerts import alert_check
+from data_table import update_data_table
 
 def timezone_dropdown():
     st.selectbox('Time zone', 
@@ -425,7 +427,7 @@ def alert_price_input():
 def set_alert_button():
     st.button('Set alert', 
                 key = 'alert_button', 
-                on_click = callbacks.set_alert(), 
+                on_click = callbacks.set_alert, 
                 width = 'stretch')
 
 def set_conditional_trade_button(direction):
@@ -473,6 +475,22 @@ def conditional_operations_widgets():
             set_alert_button()
         with sell_column:
             set_conditional_trade_button('sell')
+
+
+
+
+
+
+
+@st.fragment(run_every = constants.POLLING_INTERVAL)
+def basic_data_table():
+    if st.session_state['first_run']:
+        return
+    alert_check()
+    update_data_table(full_update = False)
+
+    display_table = st.session_state['data_table'].drop(columns = ['alert_object']) ###silences warning, check again when using st.data_editor
+    st.write(display_table)
 
 
 

@@ -6,7 +6,6 @@ import numpy as np
 import MetaTrader5 as mt5
 from constants import TIMEZONES
 from backend import scale_point
-from trades_data import update_all_trades_data
 
 import warnings
 warnings.filterwarnings('ignore', message = 'The behavior of DataFrame concatenation with empty or all-NA entries is deprecated')
@@ -33,10 +32,15 @@ def get_RR_column(price, SL, TP):   #Columns
     RR_string = ('1.0 : ' + RR.astype('string')).where(SL.notna() & TP.notna(), '')
     return(RR_string)
 
-def get_current_prices_column():
+def get_current_prices():
     trades_data = st.session_state['trades_data']
-    current_prices = {symbol: mt5.symbol_info_tick(symbol).bid
-                      for symbol in trades_data['symbol'].unique()}
+    alerts = st.session_state['alerts']
+    all_symbols = set(trades_data['symbol']) | set(alert.symbol for alert in alerts)
+    current_prices = {symbol: mt5.symbol_info_tick(symbol).bid for symbol in all_symbols}
+    return(current_prices)
+
+def get_current_prices_column(current_prices):
+    trades_data = st.session_state['trades_data']
 
     current_prices_bp = pd.Series(pd.NA, index = trades_data.index)
     for ticket in trades_data.index:
@@ -47,7 +51,7 @@ def get_current_prices_column():
 
     return(current_prices_bp)
 
-def generate_trades_data_table():
+def generate_trades_data_table(current_prices):
 
     trades_data = st.session_state['trades_data']
 
@@ -68,7 +72,7 @@ def generate_trades_data_table():
                                 trades_data['open_price'], 
                                 trades_data['open_price']])
     table['RR'] = get_RR_column(table['price'], trades_data['SL_abs'], trades_data['TP_abs'])
-    current_prices_column = get_current_prices_column()
+    current_prices_column = get_current_prices_column(current_prices)
     table['current_bp'] = np.select([trades_data['status'] == 'pending', 
                                      trades_data['status'] == 'open', 
                                      (trades_data['status'] == 'closed') & (trades_data['close_reason'] == 'SL'), 
@@ -116,40 +120,63 @@ def generate_alerts_data_table():
     
     alerts = st.session_state['alerts']
 
-    table = pd.DataFrame(columns = ['Status', 'Time', 'Operation', 'Close reason', 'Progress', 'Show'])
+    table = pd.DataFrame(columns = ['Status', 'Time', 'Operation', 'Close reason', 'Progress', 'Show', 'alert_object'])
 
     index = 0
     for alert in alerts:
 
         if alert.reason == 'manual':
             operation = f'Alert {alert.symbol}'
-            table.loc[index] = ['Alert', pd.NA, operation, pd.NA, alert.price, True]
+            table.loc[index] = ['Alert', pd.NA, operation, pd.NA, pd.NA, True, alert]
             index = index + 1
 
         if alert.reason == 'conditional_trade':
             direction = alert.conditional_trade_data['direction']
             order_type = alert.conditional_trade_data['order_type']
             operation = f'Set {direction} {order_type} {alert.symbol}'
-            price = scale_point(alert.price, st.session_state['selected_scale'], st.session_state['normalization_base_name'], alert.symbol)
-            table.loc[index] = ['Conditional trade', pd.NA, operation, pd.NA, price, True]
+            table.loc[index] = ['Conditional trade', pd.NA, operation, pd.NA, pd.NA, True]
             index = index + 1
     
     table['Status'] = pd.Categorical(table['Status'], categories = ['Alert', 'Open', 'Pending', 'Conditional trade', 'Closed'], ordered = True)
 
     return(table)
 
-def set_data_table():
+def update_alerts_data_table(table):
+    bars = st.session_state['bars_data']
+    current_price = bars.current_bid
 
-    if st.session_state['reload_table']:
-        update_all_trades_data()
-        st.session_state['trades_data_table'] = generate_trades_data_table()
+    for entry in table.itertuples():
+
+        if entry.Status == 'Alert':
+            alert = entry.alert_object
+            if bars.data_scale == 'normalized' and bars.symbol == alert.symbol:
+                goal_price_bp = scale_point(alert.absolute_price, 'normalized', bars.normalization_base, alert.symbol, rounded = True)
+                table.at[entry.Index, 'Progress'] = f'{current_price}/{goal_price_bp}'
+            else:
+                table.at[entry.Index, 'Progress'] = pd.NA
+        
+        if entry.Status == 'Conditional trade':
+            conditional_trade = entry.alert_object
+            if bars.data_scale == 'normalized' and bars.symbol == conditional_trade.symbol:
+                trigger_price_bp = scale_point(conditional_trade.absolute_price, 'normalized', bars.normalization_base, conditional_trade.symbol, rounded = True)
+                table.at[entry.Index, 'Progress'] = f'{current_price}/{trigger_price_bp}'
+            else:
+                table.at[entry.Index, 'Progress'] = pd.NA
+
+
+
+
+def update_data_table(full_update = False):
+
+    if full_update:
+        st.session_state['trades_data_table'] = generate_trades_data_table(get_current_prices())
         st.session_state['alerts_data_table'] = generate_alerts_data_table()
-        st.session_state['reload_table'] = False
+
+    #update_trades_data_table(trades_table)
+    update_alerts_data_table(st.session_state['alerts_data_table'])
 
     data_table = pd.concat([st.session_state['trades_data_table'], st.session_state['alerts_data_table']])
     data_table.sort_values(by = ['Status'], inplace = True)
-    #data_table = soft_update_data_table(data_table)
-
     st.session_state['data_table'] = data_table
 
 

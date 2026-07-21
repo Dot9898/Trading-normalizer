@@ -1,8 +1,16 @@
 
 
-diseñar muestra de trades y alertas
-alertas
-funciones condicionales 2 step (guardar entre sesiones)
+
+test conditionals
+test each data entry of the table
+add alert execution dialog box
+add 'show...' buttons
+add 'show' column functionality
+add selected trade
+add selected trade actions
+
+add table and alerts callbacks?
+
 volume min y step en order execution
 infor ordenes y posiciones existentes (show, delete, and edit buttons)
 when to apply updates?

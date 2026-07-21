@@ -8,8 +8,8 @@ from get_live_data import Graph_range
 from graph import generate_graph_in_fragment
 from callbacks import is_0930_to_1800, reload_table
 from trades_data import load_trades_data
-from alerts import load_alerts
-from data_table import set_data_table
+from alerts import load_alerts, alert_check
+from data_table import update_data_table
 
 
 
@@ -38,9 +38,13 @@ st.set_page_config(layout = 'wide')
 if 'mt5_initialized' not in st.session_state:
     st.session_state['mt5_initialized'] = initialize_MetaTrader()
 if 'trades_data' not in st.session_state:
-    st.session_state['trades_data'] = load_trades_data()
+    load_trades_data()
 if 'alerts' not in st.session_state:
-    st.session_state['alerts'] = load_alerts()
+    load_alerts()
+if 'data_table' not in st.session_state:
+    st.session_state['data_table'] = None
+if 'first_run' not in st.session_state:
+    st.session_state['first_run'] = True
 if 'bars_data' not in st.session_state:
     st.session_state['bars_data'] = None
 if 'reload_Bars' not in st.session_state:
@@ -194,8 +198,22 @@ with info_column:
     
 
 with trade_column:
-    set_data_table()
-    st.write(st.session_state['data_table'])
+    widgets.basic_data_table()
+    st.write(st.session_state['alerts'])
+
+
+
+
+if st.session_state['first_run']:
+    update_data_table(full_update = True)
+    st.session_state['first_run'] = False
+    st.rerun()
+
+
+
+
+
+
 
 
 import MetaTrader5 as mt5

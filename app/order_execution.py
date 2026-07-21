@@ -164,7 +164,6 @@ def close_position(ticket):
     return(result)
 
 
-#lotsize symbol.volume_min
 
 """
 

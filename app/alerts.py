@@ -6,14 +6,15 @@ from trades_data import update_all_trades_data
 from constants import OUT_DEAL_REASONS, POLLING_INTERVAL
 from order_execution import limit_or_stop_order
 from backend import include_symbol
+from data_table import update_data_table
 
 
 class Alert:
 
-    def __init__(self, reason, symbol = None, price = None, ticket = None, more_or_less = None, conditional_trade_data = None):
+    def __init__(self, reason, symbol = None, absolute_price = None, ticket = None, more_or_less = None, conditional_trade_data = None):
         self.reason = reason
         self.symbol = symbol
-        self.price = price
+        self.absolute_price = absolute_price
         self.ticket = ticket
         self.more_or_less = more_or_less
         self.conditional_trade_data = conditional_trade_data
@@ -23,27 +24,15 @@ class Alert:
             self.set_order_type()
 
         include_symbol(symbol)
-        
-    def set_order_type(self):
-        if self.conditional_trade_data['direction'] == 'buy':
-            if self.conditional_trade_data['execution_price'] > self.price:
-                self.order_type = 'stop'
-            else:
-                self.order_type = 'limit'
-        if self.conditional_trade_data['direction'] == 'sell':
-            if self.conditional_trade_data['execution_price'] > self.price:
-                self.order_type = 'limit'
-            else:
-                self.order_type = 'stop'
 
     def check(self):
 
         if self.reason in ['manual', 'conditional_trade']:
             current_price = mt5.symbol_info_tick(self.symbol).bid
             if self.more_or_less == 'more':
-                return(current_price >= self.price)
+                return(current_price >= self.absolute_price)
             elif self.more_or_less == 'less':
-                return(current_price <= self.price)
+                return(current_price <= self.absolute_price)
         
         if self.reason == 'open':
             return(len(mt5.positions_get(ticket = self.ticket)) == 1)
@@ -86,6 +75,7 @@ class Alert:
                                 trade_data['TP'])
         
         update_all_trades_data()
+        update_data_table(full_update = True)
 
 
 def load_alerts():
@@ -94,9 +84,8 @@ def load_alerts():
     for ticket, trade_data in trades_data.iterrows():
         if trade_data['status'] in ['pending', 'open']:
             alerts.add(Alert(trade_data['status'], ticket = ticket))
-    return(alerts)
+    st.session_state['alerts'] = alerts
 
-st.fragment(run_every = POLLING_INTERVAL)
 def alert_check():
     to_remove = []
     for alert in st.session_state['alerts']:
@@ -105,6 +94,7 @@ def alert_check():
             to_remove.append(alert)
     for alert in to_remove:
         st.session_state['alerts'].discard(alert)
+        #ADD TO JUST EXECUTED, TO SEE THE ALERT
 
 
 

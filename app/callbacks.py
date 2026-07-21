@@ -5,15 +5,17 @@ import streamlit as st
 import MetaTrader5 as mt5
 import constants
 import risk_calculation
-from backend import normalize_point_wrt_current_price
-from alerts import Alert
+from backend import normalize_point_wrt_current_price, unscale_point_wrt_current_values
+from alerts import Alert, update_all_trades_data
+from data_table import update_data_table
 
 
 def reload_graph():
     st.session_state['reload_Bars'] = True
 
 def reload_table():
-    st.session_state['reload_table'] = True
+    update_all_trades_data()
+    update_data_table(full_update = True)
 
 def is_0930_to_1800():
     ny_time = datetime.now(tz = constants.TIMEZONES['New York'])
@@ -137,34 +139,46 @@ def full_update():
 
 
 def set_alert():
+    symbol = st.session_state['selected_symbol']
     price = st.session_state['alert_price']
     bid = st.session_state['bars_data'].current_bid
     more_or_less = 'more' if bid <= price else 'less'
-    alert = Alert('manual', price = price, more_or_less = more_or_less)
+    absolute_price = unscale_point_wrt_current_values(price)
+    alert = Alert('manual', symbol = symbol, absolute_price = absolute_price, more_or_less = more_or_less)
     st.session_state['alerts'].add(alert)
+    reload_table()
 
 def set_conditional_trade(direction):
     symbol = st.session_state['selected_symbol']
-    price = st.session_state['alert_price']
-    lots = 0.1   ################################################################################
-    execution_price = st.session_state['entry']
-    SL = st.session_state['SL']
-    TP = st.session_state['TP']
+    trigger_price = st.session_state['alert_price']
     bid = st.session_state['bars_data'].current_bid
-    more_or_less = 'more' if bid <= price else 'less'
+    more_or_less = 'more' if bid <= trigger_price else 'less'
+    trigger_price_abs = unscale_point_wrt_current_values(trigger_price)
+    lots = 0.1   ################################################################################
+    
+    execution_price = st.session_state['entry']
+    execution_price_abs = unscale_point_wrt_current_values(execution_price)
+    SL = st.session_state['SL']
+    SL_abs =  unscale_point_wrt_current_values(SL)
+    TP = st.session_state['TP']
+    TP_abs = unscale_point_wrt_current_values(TP)
+
+    if direction == 'buy':
+        order_type = 'stop' if execution_price_abs > trigger_price_abs else 'limit'
+    if direction == 'sell':
+        order_type = 'stop' if execution_price_abs < trigger_price_abs else 'limit'
+
 
     trade_data = {'symbol': symbol, 
                   'lots': lots, 
                   'direction': direction, 
-                  'execution_price': execution_price, 
-                  'SL': SL, 
-                  'TP': TP}
+                  'execution_price': execution_price_abs, 
+                  'SL': SL_abs, 
+                  'TP': TP_abs, 
+                  'order_type': order_type}
 
-    trade_alert = Alert('conditional_trade', symbol = symbol, price = price, more_or_less = more_or_less, conditional_trade_data = trade_data)
+    trade_alert = Alert('conditional_trade', symbol = symbol, absolute_price = trigger_price_abs, more_or_less = more_or_less, conditional_trade_data = trade_data)
     st.session_state['alerts'].add(trade_alert)
-
-
-
 
 
 

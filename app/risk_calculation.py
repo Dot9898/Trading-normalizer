@@ -6,7 +6,7 @@ def get_entry(TP, SL, risk, reward): #Scale independent
     entry = SL + (risk / (risk + reward)) * (TP - SL)
     return(entry)
 
-def get_lotsize_from_ppb_or_pppt(current_price, equity, pppt = None, ppb = None):
+def get_lotsize_from_ppb_or_pppt(current_price, execution_price, equity, pppt = None, ppb = None):
     """
     pppt is (account) percent per point
     If the underlying moves 1 point, how much % does the account win or lose?
@@ -19,13 +19,18 @@ def get_lotsize_from_ppb_or_pppt(current_price, equity, pppt = None, ppb = None)
     the same on a $100 and a $1000000 account, and the same too on EURUSD and GOOG.
     However, ppb is not a fixed risk to use for all trades. It still depends on volatility or average daily range:
     EURUSD moves 50-100 basis points in the same time GOOG moves 200-300 basis points.
+
+    When calling this function to get the lotsize to set a pending order, 
+    the ppb when called will be diferent from the ppb at execution price, which is the correct one.
+    To adjust for that difference, we see that ppb is a linear function of 1/abs(TP-SL), 
+    which is a linear function of 1/current_price. Thus, ppb is linear wrt price, and pppt and lotsize are too.
     """
 
     if pppt is None and ppb is None:
-        lotsize == 0
+        lotsize = 0
 
     elif pppt is None:
-        pppt = (10000 / current_price) * ppb
+        pppt = (10000 / execution_price) * ppb
         lotsize = pppt * equity * 0.01
 
     elif ppb is None:
@@ -33,6 +38,9 @@ def get_lotsize_from_ppb_or_pppt(current_price, equity, pppt = None, ppb = None)
 
     else:
         lotsize = 0
+
+    ppb_adjustment_factor = current_price/execution_price
+    lotsize = ppb_adjustment_factor * lotsize
 
     return(lotsize)
 

@@ -19,7 +19,7 @@ def load_trades_data():
         trades_data = pd.read_csv(trades_data_path, dtype = TRADE_DATA_COLUMNS_TO_TYPES)
     trades_data = trades_data.set_index('ticket')
     
-    return(trades_data)
+    st.session_state['trades_data'] = trades_data
 
 def save_trades_data_to_file():
     trades_data_path = DATA_PATH / 'trades_data.csv'
@@ -488,10 +488,9 @@ def update_all_trades_data():
 
 
 #Pensar cuándo quiero updatear la data polleando del server:
-#Cuando el server abre una orden pendiente, por precio
-#Cuando el server cierra una posición abierta, por precio
+#Cuando se ejecuta una alert (set conditional, open, close, alert)
 #Al iniciar el programa
-#Cada cierto tiempo, para revisar acciones remotas del usuario al server (desktop client, mobile), revisar cada acción? o actualizar las abiertas, pendientes, history
+#Cada cierto tiempo, para revisar acciones remotas del usuario al server (desktop client, mobile), o actualizar las abiertas, pendientes, history
 
 
 
