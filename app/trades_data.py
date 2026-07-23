@@ -477,7 +477,8 @@ def update_ticket_data(ticket, data_source, category):
         data = get_trade_data_to_edit(ticket, data_source, category)
         edit_trade_data(ticket, data)
 
-def update_all_trades_data():
+def update_all_trades_data():#from_server_time = None):
+    #if from_server_time is None:
     from_server_time = get_last_update_server_time()
     categories = get_update_categories(from_server_time)
     for ticket, category in categories.items():

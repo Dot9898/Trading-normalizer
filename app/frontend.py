@@ -43,6 +43,10 @@ if 'alerts' not in st.session_state:
     load_alerts()
 if 'data_table' not in st.session_state:
     st.session_state['data_table'] = None
+if 'alerts_pending_notification' not in st.session_state:
+    st.session_state['alerts_pending_notification'] = []
+if 'dialog_open' not in st.session_state:
+    st.session_state['dialog_open'] = False
 if 'first_run' not in st.session_state:
     st.session_state['first_run'] = True
 if 'bars_data' not in st.session_state:
@@ -211,8 +215,7 @@ if st.session_state['first_run']:
 
 
 
-
-
+st.write(f'dialog open {st.session_state['dialog_open']}')
 
 
 
@@ -257,8 +260,7 @@ for i in hdls:
     st.write(i)
 
 st.button('UPDATE DATA TEST', 
-          on_click = update_all_trades_data, 
-          args = [get_current_server_time() - 600])
+          on_click = update_all_trades_data)
 
 
 

@@ -105,7 +105,7 @@ def update_lotsize(): #Always used right after update_ppb
     if ppb == 0 or current_price in [0, None]:
         lotsize = 0
     else:
-        lotsize = risk_calculation.get_lotsize_from_ppb_or_pppt(current_price, equity, ppb)
+        lotsize = risk_calculation.get_lotsize_from_ppb_or_pppt(current_price, current_price, equity = equity, ppb = ppb)
     st.session_state['lotsize'] = lotsize
 
 def update_max_lotsize():
@@ -116,7 +116,7 @@ def update_max_lotsize():
     if max_ppb == 0 or current_price in [0, None]:
         max_lotsize = 0
     else:
-        max_lotsize = risk_calculation.get_lotsize_from_ppb_or_pppt(current_price, equity, max_ppb)
+        max_lotsize = risk_calculation.get_lotsize_from_ppb_or_pppt(current_price, current_price, equity = equity, ppb = max_ppb)
     st.session_state['max_lotsize'] = max_lotsize
 
 def set_rr():
@@ -168,7 +168,6 @@ def set_conditional_trade(direction):
     if direction == 'sell':
         order_type = 'stop' if execution_price_abs < trigger_price_abs else 'limit'
 
-
     trade_data = {'symbol': symbol, 
                   'lots': lots, 
                   'direction': direction, 
@@ -179,7 +178,7 @@ def set_conditional_trade(direction):
 
     trade_alert = Alert('conditional_trade', symbol = symbol, absolute_price = trigger_price_abs, more_or_less = more_or_less, conditional_trade_data = trade_data)
     st.session_state['alerts'].add(trade_alert)
-
+    reload_table()
 
 
 

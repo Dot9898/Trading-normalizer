@@ -470,11 +470,11 @@ def conditional_operations_widgets():
         buy_column, alert_column, sell_column = st.columns(3)
         with buy_column:
             st.write()
-            set_conditional_trade_button('buy')
+            set_conditional_trade_button('sell')
         with alert_column:
             set_alert_button()
         with sell_column:
-            set_conditional_trade_button('sell')
+            set_conditional_trade_button('buy')
 
 
 

@@ -1,23 +1,25 @@
 
 
-
-test conditionals
+test order execution alerts
 test each data entry of the table
-add alert execution dialog box
+remove clickable button if SL > TP buy/sell
 add 'show...' buttons
 add 'show' column functionality
+add alerts executed in the data table, with color
 add selected trade
-add selected trade actions
+add selected trade actions: close/delete, edit. erase button for closed orders, dismiss button for alert
 
 add table and alerts callbacks?
 
 volume min y step en order execution
 infor ordenes y posiciones existentes (show, delete, and edit buttons)
-when to apply updates?
+save alerts data to survive F5?
+when to apply updates? check all callbacks, in particular risk (ppb, ppt, lotsize, maxes).
 
 cuando trade es cerrada, guardarla y mostrar info (% etc) (full trade local storage with checks for shown or not)
 función dibujar un precio en el gráfico, por número o +- de base, dibujar la línea
 show sltp en el gráfico checkbox
+add update risk callback before setting an operation
 confirmation of b/s in dialog box. checkbox for confirmation on/off
 
 refactor graph (load all from backmost timestamp to now, reload on.. change of scale? change of timeframe? is it worth to re do it all?)

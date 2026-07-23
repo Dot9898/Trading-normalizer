@@ -3,11 +3,14 @@
 import streamlit as st
 import MetaTrader5 as mt5
 from trades_data import update_all_trades_data
-from constants import OUT_DEAL_REASONS, POLLING_INTERVAL
+from constants import OUT_DEAL_REASONS, ALERT_REASON_TEXT
 from order_execution import limit_or_stop_order
 from backend import include_symbol
 from data_table import update_data_table
 
+
+def set_dialog_closed():
+    st.session_state['dialog_open'] = False
 
 class Alert:
 
@@ -19,9 +22,6 @@ class Alert:
         self.more_or_less = more_or_less
         self.conditional_trade_data = conditional_trade_data
         self.order_type = None
-
-        if self.reason == 'conditional_trade':
-            self.set_order_type()
 
         include_symbol(symbol)
 
@@ -73,9 +73,17 @@ class Alert:
                                 trade_data['execution_price'], 
                                 trade_data['SL'], 
                                 trade_data['TP'])
-        
-        update_all_trades_data()
-        update_data_table(full_update = True)
+    
+    def notify_execution(self, data):
+
+        @st.dialog(ALERT_REASON_TEXT[self.reason], width = 'medium', on_dismiss = set_dialog_closed)
+        def notification_dialog():
+            st.session_state['dialog_open'] = True
+            display_data = data.drop('alert_object') ###silences warning, check again when using st.data_editor
+            st.write(display_data)
+
+        notification_dialog()
+
 
 
 def load_alerts():
@@ -86,6 +94,13 @@ def load_alerts():
             alerts.add(Alert(trade_data['status'], ticket = ticket))
     st.session_state['alerts'] = alerts
 
+def notify_executions_in_serie():   #Used inside a fragment
+    if st.session_state['dialog_open']:
+        return
+    alert, data = st.session_state['alerts_pending_notification'][0]
+    alert.notify_execution(data)
+    del st.session_state['alerts_pending_notification'][0]
+
 def alert_check():
     to_remove = []
     for alert in st.session_state['alerts']:
@@ -93,9 +108,14 @@ def alert_check():
             alert.execute()
             to_remove.append(alert)
     for alert in to_remove:
+        st.session_state['alerts_pending_notification'].append((alert, st.session_state['data_table'].loc[alert.ticket]))
         st.session_state['alerts'].discard(alert)
+    if st.session_state['alerts_pending_notification']:
+        notify_executions_in_serie()
+    if to_remove:
+        update_all_trades_data()
+        update_data_table(full_update = True)
         #ADD TO JUST EXECUTED, TO SEE THE ALERT
-
 
 
 
