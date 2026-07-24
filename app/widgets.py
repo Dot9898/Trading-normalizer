@@ -489,7 +489,7 @@ def basic_data_table():
     alert_check()
     update_data_table(full_update = False)
 
-    display_table = st.session_state['data_table'].drop(columns = ['alert_object']) ###silences warning, check again when using st.data_editor
+    display_table = st.session_state['data_table'].drop(columns = ['source_object']) ###silences warning, check again when using st.data_editor
     st.write(display_table)
 
 

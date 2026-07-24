@@ -79,7 +79,7 @@ class Alert:
         @st.dialog(ALERT_REASON_TEXT[self.reason], width = 'medium', on_dismiss = set_dialog_closed)
         def notification_dialog():
             st.session_state['dialog_open'] = True
-            display_data = data.drop('alert_object') ###silences warning, check again when using st.data_editor
+            display_data = data.drop('source_object') ###silences warning, check again when using st.data_editor
             st.write(display_data)
 
         notification_dialog()

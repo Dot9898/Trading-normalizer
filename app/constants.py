@@ -127,6 +127,8 @@ REMAINING_CANDLE_TIME_FORMAT = {mt5.TIMEFRAME_M1: '%M:%S',
                                 mt5.TIMEFRAME_W1: '%ed, %Hh', 
                                 mt5.TIMEFRAME_MN1: '%ed, %Hh'}
 
+DATA_TABLE_DATE_FORMAT = '%e %b, %H:%M'
+
 ALERT_REASON_TEXT = {'manual': 'Alert', 
                      'open': 'Position opened', 
                      'close': 'Position closed', 

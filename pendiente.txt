@@ -1,10 +1,9 @@
 
 
-test order execution alerts
-refactor generate trades data table
-create update trades data table
-test each data entry of the table
+add sort trades data when saving(?), take sort from generate data table
+move backend format functions to format functions
 remove clickable button if SL > TP buy/sell
+format table
 add 'show...' buttons
 add 'show' column functionality
 add alerts executed in the data table, with color
@@ -15,8 +14,8 @@ add table and alerts callbacks?
 
 volume min y step en order execution
 infor ordenes y posiciones existentes (show, delete, and edit buttons)
-save alerts data to survive F5?
 when to apply updates? check all callbacks, in particular risk (ppb, ppt, lotsize, maxes).
+disable everything in logarithmic view
 
 cuando trade es cerrada, guardarla y mostrar info (% etc) (full trade local storage with checks for shown or not)
 función dibujar un precio en el gráfico, por número o +- de base, dibujar la línea
@@ -33,7 +32,7 @@ aviso? fin de los datos mt5
 move remaining candle time to price lines?
 colores open n closed market
 ticker navigation and naming
-colores
+colores (markdown RR string y table data)
 local h/l
 implementación trading range según la nota
 correr múltiples a la vez? para comparar gráficos normalizados
@@ -43,7 +42,9 @@ weekend bugs
 cambiar x shift según timeframe (flechitas)
 add option to show absolute values or not
 
+register that using a 'close by' breaks everything
 trailing stops
+
 
 all
 status

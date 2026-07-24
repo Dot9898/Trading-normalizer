@@ -15,10 +15,14 @@ def initialize_MetaTrader():
 def include_symbol(symbol):
     mt5.symbol_select(symbol, True)
 
+@st.cache_data
+def get_symbol_digits(symbol):
+    return(mt5.symbol_info(symbol).digits)
+
 
 def get_rounding_digits(symbol, scale):
     if scale == 'absolute':
-        return(mt5.symbol_info(symbol).digits)
+        return(get_symbol_digits(symbol))
     elif scale == 'normalized':
         return(SYMBOL_DATA[symbol]['digits'] if symbol in SYMBOL_DATA else DEFAULTS['digits'])
     elif scale == 'logarithmic':
@@ -132,10 +136,7 @@ def no_tag_text(text, alignment, font_size, font_weight):
     """)
 
 def capitalize_first(string):
-    if pd.isna(string):
-        return(string)
     return(string[0].upper() + string[1:])
-
 
 
 

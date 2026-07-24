@@ -14,4 +14,20 @@ def RR_format(rr):
         risk, reward = rr
         return(f'{risk}:{reward}') #({round(risk / (risk + reward), 2)})')
 
+def add_sign(number, percent = False):
+    if number > 0:
+        formatted = f'+{number}'
+    else:
+        formatted = f'{number}'
+    if percent:
+        formatted = f'{formatted}%'
+    return(formatted)
+
+
+
+
+
+
+
+
 
