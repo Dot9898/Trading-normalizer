@@ -6,7 +6,7 @@ import MetaTrader5 as mt5
 import constants
 import risk_calculation
 from backend import normalize_point_wrt_current_price, unscale_point_wrt_current_values
-from alerts import Alert, update_all_trades_data
+from alerts import Alert, update_all_trades_data, update_open_and_close_alerts
 from data_table import update_data_table
 
 
@@ -15,6 +15,7 @@ def reload_graph():
 
 def reload_table():
     update_all_trades_data()
+    update_open_and_close_alerts()
     update_data_table(full_update = True)
 
 def is_0930_to_1800():
@@ -133,7 +134,7 @@ def update_risk():
     update_max_lotsize()
     update_max_ppb()
 
-def full_update():
+def full_update(): #when checking all callbacks UPDATE THIS FUNCTION TO INCLUDE ALERTS, DATA TABLE
     update_risk()
     reload_graph()
 

@@ -45,6 +45,8 @@ if 'data_table' not in st.session_state:
     st.session_state['data_table'] = None
 if 'alerts_pending_notification' not in st.session_state:
     st.session_state['alerts_pending_notification'] = []
+if 'orders_to_delete' not in st.session_state:
+    st.session_state['orders_to_delete'] = set()
 if 'dialog_open' not in st.session_state:
     st.session_state['dialog_open'] = False
 if 'first_run' not in st.session_state:
@@ -203,13 +205,13 @@ with info_column:
 
 with trade_column:
     widgets.basic_data_table()
-    st.write(st.session_state['alerts'])
+    st.write([alert.ticket for alert in st.session_state['alerts']])
 
 
 
 
 if st.session_state['first_run']:
-    update_data_table(full_update = True)
+    reload_table()
     st.session_state['first_run'] = False
     st.rerun()
 

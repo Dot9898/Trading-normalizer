@@ -2,6 +2,7 @@
 
 from numpy import log10
 import streamlit as st
+import pandas as pd
 import MetaTrader5 as mt5
 from constants import SYMBOL_DATA, DEFAULTS, DATA_PATH
 from decimal import Decimal, ROUND_FLOOR
@@ -130,7 +131,10 @@ def no_tag_text(text, alignment, font_size, font_weight):
     </h5>
     """)
 
-
+def capitalize_first(string):
+    if pd.isna(string):
+        return(string)
+    return(string[0].upper() + string[1:])
 
 
 

@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 import MetaTrader5 as mt5
 from constants import TIMEZONES
-from backend import scale_point
+from backend import scale_point, capitalize_first
 
 import warnings
 warnings.filterwarnings('ignore', message = 'The behavior of DataFrame concatenation with empty or all-NA entries is deprecated')
@@ -102,10 +102,12 @@ def generate_trades_data_table(current_prices):
                                   trades_data['TP_bp'], 
                                   trades_data['TP_bp']])
 
+    #table['order_type'] = limit or stop orders in operation
+
     table['Status'] = trades_data['status'].str.capitalize()
     table['Time'] = create_datetime_label(table['server_timestamp'], st.session_state['selected_timezone'])
     table['Operation'] = trades_data['direction'].str.capitalize() + ' ' + trades_data['symbol'] + ' ' + table['RR']
-    table['Close reason'] = trades_data['close_reason'].str.capitalize()
+    table['Close reason'] = trades_data['close_reason'].apply(capitalize_first)
     table['Progress'] = table['current_bp'].astype('string') + '/' + table['goal_bp'].astype('string')
     table['Show'] = trades_data['is_shown']
 

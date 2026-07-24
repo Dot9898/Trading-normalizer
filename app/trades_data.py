@@ -20,6 +20,7 @@ def load_trades_data():
     trades_data = trades_data.set_index('ticket')
     
     st.session_state['trades_data'] = trades_data
+    update_all_trades_data()
 
 def save_trades_data_to_file():
     trades_data_path = DATA_PATH / 'trades_data.csv'

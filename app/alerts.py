@@ -90,9 +90,24 @@ def load_alerts():
     alerts = set()
     trades_data = st.session_state['trades_data']
     for ticket, trade_data in trades_data.iterrows():
-        if trade_data['status'] in ['pending', 'open']:
-            alerts.add(Alert(trade_data['status'], ticket = ticket))
+        if trade_data['status'] == 'pending':
+            alerts.add(Alert('open', ticket = ticket))
+        if trade_data['status'] == 'open':
+            alerts.add(Alert('close', ticket = ticket))
     st.session_state['alerts'] = alerts
+
+def update_open_and_close_alerts():   #Used after updating trades_data
+    alerts_tickets = [alert.ticket for alert in st.session_state['alerts']]
+    trades_data = st.session_state['trades_data']
+    for ticket, trade_data in trades_data.iterrows():
+        if ticket not in alerts_tickets and trade_data['status'] == 'pending':
+            st.session_state['alerts'].add(Alert('open', ticket = ticket))
+        if ticket not in alerts_tickets and trade_data['status'] == 'open':
+            st.session_state['alerts'].add(Alert('close', ticket = ticket))
+    for alert in st.session_state['alerts']:
+        if alert.reason in ['open', 'close'] and alert.ticket not in trades_data.index:
+            print(f'del ticket {alert.ticket}')
+            st.session_state['orders_to_delete'].add(alert)
 
 def notify_executions_in_serie():   #Used inside a fragment
     if st.session_state['dialog_open']:
@@ -110,10 +125,13 @@ def alert_check():
     for alert in to_remove:
         st.session_state['alerts_pending_notification'].append((alert, st.session_state['data_table'].loc[alert.ticket]))
         st.session_state['alerts'].discard(alert)
+    for alert in st.session_state['orders_to_delete']:
+        st.session_state['alerts'].discard(alert)
     if st.session_state['alerts_pending_notification']:
         notify_executions_in_serie()
     if to_remove:
         update_all_trades_data()
+        update_open_and_close_alerts()
         update_data_table(full_update = True)
         #ADD TO JUST EXECUTED, TO SEE THE ALERT
 

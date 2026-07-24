@@ -1,6 +1,8 @@
 
 
 test order execution alerts
+refactor generate trades data table
+create update trades data table
 test each data entry of the table
 remove clickable button if SL > TP buy/sell
 add 'show...' buttons
@@ -41,6 +43,7 @@ weekend bugs
 cambiar x shift según timeframe (flechitas)
 add option to show absolute values or not
 
+trailing stops
 
 all
 status
