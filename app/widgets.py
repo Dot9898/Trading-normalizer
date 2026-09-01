@@ -6,8 +6,8 @@ import constants
 import format_functions
 import callbacks
 from numpy import log10
-from backend import no_tag_text
-from alerts import alert_check
+from format_functions import no_tag_text
+from alerts import alert_check, notify_executions_in_serie
 from data_table import update_data_table
 
 def timezone_dropdown():
@@ -242,16 +242,26 @@ def symbol_dropdown():
                 index = 0, 
                 on_change = callbacks.full_update)
 
+def is_order_button_disabled(direction):
+    SL = st.session_state['SL']
+    TP = st.session_state['TP']
+    enabled = (SL <= TP if direction == 'buy' 
+               else SL >= TP if direction == 'sell' 
+               else False)
+    return(not enabled)
+
 def market_order_buttons():
     sell_column, buy_column = st.columns(2)
     with sell_column:
         st.button('Sell', 
                   key = 'sell_button', 
+                  disabled = is_order_button_disabled('sell'), 
                   #on_click = pass, 
                   width = 'stretch')
     with buy_column:
         st.button('Buy', 
                   key = 'buy_button', 
+                  disabled = is_order_button_disabled('buy'), 
                   #on_click = pass, 
                   width = 'stretch')
 
@@ -260,11 +270,13 @@ def limit_order_buttons():
     with sell_limit_column:
         st.button('Sell limit\n\nSell stop', 
                   key = 'limit_sell_button', 
+                  disabled = is_order_button_disabled('sell'), 
                   #on_click = pass,
                   width = 'stretch')
     with buy_limit_column:
         st.button('Buy limit\n\nBuy stop', 
                   key = 'limit_buy_button', 
+                  disabled = is_order_button_disabled('buy'), 
                   #on_click = pass,
                   width = 'stretch')
 
@@ -431,17 +443,19 @@ def set_alert_button():
                 width = 'stretch')
 
 def set_conditional_trade_button(direction):
-    if direction == 'buy':
-        st.button('Set BL/BS', 
-                    key = 'conditional_buy_button', 
-                    on_click = callbacks.set_conditional_trade, 
-                    args = ['buy'], 
-                    width = 'stretch')
     if direction == 'sell':
         st.button('Set SL/SS', 
                     key = 'conditional_sell_button', 
+                    disabled = is_order_button_disabled('sell'), 
                     on_click = callbacks.set_conditional_trade, 
                     args = ['sell'], 
+                    width = 'stretch')
+    if direction == 'buy':
+        st.button('Set BL/BS', 
+                    key = 'conditional_buy_button', 
+                    disabled = is_order_button_disabled('buy'), 
+                    on_click = callbacks.set_conditional_trade, 
+                    args = ['buy'], 
                     width = 'stretch')
 
 def conditionals_and_account_data_checkboxes():
@@ -483,14 +497,20 @@ def conditional_operations_widgets():
 
 
 @st.fragment(run_every = constants.POLLING_INTERVAL)
-def basic_data_table():
+def data_table():
     if st.session_state['first_run']:
         return
     alert_check()
-    update_data_table(full_update = False)
+    update_data_table()
+    if st.session_state['alerts_pending_notification']:
+        notify_executions_in_serie()
 
-    display_table = st.session_state['data_table'].drop(columns = ['source_object']) ###silences warning, check again when using st.data_editor
-    st.write(display_table)
+    display_table = st.session_state['data_table'].drop(columns = ['source_object']) #Object can't be converted by st.dataframe
+    st.dataframe(display_table, 
+                 hide_index = True, 
+                 column_order = constants.SHOWN_TRADES_DATA_COLUMNS, 
+                 placeholder = '-', 
+                 height = 271) #set height #############################
 
 
 

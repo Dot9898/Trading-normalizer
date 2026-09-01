@@ -5,7 +5,7 @@ showErrorDetails = 'full'
 [theme]
 base = 'dark'
 
-primaryColor = '#ff00f0'
+primaryColor = '#2A4365'
 backgroundColor = '#1f1f1f'
 secondaryBackgroundColor = '#3a3a3f'
 
@@ -24,7 +24,7 @@ baseFontWeight = 500
 #2E8B7D
 #2E8B7D
 
-
+#ff00f0
 
 
 

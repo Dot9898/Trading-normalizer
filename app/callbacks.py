@@ -5,22 +5,19 @@ import streamlit as st
 import MetaTrader5 as mt5
 import constants
 import risk_calculation
-from backend import normalize_point_wrt_current_price, unscale_point_wrt_current_values
-from alerts import Alert, update_all_trades_data, update_open_and_close_alerts
-from data_table import update_data_table
+from backend import normalize_point_wrt_current_price, unscale_point_wrt_current_values, get_usable_price_level
+from alerts import Alert
 
 
 def reload_graph():
     st.session_state['reload_Bars'] = True
 
-def reload_table():
-    update_all_trades_data()
-    update_open_and_close_alerts()
-    update_data_table(full_update = True)
+def reload_table(): #Change for update data table full up = True everywhere
+    st.session_state['update_data_table'] = True
 
 def is_0930_to_1800():
     ny_time = datetime.now(tz = constants.TIMEZONES['New York'])
-    if (10 <= ny_time.hour <= 18) or ny_time.hour == 9 and ny_time.minute > 30:
+    if (10 <= ny_time.hour <= 17) or ny_time.hour == 9 and ny_time.minute > 30:
         return(True)
     return(False)
 
@@ -158,11 +155,11 @@ def set_conditional_trade(direction):
     lots = 0.1   ################################################################################
     
     execution_price = st.session_state['entry']
-    execution_price_abs = unscale_point_wrt_current_values(execution_price)
+    execution_price_abs = get_usable_price_level(execution_price)
     SL = st.session_state['SL']
-    SL_abs =  unscale_point_wrt_current_values(SL)
+    SL_abs =  get_usable_price_level(SL)
     TP = st.session_state['TP']
-    TP_abs = unscale_point_wrt_current_values(TP)
+    TP_abs = get_usable_price_level(TP)
 
     if direction == 'buy':
         order_type = 'stop' if execution_price_abs > trigger_price_abs else 'limit'

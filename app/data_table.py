@@ -2,12 +2,12 @@
 
 import streamlit as st
 import pandas as pd
-import numpy as np
-from datetime import datetime
 import MetaTrader5 as mt5
-from constants import TIMEZONES, DATA_TABLE_DATE_FORMAT
-from backend import scale_point, capitalize_first, unscale_point_wrt_current_values
-from format_functions import add_sign
+from constants import SHOW_ORDER_TYPES
+from backend import scale_point, unscale_point_wrt_current_values
+from format_functions import add_sign, capitalize_first, format_timestamp
+from alerts import update_open_and_close_alerts
+from trades_data import update_all_trades_data
 
 import warnings
 warnings.filterwarnings('ignore', message = 'The behavior of DataFrame concatenation with empty or all-NA entries is deprecated')
@@ -58,7 +58,7 @@ def get_progress_string(row):   #Format leading zeroes here
         trigger_price_bp = scale_point(conditional_trade.absolute_price, 'normalized', bars.normalization_base, conditional_trade.symbol, rounded = True)
         return(f'{current_price} / {trigger_price_bp}')
 
-def generate_trades_data_table():
+def generate_trades_data_table(timezone):
     trades_data = st.session_state['trades_data']
     PL_equity_column_number = trades_data.columns.get_loc('P/L_acc_percent_(equity)') + 1
     PL_estimate_column_number = trades_data.columns.get_loc('P/L_acc_percent_(estimate)') + 1
@@ -72,13 +72,16 @@ def generate_trades_data_table():
         server_timestamp = (trade.open_server_time if trade.status == 'open' 
                             else trade.close_server_time if trade.status == 'closed' 
                             else pd.NA)
-        
-        order_type = '' if trade.order_type == 'market' else trade.order_type
+        timestamp = (server_timestamp if timezone == 'server' 
+                     else trade.open_timestamp if trade.status == 'open' 
+                     else trade.close_timestamp if trade.status == 'closed' 
+                     else pd.NA)
+        order_type = '' if (not SHOW_ORDER_TYPES or trade.order_type == 'market') else f'{trade.order_type} '
         price = trade.set_price if trade.status == 'pending' else trade.open_price
         RR = get_RR_string(price, trade.SL_abs, trade.TP_abs)
 
-        time = datetime.fromtimestamp(server_timestamp).strftime(DATA_TABLE_DATE_FORMAT)
-        operation = f'{trade.direction.capitalize()} {order_type} {trade.symbol} {RR}'
+        time = pd.NA if pd.isna(timestamp) else format_timestamp(timestamp, timezone)
+        operation = f'{trade.direction.capitalize()} {order_type}{trade.symbol} {RR}'.strip()
         close_reason = pd.NA if pd.isna(trade.close_reason) else capitalize_first(trade.close_reason)
 
         if trade.status == 'closed':
@@ -94,9 +97,8 @@ def generate_trades_data_table():
         table.loc[trade.Index] = [status.capitalize(), time, operation, close_reason, progress, PL_percent, trade.is_shown, server_timestamp, trade]
 
     table['Status'] = pd.Categorical(table['Status'], categories = ['Alert', 'Open', 'Pending', 'Conditional trade', 'Closed'], ordered = True)
-    table.reset_index(inplace = True)
-    table.sort_values(by = ['Status', 'server_timestamp', 'ticket'], ascending = [True, False, False], inplace = True)
-    table.set_index('ticket', inplace = True)
+    table.sort_index(inplace = True)
+    table.sort_values(by = ['Status', 'server_timestamp'], ascending = [True, False], kind = 'stable', inplace = True)
     
     return(table)
 
@@ -130,11 +132,12 @@ def update_trades_data_table(table):
     bars = st.session_state['bars_data']
     if (table['Status'] == 'Open').any():
         equity = mt5.account_info().equity
-    #['Status', 'Time', 'Operation', 'Close reason', +'Progress', +'P/L', 'Show', 'server_timestamp', 'source_object']
 
     for row in table.itertuples():
+
         if row.Status == 'Closed':
             continue
+
         if bars.data_scale == 'normalized' and bars.symbol == row.source_object.symbol:
             table.at[row.Index, 'Progress'] = get_progress_string(row)
         else:
@@ -156,12 +159,12 @@ def update_alerts_data_table(table):
 
     for row in table.itertuples():
 
-        if row.Status == 'Alert':
-            if bars.data_scale == 'normalized' and bars.symbol == row.source_object.symbol:
-                table.at[row.Index, 'Progress'] = get_progress_string(row)
-            else:
-                table.at[row.Index, 'Progress'] = pd.NA
-        
+        if bars.data_scale == 'normalized' and bars.symbol == row.source_object.symbol:
+            table.at[row.Index, 'Progress'] = get_progress_string(row)
+        else:
+            table.at[row.Index, 'Progress'] = pd.NA
+
+        continue
         if row.Status == 'Conditional trade':
             conditional_trade = row.source_object
             direction = conditional_trade.conditional_trade_data['direction']
@@ -171,25 +174,30 @@ def update_alerts_data_table(table):
             if bars.data_scale == 'normalized' and bars.symbol == conditional_trade.symbol:
                 execution_price_abs = conditional_trade.conditional_trade_data['execution_price']
                 execution_price_bp = scale_point(execution_price_abs, 'normalized', bars.normalization_base, conditional_trade.symbol, rounded = True)
-                operation = f'{operation} at {execution_price_bp}'
-                table.at[row.Index, 'Progress'] = get_progress_string(row)
+                #operation = f'{operation} at {execution_price_bp}'   #show execution prices? and with pending orders?
                 table.at[row.Index, 'Operation'] = operation
             else:
-                table.at[row.Index, 'Progress'] = pd.NA
                 table.at[row.Index, 'Operation'] = operation
 
 
 def update_data_table(full_update = False):
 
+    if st.session_state['update_data_table']:
+        st.session_state['update_data_table'] = False
+        full_update = True
+
     if full_update:
-        st.session_state['trades_data_table'] = generate_trades_data_table()
+        update_all_trades_data()
+        update_open_and_close_alerts()
+        timezone = st.session_state['selected_timezone']
+        st.session_state['trades_data_table'] = generate_trades_data_table(timezone)
         st.session_state['alerts_data_table'] = generate_alerts_data_table()
 
     update_trades_data_table(st.session_state['trades_data_table'])
     update_alerts_data_table(st.session_state['alerts_data_table'])
 
     data_table = pd.concat([st.session_state['trades_data_table'], st.session_state['alerts_data_table']])
-    data_table.sort_values(by = ['Status'], inplace = True)
+    data_table.sort_values(by = ['Status'], kind = 'stable', inplace = True)
     st.session_state['data_table'] = data_table
 
 

@@ -43,6 +43,8 @@ if 'alerts' not in st.session_state:
     load_alerts()
 if 'data_table' not in st.session_state:
     st.session_state['data_table'] = None
+if 'update_data_table' not in st.session_state:
+    st.session_state['update_data_table'] = True
 if 'alerts_pending_notification' not in st.session_state:
     st.session_state['alerts_pending_notification'] = []
 if 'orders_to_delete' not in st.session_state:
@@ -163,8 +165,10 @@ with orders_column:
     prices_container = st.container()
     with prices_container:
         widgets.print_prices_test()
-    widgets.market_order_buttons()
+    market_order_container = st.container()
     widgets.SL_and_TP_input()
+    with market_order_container:
+        widgets.market_order_buttons()
     widgets.limit_order_buttons()
     widgets.entry_display()
 
@@ -199,14 +203,14 @@ with info_column:
     
 
 with info_column:
-    st.header('')
+    if not st.session_state['conditionals_checkbox']:
+        st.header('')
     print_remaining_time_test()
     
 
 with trade_column:
-    widgets.basic_data_table()
-    st.write([alert.ticket for alert in st.session_state['alerts']])
-
+    widgets.data_table()
+    #st.write([alert.ticket for alert in st.session_state['alerts']])
 
 
 
@@ -216,7 +220,9 @@ if st.session_state['first_run']:
     st.rerun()
 
 
-
+st.write('')
+st.write('')
+st.write('test')
 st.write(f'dialog open {st.session_state['dialog_open']}')
 
 
@@ -246,8 +252,8 @@ if 'order_return' in st.session_state:
 current_time = get_current_server_time()
 ord = mt5.orders_get()
 pos = mt5.positions_get()
-hord = mt5.history_orders_get(current_time - 300, current_time)
-hdls = mt5.history_deals_get(current_time - 300, current_time)
+hord = mt5.history_orders_get(current_time - 120, current_time)
+hdls = mt5.history_deals_get(current_time - 120, current_time)
 st.write('orders')
 for i in ord:
     st.write(i)
@@ -262,7 +268,14 @@ for i in hdls:
     st.write(i)
 
 st.button('UPDATE DATA TEST', 
-          on_click = update_all_trades_data)
+          on_click = update_all_trades_data, 
+          args = [None])
 
 
+
+@st.fragment(run_every = 60.0)
+def reload_table_test():
+    reload_table()
+
+reload_table_test()
 

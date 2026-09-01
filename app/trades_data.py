@@ -29,6 +29,21 @@ def save_trades_data_to_file():
     st.session_state['trades_data'].to_csv(tmp_path, index = True)
     tmp_path.replace(trades_data_path)
 
+def sort_trades_data():
+    trades_data = st.session_state['trades_data']
+
+    trades_data.sort_index(inplace = True)
+
+    open_trades = trades_data[trades_data['status'] == 'open'].sort_values('open_server_time', 
+                                                                           ascending = False, 
+                                                                           kind = 'stable')
+    pending_trades = trades_data[trades_data['status'] == 'pending']
+    closed_trades = trades_data[trades_data['status'] == 'closed'].sort_values('close_server_time', 
+                                                                               ascending = False, 
+                                                                               kind = 'stable')
+
+    st.session_state['trades_data'] = pd.concat([open_trades, pending_trades, closed_trades])
+
 def edit_trade_data(ticket, data_to_edit: dict | None = None, delete = False):
 
     trades_data = st.session_state['trades_data']
@@ -142,10 +157,11 @@ def update_SL_TP(data, data_source, update_type, SL, TP, base_price, lots, symbo
         data['SL_abs'] = SL
         data['SL_bp'] = round(scale_point(SL, 'normalized', base_price, symbol), 1)
 
-        if update_type == 'set':
-            data['SL_acc_percent_at_set_(equity)'] = round(100 * (SL - base_price) * lots / current_account_info.equity, 1)
-        if update_type == 'open' and data_source == 'local':
-            data['SL_acc_percent_at_open_(equity)'] = round(100 * (SL - base_price) * lots / current_account_info.equity, 1)
+        if data_source == 'local':
+            if update_type == 'set':
+                data['SL_acc_percent_at_set_(equity)'] = round(100 * (SL - base_price) * lots / current_account_info.equity, 1)
+            if update_type == 'open':
+                data['SL_acc_percent_at_open_(equity)'] = round(100 * (SL - base_price) * lots / current_account_info.equity, 1)
 
     if TP is None:
         data['TP_abs'] = None
@@ -155,10 +171,11 @@ def update_SL_TP(data, data_source, update_type, SL, TP, base_price, lots, symbo
         data['TP_abs'] = TP
         data['TP_bp'] = round(scale_point(TP, 'normalized', base_price, symbol), 1)
 
-        if update_type == 'set':
-            data['TP_acc_percent_at_set_(equity)'] = round(100 * (TP - base_price) * lots / current_account_info.equity, 1)
-        if update_type == 'open' and data_source == 'local':
-            data['TP_acc_percent_at_open_(equity)'] = round(100 * (TP - base_price) * lots / current_account_info.equity, 1)
+        if data_source == 'local':
+            if update_type == 'set':
+                data['TP_acc_percent_at_set_(equity)'] = round(100 * (TP - base_price) * lots / current_account_info.equity, 1)
+            if update_type == 'open':
+                data['TP_acc_percent_at_open_(equity)'] = round(100 * (TP - base_price) * lots / current_account_info.equity, 1)
 
     return(data)
 
@@ -232,11 +249,11 @@ def get_trade_data_to_edit(ticket, data_source, operation_type): #Need to fix th
             if potential_deal.entry == mt5.DEAL_ENTRY_OUT:
                 exit_deal = potential_deal
         
-        entry_order = mt5.history_orders_get(position = ticket)[0] #Deals have no TP or SL, we assume the first order is the entry market order
+        entry_order = mt5.history_orders_get(position = ticket)[0] #Entry market order
 
-        SL = None if entry_order.sl == 0 else entry_order.sl
-        TP = None if entry_order.tp == 0 else entry_order.tp
-        open_price = entry_deal.price
+        SL = None if entry_order.sl == 0 else entry_order.sl #TP and SL are only exposed through the IN order.
+        TP = None if entry_order.tp == 0 else entry_order.tp #If they were modified, the last values are
+        open_price = entry_deal.price                        #not retrievable after closing.
         close_price = exit_deal.price
         symbol = entry_deal.symbol
         lots = entry_deal.volume
@@ -423,13 +440,11 @@ def get_trade_data_to_edit(ticket, data_source, operation_type): #Need to fix th
                 entry_deal = potential_deal
             if potential_deal.entry == mt5.DEAL_ENTRY_OUT:
                 exit_deal = potential_deal
-        
-        entry_order = mt5.history_orders_get(position = ticket)[0] #Deals have no TP or SL, we assume the first order is the entry market order
 
-        SL = None if entry_order.sl == 0 else entry_order.sl
-        TP = None if entry_order.tp == 0 else entry_order.tp
         set_SL = None if order.sl == 0 else order.sl
         set_TP = None if order.tp == 0 else order.tp
+        SL = set_SL   #We asssume the TP and SL did not change between opened and closed.
+        TP = set_TP   #This is a MQL5 limitation: it doesn't expose the "last TP/SL before closing".
         set_price = order.price_open
         open_price = entry_deal.price
         symbol = entry_deal.symbol
@@ -458,7 +473,7 @@ def get_trade_data_to_edit(ticket, data_source, operation_type): #Need to fix th
         data['status'] = 'closed'
         data['close_server_time'] = exit_deal.time
         data['close_timestamp'] = get_actual_timestamp(exit_deal.time)
-        data['close_reason'] = close_price
+        data['close_reason'] = close_reason
         data['close_price'] = close_price
                 
         data['points_abs'] = round(close_price - open_price, 1)
@@ -469,7 +484,7 @@ def get_trade_data_to_edit(ticket, data_source, operation_type): #Need to fix th
 
     return(data)
 
-def update_ticket_data(ticket, data_source, category):
+def update_ticket_data(ticket, data_source, category): #change data source here based on category
     
     if category == 'deleted':
         edit_trade_data(ticket, delete = True)
@@ -478,12 +493,14 @@ def update_ticket_data(ticket, data_source, category):
         data = get_trade_data_to_edit(ticket, data_source, category)
         edit_trade_data(ticket, data)
 
-def update_all_trades_data():#from_server_time = None):
-    #if from_server_time is None:
-    from_server_time = get_last_update_server_time()
+
+def update_all_trades_data(from_server_time = None):
+    if from_server_time is None:
+        from_server_time = get_last_update_server_time()
     categories = get_update_categories(from_server_time)
     for ticket, category in categories.items():
         update_ticket_data(ticket, 'server', category)
+    sort_trades_data()
     register_update_time()
 
 

@@ -15,10 +15,10 @@ def initialize_MetaTrader():
 def include_symbol(symbol):
     mt5.symbol_select(symbol, True)
 
+
 @st.cache_data
 def get_symbol_digits(symbol):
     return(mt5.symbol_info(symbol).digits)
-
 
 def get_rounding_digits(symbol, scale):
     if scale == 'absolute':
@@ -27,6 +27,7 @@ def get_rounding_digits(symbol, scale):
         return(SYMBOL_DATA[symbol]['digits'] if symbol in SYMBOL_DATA else DEFAULTS['digits'])
     elif scale == 'logarithmic':
         return(6)
+
 
 def scale_point(value, data_scale, normalization_base = None, symbol = None, true_normalization = False, rounded = False):
 
@@ -96,8 +97,7 @@ def floor_with_step(value, step):
 
 def get_usable_lotsize(execution_price = 'current'):
     bars = st.session_state['bars_data']
-    symbol = bars.symbol
-    symbol_info = mt5.symbol_info(symbol)
+    symbol_info = mt5.symbol_info(bars.symbol)
 
     equity = mt5.account_info().equity
     current_price = symbol_info.bid
@@ -123,25 +123,11 @@ def get_usable_lotsize(execution_price = 'current'):
     
     return(lotsize)
 
-def no_tag_text(text, alignment, font_size, font_weight):
-    st.html(f"""
-    <h5 style="
-        margin:0;
-        font-size:{font_size};
-        font-weight:{font_weight};
-        text-align:{alignment};
-    ">
-        {text}
-    </h5>
-    """)
+def get_usable_price_level(value):
+    bars = st.session_state['bars_data']
+    symbol_info = mt5.symbol_info(bars.symbol)
 
-def capitalize_first(string):
-    return(string[0].upper() + string[1:])
+    absolute_price = unscale_point_wrt_current_values(value)
+    usable_level = round(absolute_price, symbol_info.digits)
 
-
-
-
-
-
-
-
+    return(usable_level)

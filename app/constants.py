@@ -9,8 +9,11 @@ import MetaTrader5 as mt5
 #Parameters
 
 POLLING_INTERVAL = 0.5
+DATA_TABLE_UPDATE_INTERVAL = 5.0 ###########
 MAX_BARS_IN_GRAPH = 1000
 GRAPH_HEIGHT = 450
+SHOW_ORDER_TYPES = True
+
 SYMBOL_DATA = {'US500': {'ideal_ppb': 0.75, 
                          'margin_req': 0.005, 
                          'display': 'basis', 
@@ -35,6 +38,11 @@ TIMEZONES = {'server': None,
 SHOWN_TIMEZONES = ['Chile', 'New York', 'server', 'France']
 SCALES = ['absolute', 'normalized', 'logarithmic']
 NORMALIZATION_BASES = ['first_bar', 'market_open', 'week_market_open', 'server_1:00', 'now']
+SHOWN_TRADES_DATA_COLUMNS = ['Time', 'Status', 'Operation', 'Progress', 'P/L', 'Close reason']
+SHOWN_ALERTS_DATA_COLUMNS = {'manual': ['Time', 'Status', 'Operation', 'Progress'], 
+                             'conditional_trade': ['Time', 'Status', 'Operation'], 
+                             'open': ['Time', 'Status', 'Operation', 'Progress', 'P/L'], 
+                             'close': ['Time', 'Status', 'Operation', 'Progress', 'P/L', 'Close reason']}
 
 INTERESTING_TIMES = ['now', 
                      'market_open', 
