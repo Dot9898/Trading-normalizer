@@ -1,20 +1,30 @@
 
 
-add sort trades data when saving(?), take sort from generate data table
-move backend format functions to format functions
-remove clickable button if SL > TP buy/sell
-format table
-add 'show...' buttons
-add 'show' column functionality
-add alerts executed in the data table, with color
-add selected trade
-add selected trade actions: close/delete, edit. erase button for closed orders, dismiss button for alert
 
+add selected trade actions: hide, close/delete, edit, erase button for closed orders
+add 'show all' or 'show hidden' checkbox
+
+
+actions
+closed: hide, delete
+open: close, edit
+pending: modify, delete
+alert: delete
+
+add confirmation box to delete closed trades
+
+
+check warning
+
+
+
+save eq balance and pl acc percent equity and balance if trade closed in the last x mins (data source in update ticket function? or similar)
 add table and alerts callbacks?
 
 volume min y step en order execution
 infor ordenes y posiciones existentes (show, delete, and edit buttons)
 when to apply updates? check all callbacks, in particular risk (ppb, ppt, lotsize, maxes).
+add extra button to TP PL to auto set +-20 (changeable in a number input)
 disable everything in logarithmic view
 
 cuando trade es cerrada, guardarla y mostrar info (% etc) (full trade local storage with checks for shown or not)
@@ -22,7 +32,10 @@ función dibujar un precio en el gráfico, por número o +- de base, dibujar la 
 show sltp en el gráfico checkbox
 add update risk callback before setting an operation
 confirmation of b/s in dialog box. checkbox for confirmation on/off
+order history in graph
+add 'zoom' square in the graph?
 
+cambiar path mt5
 refactor graph (load all from backmost timestamp to now, reload on.. change of scale? change of timeframe? is it worth to re do it all?)
 
 
@@ -46,26 +59,9 @@ register that using a 'close by' breaks everything
 trailing stops
 
 
-all
-status
-symbol
-direction?
-RR at open or set (equity)
-show
 
-open
-open time
-points bp (current)
-PL % (equity, current)
 
-closed
-close time
-close reason
-points bp
-PL % (equity or estimate)
 
-set
 
-status, time, direction + symbol + RR, close reason, points / TPSL+-, PL%, action, show
 
-edit df as needed considering shown or not and show all
+
