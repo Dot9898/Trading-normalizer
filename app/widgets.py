@@ -458,7 +458,7 @@ def set_conditional_trade_button(direction):
                     args = ['buy'], 
                     width = 'stretch')
 
-def conditionals_and_account_data_checkboxes():
+def alerts_and_account_data_and_hidden_trades_checkboxes():
     conditionals_column, account_data_column = st.columns(2)
     with conditionals_column:
         st.checkbox('Set alert', 
@@ -466,6 +466,9 @@ def conditionals_and_account_data_checkboxes():
     with account_data_column:
         st.checkbox('Show account data', 
                     key = 'account_data_checkbox')
+        st.checkbox('Show hidden trades', 
+                    key = 'show_hidden_checkbox', 
+                    value = False)
 
 def conditional_operations_widgets():
     if st.session_state['conditionals_checkbox']:
@@ -506,12 +509,20 @@ def data_table():
         notify_executions_in_serie()
 
     display_table = st.session_state['data_table'].drop(columns = ['source_object']) #Object can't be converted by st.dataframe
+    if not st.session_state['show_hidden_checkbox']:
+        display_table = display_table[display_table['is_shown'] == True]
+    st.session_state['displayed_table'] = display_table
+
+    column_config = {'hide_button': st.column_config.ButtonColumn('', 
+                                                                  on_click = callbacks.hide_trade, 
+                                                                  key = 'hide_button_state')}
+    
     st.dataframe(display_table, 
                  hide_index = True, 
                  column_order = constants.SHOWN_TRADES_DATA_COLUMNS, 
+                 column_config = column_config, 
                  placeholder = '-', 
                  height = 271) #set height #############################
-
 
 
 

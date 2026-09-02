@@ -1,5 +1,3 @@
-
-
 import pandas as pd
 import streamlit as st
 
@@ -24,5 +22,12 @@ st.dataframe(
     hide_index=True,
 )
 
+
+def hide_cback():
+    pass
+
+extra_df_entry = pd.DataFrame({'show': ['Hide' if closed else 'test']})
+
+column_config = {'show': st.column_config.ButtonColumn('', on_click = hide_cback, key = 'full_row_returned_in_this_key')}
 
 

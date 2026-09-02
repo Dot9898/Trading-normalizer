@@ -62,7 +62,7 @@ def generate_trades_data_table(timezone):
     trades_data = st.session_state['trades_data']
     PL_equity_column_number = trades_data.columns.get_loc('P/L_acc_percent_(equity)') + 1
     PL_estimate_column_number = trades_data.columns.get_loc('P/L_acc_percent_(estimate)') + 1
-    table = pd.DataFrame(columns = ['Status', 'Time', 'Operation', 'Close reason', 'Progress', 'P/L', 'Show', 'server_timestamp', 'source_object'])
+    table = pd.DataFrame(columns = ['Status', 'Time', 'Operation', 'Close reason', 'Progress', 'P/L', 'hide_button', 'server_timestamp', 'is_shown', 'source_object'])
     table.index.name = 'ticket'
 
     for trade in trades_data.itertuples():
@@ -90,11 +90,13 @@ def generate_trades_data_table(timezone):
             PL_percent = (trade[PL_equity_column_number] if not pd.isna(trade[PL_equity_column_number]) 
                         else trade[PL_estimate_column_number])
             PL_percent = add_sign(PL_percent, percent = True)
+            hide_button_text = 'Hide' if trade.is_shown else 'Unhide'
         else:
             progress = pd.NA
             PL_percent = pd.NA
+            hide_button_text = pd.NA
 
-        table.loc[trade.Index] = [status.capitalize(), time, operation, close_reason, progress, PL_percent, trade.is_shown, server_timestamp, trade]
+        table.loc[trade.Index] = [status.capitalize(), time, operation, close_reason, progress, PL_percent, hide_button_text, server_timestamp, trade.is_shown, trade]
 
     table['Status'] = pd.Categorical(table['Status'], categories = ['Alert', 'Open', 'Pending', 'Conditional trade', 'Closed'], ordered = True)
     table.sort_index(inplace = True)
@@ -104,7 +106,7 @@ def generate_trades_data_table(timezone):
 
 def generate_alerts_data_table():
     alerts = st.session_state['alerts']
-    table = pd.DataFrame(columns = ['Status', 'Time', 'Operation', 'Close reason', 'Progress', 'P/L', 'Show', 'server_timestamp', 'source_object'])
+    table = pd.DataFrame(columns = ['Status', 'Time', 'Operation', 'Close reason', 'Progress', 'P/L', 'hide_button', 'server_timestamp', 'is_shown', 'source_object'])
     table.index.name = 'ticket'
 
     index = 0
@@ -112,7 +114,7 @@ def generate_alerts_data_table():
 
         if alert.reason == 'manual':
             operation = f'Alert {alert.symbol}'
-            table.loc[index] = ['Alert', pd.NA, operation, pd.NA, pd.NA, pd.NA, True, pd.NA, alert]
+            table.loc[index] = ['Alert', pd.NA, operation, pd.NA, pd.NA, pd.NA, pd.NA, pd.NA, True, alert]
             alert.ticket = index
             index = index + 1
 
@@ -120,7 +122,7 @@ def generate_alerts_data_table():
             direction = alert.conditional_trade_data['direction']
             order_type = alert.conditional_trade_data['order_type']
             operation = f'Set {direction} {order_type} {alert.symbol}'
-            table.loc[index] = ['Conditional trade', pd.NA, operation, pd.NA, pd.NA, pd.NA, True, pd.NA, alert]
+            table.loc[index] = ['Conditional trade', pd.NA, operation, pd.NA, pd.NA, pd.NA, pd.NA, pd.NA, True, alert]
             alert.ticket = index
             index = index + 1
     
@@ -148,11 +150,6 @@ def update_trades_data_table(table):
             PL = position.profit
             PL_percent = round(PL/(equity - PL) * 100, 1)
             table.at[row.Index, 'P/L'] = add_sign(PL_percent, percent = True)
-
-
-
-
-
 
 def update_alerts_data_table(table):
     bars = st.session_state['bars_data']

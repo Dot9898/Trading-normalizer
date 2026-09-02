@@ -1,4 +1,5 @@
 ticket,status,symbol,volume,set_price,direction,order_type,SL_abs,TP_abs,SL_bp,TP_bp,balance_at_set,equity_at_set,SL_acc_percent_at_set_(equity),TP_acc_percent_at_set_(equity),open_server_time,open_timestamp,open_price,balance_at_open,equity_at_open,SL_acc_percent_at_open_(equity),TP_acc_percent_at_open_(equity),close_server_time,close_timestamp,close_reason,close_price,points_abs,points_bp,balance_at_close,equity_at_close,P/L_abs,P/L_acc_percent_(equity),P/L_acc_percent_(balance),P/L_acc_percent_(estimate),display,is_shown
+323728394,closed,US500,0.1,7627.1,buy,market,,,,,,,,,1788335574,1788324774,7627.1,,,,,1788335595,1788324795,manual,7626.7,-0.4,-0.5,,,-0.04,,,-0.1,basis,True
 323041662,closed,US500,0.1,7687.5,buy,market,,,,,,,,,1788240379,1788229579,7687.5,,,,,1788240494,1788229694,manual,7686.9,-0.6,-0.8,,,-0.06,,,-0.1,basis,True
 315053487,closed,US500,0.6,7751.0,buy,limit,7743.0,7767.0,-10.3,20.6,,,,,1786390319,1786379519,7751.0,,,,,1786390320,1786379520,SL,7742.1,-8.9,-11.5,,,-5.34,,,-11.7,basis,True
 314490208,closed,US500,0.6,7730.5,buy,market,,,,,,,,,1786120192,1786109392,7730.5,,,,,1786122730,1786111930,SL,7719.5,-11.0,-14.2,,,-6.6,,,-14.1,basis,True

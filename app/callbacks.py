@@ -6,6 +6,7 @@ import MetaTrader5 as mt5
 import constants
 import risk_calculation
 from backend import normalize_point_wrt_current_price, unscale_point_wrt_current_values, get_usable_price_level
+from trades_data import edit_trade_data
 from alerts import Alert
 
 
@@ -179,11 +180,19 @@ def set_conditional_trade(direction):
     reload_table()
 
 
+def hide_trade():
+    row_number = st.session_state['hide_button_state'].row
+    row = st.session_state['displayed_table'].iloc[row_number]
+    label = st.session_state['hide_button_state'].label
+    ticket = row.name
+    data = {}
+    if label == 'Hide':
+        data['is_shown'] = False
+    if label == 'Unhide':
+        data['is_shown'] = True
 
-
-
-
-
+    edit_trade_data(ticket, data)
+    reload_table()
 
 
 

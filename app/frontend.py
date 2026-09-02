@@ -198,7 +198,7 @@ with risk_spot:
             widgets.max_lotsize_display()
 
 with info_column:
-    widgets.conditionals_and_account_data_checkboxes()
+    widgets.alerts_and_account_data_and_hidden_trades_checkboxes()
     widgets.conditional_operations_widgets()
     
 

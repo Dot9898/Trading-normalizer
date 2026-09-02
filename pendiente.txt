@@ -1,8 +1,7 @@
 
 
 
-add selected trade actions: hide, close/delete, edit, erase button for closed orders
-add 'show all' or 'show hidden' checkbox
+add selected trade actions: close/delete, edit, erase button for closed orders
 
 
 actions
