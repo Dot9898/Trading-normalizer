@@ -5,6 +5,7 @@ import streamlit as st
 import MetaTrader5 as mt5
 import constants
 import risk_calculation
+import order_execution
 from backend import normalize_point_wrt_current_price, unscale_point_wrt_current_values, get_usable_price_level
 from trades_data import edit_trade_data
 from alerts import Alert
@@ -180,19 +181,54 @@ def set_conditional_trade(direction):
     reload_table()
 
 
-def hide_trade():
-    row_number = st.session_state['hide_button_state'].row
+def execute_table_action(button_number):
+    button_key = f'action_button_{button_number}_state'
+    row_number = st.session_state[button_key].row
+    label = st.session_state[button_key].label
     row = st.session_state['displayed_table'].iloc[row_number]
-    label = st.session_state['hide_button_state'].label
-    ticket = row.name
-    data = {}
-    if label == 'Hide':
-        data['is_shown'] = False
-    if label == 'Unhide':
-        data['is_shown'] = True
+    ticket = int(row.name)
 
-    edit_trade_data(ticket, data)
-    reload_table()
+    status = row['Status']
+
+    if label == 'Hide':
+        assert status == 'Closed'
+        data = {'is_shown': False}
+        edit_trade_data(ticket, data)
+
+    if label == 'Unhide':
+        assert status == 'Closed'
+        data = {'is_shown': True}
+        edit_trade_data(ticket, data)
+
+    if label == 'Delete' and status in ['Alert', 'Conditional trade']:
+        alert = st.session_state['data_table'].loc[ticket, 'source_object']
+        st.session_state['alerts'].discard(alert)
+
+    if label == 'Close':
+        assert status == 'Open'
+        order_execution.close_position(ticket = ticket)
+
+    if label == 'Delete' and status == 'Pending':
+        order_execution.delete_pending_order(ticket = ticket)
+
+    if label == 'Erase':
+        assert status == 'Closed'
+        st.session_state['dialog_data'] = {'reason': 'erase', 'ticket': ticket}
+
+    if label == 'Edit':
+        pass
+
+
+    if label not in ['Erase', 'Edit', 'Modify']:
+        st.session_state['update_data_table'] = True
+    
+    st.rerun()
+
+def erase_trade(ticket):
+    edit_trade_data(ticket, delete = True)
+    st.rerun()
+
+#hide, delete(alert), close, delete(pending), erase, edit, modify
 
 
 

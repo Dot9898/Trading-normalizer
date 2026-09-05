@@ -7,6 +7,7 @@ import format_functions
 import callbacks
 from numpy import log10
 from format_functions import no_tag_text
+from trades_data import edit_trade_data
 from alerts import alert_check, notify_executions_in_serie
 from data_table import update_data_table
 
@@ -494,6 +495,30 @@ def conditional_operations_widgets():
             set_conditional_trade_button('buy')
 
 
+@st.dialog(' ', width = 'medium')
+def erase_closed_trade_dialog(ticket):
+    st.header('This will permanently delete all the data of this trade', text_alignment = 'center')
+    st.subheader('')
+    columns = st.columns(4)
+    with columns[1]:
+        st.button('Erase data', 
+                  key = 'erase_button', 
+                  width = 'stretch', 
+                  on_click = callbacks.erase_trade, 
+                  args = [ticket])
+    with columns[2]:
+        st.button('Cancel', 
+                  key = 'cancel_button', 
+                  width = 'stretch', 
+                  on_click = st.rerun)
+
+def open_dialog():
+    reason = st.session_state['dialog_data']['reason']
+    ticket = st.session_state['dialog_data']['ticket']
+    st.session_state['dialog_data'] = None
+    
+    if reason == 'erase':
+        erase_closed_trade_dialog(ticket)
 
 
 
@@ -513,9 +538,14 @@ def data_table():
         display_table = display_table[display_table['is_shown'] == True]
     st.session_state['displayed_table'] = display_table
 
-    column_config = {'hide_button': st.column_config.ButtonColumn('', 
-                                                                  on_click = callbacks.hide_trade, 
-                                                                  key = 'hide_button_state')}
+    column_config = {'action_button_1': st.column_config.ButtonColumn('', 
+                                                                      key = 'action_button_1_state', 
+                                                                      on_click = callbacks.execute_table_action, 
+                                                                      args = [1]), 
+                     'action_button_2': st.column_config.ButtonColumn('', 
+                                                                      key = 'action_button_2_state', 
+                                                                      on_click = callbacks.execute_table_action, 
+                                                                      args = [2])}
     
     st.dataframe(display_table, 
                  hide_index = True, 

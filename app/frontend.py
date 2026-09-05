@@ -73,6 +73,8 @@ if 'risk' not in st.session_state:
     st.session_state['risk'] = 0
 if 'reward' not in st.session_state:
     st.session_state['reward'] = 0
+if 'dialog_data' not in st.session_state:
+    st.session_state['dialog_data'] = None
 
 
 
@@ -201,16 +203,16 @@ with info_column:
     widgets.alerts_and_account_data_and_hidden_trades_checkboxes()
     widgets.conditional_operations_widgets()
     
-
 with info_column:
     if not st.session_state['conditionals_checkbox']:
         st.header('')
     print_remaining_time_test()
-    
 
+if st.session_state['dialog_data'] is not None:
+    widgets.open_dialog()
+    
 with trade_column:
     widgets.data_table()
-    #st.write([alert.ticket for alert in st.session_state['alerts']])
 
 
 
@@ -225,7 +227,7 @@ st.write('')
 st.write('test')
 st.write(f'dialog open {st.session_state['dialog_open']}')
 
-
+st.write(f"Streamlit version: {st.__version__}")
 
 import MetaTrader5 as mt5
 from order_execution import change_SLTP_open, market_order, close_position, delete_pending_order, change_price_and_SLTP_pending, limit_or_stop_order
@@ -237,9 +239,9 @@ def lmocallback():
     #st.session_state['order_return'] = limit_or_stop_order('BTCUSD', 0.01, 'buy', 5000, TP = 200000)
     #st.session_state['order_return'] = change_price_and_SLTP_pending(304970240, execution_price = 4000, TP = 30000)
     #st.session_state['order_return'] = delete_pending_order(304969813)
-    #st.session_state['order_return'] = close_position(304969852)
+    #st.session_state['order_return'] = close_position(325121823)
     pass
-
+#mt5.positions_get(ticket = ticket)
 st.button('reload table', 
           on_click = reload_table)
 
@@ -278,4 +280,6 @@ def reload_table_test():
     reload_table()
 
 reload_table_test()
+
+
 

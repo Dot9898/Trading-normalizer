@@ -38,7 +38,7 @@ TIMEZONES = {'server': None,
 SHOWN_TIMEZONES = ['Chile', 'New York', 'server', 'France']
 SCALES = ['absolute', 'normalized', 'logarithmic']
 NORMALIZATION_BASES = ['first_bar', 'market_open', 'week_market_open', 'server_1:00', 'now']
-SHOWN_TRADES_DATA_COLUMNS = ['Time', 'Status', 'Operation', 'Progress', 'P/L', 'Close reason', 'hide_button']
+SHOWN_TRADES_DATA_COLUMNS = ['Time', 'Status', 'Operation', 'Progress', 'P/L', 'Close reason', 'action_button_1', 'action_button_2']
 SHOWN_ALERTS_DATA_COLUMNS = {'manual': ['Time', 'Status', 'Operation', 'Progress'], 
                              'conditional_trade': ['Time', 'Status', 'Operation'], 
                              'open': ['Time', 'Status', 'Operation', 'Progress', 'P/L'], 
