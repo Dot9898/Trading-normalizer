@@ -52,6 +52,14 @@ def scale_point(value, data_scale, normalization_base = None, symbol = None, tru
     
     return(value)
 
+def scale_point_wrt_current_values(value, rounded = False):
+    bars = st.session_state['bars_data']
+
+    data_scale = bars.data_scale
+    base = bars.normalization_base
+    symbol = bars.symbol
+    return(scale_point(value, data_scale, base, symbol, rounded = rounded))
+
 def unscale_point(value, original_scale, original_normalization_base, original_normalization_factor):
 
     if original_scale == 'absolute':
@@ -64,6 +72,16 @@ def unscale_point(value, original_scale, original_normalization_base, original_n
         if value > 9:
             return(None) #Prevents overflow
         return(10 ** value)
+
+def scale_point_wrt_current_values(value, rounded = False):
+    if pd.isna(value):
+        return(pd.NA)
+    bars = st.session_state['bars_data']
+
+    data_scale = bars.data_scale
+    base = bars.normalization_base
+    symbol = bars.symbol
+    return(scale_point(value, data_scale, base, symbol, rounded = rounded))
 
 def unscale_point_wrt_current_values(value):
     bars = st.session_state['bars_data']

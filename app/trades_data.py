@@ -62,6 +62,7 @@ def edit_trade_data(ticket, data_to_edit: dict | None = None, delete = False):
         for column, new_value in data_to_edit.items():
             trades_data.at[ticket, column] = new_value
 
+    st.session_state['update_data_table'] = True
     save_trades_data_to_file()
 
 def get_update_categories(from_server_time):

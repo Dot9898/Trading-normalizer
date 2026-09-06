@@ -1,21 +1,24 @@
 
 
+check bug when closing open trade via button?? double close
 
+add edit callback, then all of modify
 add selected trade actions: close/delete, edit, erase button for closed orders
-
+add order execution error handling
+handle dialog colision with alert
 
 actions
-closed: hide, delete
-open: close, edit
+closed: hide, erase
+open: edit, close
 pending: modify, delete
 alert: delete
 
 add confirmation box to delete closed trades
 
-
+fix BL BS buttons alignment (updated streamlit)
 check warning
 
-
+add settings box
 
 save eq balance and pl acc percent equity and balance if trade closed in the last x mins (data source in update ticket function? or similar)
 add table and alerts callbacks?

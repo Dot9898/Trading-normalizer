@@ -208,11 +208,11 @@ with info_column:
         st.header('')
     print_remaining_time_test()
 
-if st.session_state['dialog_data'] is not None:
-    widgets.open_dialog()
-    
 with trade_column:
     widgets.data_table()
+
+if st.session_state['dialog_data'] is not None:
+    widgets.open_dialog()
 
 
 

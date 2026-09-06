@@ -1,5 +1,7 @@
 ticket,status,symbol,volume,set_price,direction,order_type,SL_abs,TP_abs,SL_bp,TP_bp,balance_at_set,equity_at_set,SL_acc_percent_at_set_(equity),TP_acc_percent_at_set_(equity),open_server_time,open_timestamp,open_price,balance_at_open,equity_at_open,SL_acc_percent_at_open_(equity),TP_acc_percent_at_open_(equity),close_server_time,close_timestamp,close_reason,close_price,points_abs,points_bp,balance_at_close,equity_at_close,P/L_abs,P/L_acc_percent_(equity),P/L_acc_percent_(balance),P/L_acc_percent_(estimate),display,is_shown
-323728394,closed,US500,0.1,7627.1,buy,market,,,,,,,,,1788335574,1788324774,7627.1,,,,,1788335595,1788324795,manual,7626.7,-0.4,-0.5,,,-0.04,,,-0.1,basis,True
+325179827,closed,ETHUSD,0.01,2486.64,buy,market,,,,,,,,,1788714977,1788704177,2486.64,,,,,1788715013,1788704213,manual,2483.82,-2.8,-0.1,39.66,39.66,-0.03,-0.1,-0.1,-0.1,percent,True
+325179640,closed,ETHUSD,0.01,2494.63,buy,market,,,,,,,,,1788714092,1788703292,2494.63,,,,,1788714110,1788703310,manual,2492.53,-2.1,-0.1,39.69,39.69,-0.02,-0.1,-0.1,-0.1,percent,True
+325179562,closed,ETHUSD,0.01,2497.14,buy,market,,,,,,,,,1788713616,1788702816,2497.14,,,,,1788713765,1788702965,manual,2493.91,-3.2,-0.1,39.71,39.71,-0.03,-0.1,-0.1,-0.1,percent,True
 323041662,closed,US500,0.1,7687.5,buy,market,,,,,,,,,1788240379,1788229579,7687.5,,,,,1788240494,1788229694,manual,7686.9,-0.6,-0.8,,,-0.06,,,-0.1,basis,True
 315053487,closed,US500,0.6,7751.0,buy,limit,7743.0,7767.0,-10.3,20.6,,,,,1786390319,1786379519,7751.0,,,,,1786390320,1786379520,SL,7742.1,-8.9,-11.5,,,-5.34,,,-11.7,basis,True
 314490208,closed,US500,0.6,7730.5,buy,market,,,,,,,,,1786120192,1786109392,7730.5,,,,,1786122730,1786111930,SL,7719.5,-11.0,-14.2,,,-6.6,,,-14.1,basis,True
@@ -22,7 +24,6 @@ ticket,status,symbol,volume,set_price,direction,order_type,SL_abs,TP_abs,SL_bp,T
 310093758,closed,US500,0.1,7420.9,buy,market,,,,,,,,,1785252850,1785242050,7420.9,,,,,1785252858,1785242058,manual,7422.0,1.1,1.5,,,0.11,,,0.3,basis,True
 310091329,closed,US500,0.1,7423.5,buy,market,,,,,,,,,1785252572,1785241772,7423.5,,,,,1785252596,1785241796,manual,7424.1,0.6,0.8,,,0.06,,,0.1,basis,True
 310090776,closed,US500,0.1,7424.2,buy,market,,,,,,,,,1785252456,1785241656,7424.2,,,,,1785252463,1785241663,manual,7425.1,0.9,1.2,,,0.09,,,0.2,basis,True
-310090612,closed,US500,0.1,7423.6,buy,market,,,,,,,,,1785252429,1785241629,7423.6,,,,,1785252437,1785241637,manual,7423.6,0.0,0.0,,,-0.0,,,-0.0,basis,True
 310090465,closed,US500,0.1,7422.7,buy,market,,,,,,,,,1785252387,1785241587,7422.7,,,,,1785252404,1785241604,manual,7423.1,0.4,0.5,,,0.04,,,0.1,basis,True
 310090056,closed,US500,0.1,7420.7,buy,market,,,,,,,,,1785252323,1785241523,7420.7,,,,,1785252329,1785241529,manual,7420.2,-0.5,-0.7,,,-0.05,,,-0.1,basis,True
 310089386,closed,US500,0.1,7420.5,buy,market,,,,,,,,,1785252216,1785241416,7420.5,,,,,1785252224,1785241424,manual,7419.6,-0.9,-1.2,,,-0.09,,,-0.2,basis,True

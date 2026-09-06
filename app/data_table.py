@@ -60,6 +60,7 @@ def get_progress_string(row):   #Format leading zeroes here
 
 def generate_trades_data_table(timezone):
     trades_data = st.session_state['trades_data']
+    current_symbol = st.session_state['selected_symbol']
     PL_equity_column_number = trades_data.columns.get_loc('P/L_acc_percent_(equity)') + 1
     PL_estimate_column_number = trades_data.columns.get_loc('P/L_acc_percent_(estimate)') + 1
     table = pd.DataFrame(columns = ['Status', 'Time', 'Operation', 'Close reason', 'Progress', 'P/L', 
@@ -100,11 +101,11 @@ def generate_trades_data_table(timezone):
             PL_percent = pd.NA
 
         if trade.status == 'open':
-            action_button_1_text = 'Edit'
+            action_button_1_text = 'Edit' if trade.symbol == current_symbol else pd.NA
             action_button_2_text = 'Close'
 
         if trade.status == 'pending':
-            action_button_1_text = 'Modify'
+            action_button_1_text = 'Modify' if trade.symbol == current_symbol else pd.NA
             action_button_2_text = 'Delete'
 
         table.loc[trade.Index] = [status.capitalize(), time, operation, close_reason, progress, PL_percent, 

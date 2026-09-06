@@ -24,6 +24,12 @@ SYMBOL_DATA = {'US500': {'ideal_ppb': 0.75,
                           'margin_req': 0.05, 
                           'display': 'percent', 
                           'digits': 2, 
+                          'power': 2}, 
+
+               'ETHUSD': {'ideal_ppb': None,
+                          'margin_req': 0.05, 
+                          'display': 'percent', 
+                          'digits': 2, 
                           'power': 2}}
 
 
@@ -43,6 +49,9 @@ SHOWN_ALERTS_DATA_COLUMNS = {'manual': ['Time', 'Status', 'Operation', 'Progress
                              'conditional_trade': ['Time', 'Status', 'Operation'], 
                              'open': ['Time', 'Status', 'Operation', 'Progress', 'P/L'], 
                              'close': ['Time', 'Status', 'Operation', 'Progress', 'P/L', 'Close reason']}
+SHOWN_ACTIONS_DATA_COLUMNS = {'modify': ['Time', 'Status', 'Operation', 'Current entry', 'Current SL', 'Current TP'], 
+                              'edit': ['Time', 'Status', 'Operation', 'Progress', 'P/L', 'Current SL', 'Current TP'], 
+                              'erase': ['Time', 'Status', 'Operation', 'Progress', 'P/L', 'Close reason']}
 
 INTERESTING_TIMES = ['now', 
                      'market_open', 

@@ -10,6 +10,7 @@ from format_functions import no_tag_text
 from trades_data import edit_trade_data
 from alerts import alert_check, notify_executions_in_serie
 from data_table import update_data_table
+import dialog_boxes
 
 def timezone_dropdown():
     st.selectbox('Time zone', 
@@ -495,30 +496,23 @@ def conditional_operations_widgets():
             set_conditional_trade_button('buy')
 
 
-@st.dialog(' ', width = 'medium')
-def erase_closed_trade_dialog(ticket):
-    st.header('This will permanently delete all the data of this trade', text_alignment = 'center')
-    st.subheader('')
-    columns = st.columns(4)
-    with columns[1]:
-        st.button('Erase data', 
-                  key = 'erase_button', 
-                  width = 'stretch', 
-                  on_click = callbacks.erase_trade, 
-                  args = [ticket])
-    with columns[2]:
-        st.button('Cancel', 
-                  key = 'cancel_button', 
-                  width = 'stretch', 
-                  on_click = st.rerun)
-
+@st.fragment(key = 'dialog_fragment')
 def open_dialog():
     reason = st.session_state['dialog_data']['reason']
     ticket = st.session_state['dialog_data']['ticket']
     st.session_state['dialog_data'] = None
     
     if reason == 'erase':
-        erase_closed_trade_dialog(ticket)
+        dialog_boxes.erase_closed_trade_dialog(ticket)
+
+    if reason == 'edit':
+        dialog_boxes.edit_open_trade_dialog(ticket)
+
+    if reason == 'modify':
+        pass
+
+
+
 
 
 

@@ -136,6 +136,7 @@ def update_risk():
 def full_update(): #when checking all callbacks UPDATE THIS FUNCTION TO INCLUDE ALERTS, DATA TABLE
     update_risk()
     reload_graph()
+    reload_table()
 
 
 def set_alert():
@@ -181,7 +182,10 @@ def set_conditional_trade(direction):
     reload_table()
 
 
-def execute_table_action(button_number):
+def execute_table_action(button_number):   #This callback is executed inside data_table fragment, 
+                                           #and as a callback inside a fragment, when the action button, 
+                                           #is clicked, it only triggers a fragment rerun.
+                                           #st.rerun is used at the end to fix this and avoid input lag.
     button_key = f'action_button_{button_number}_state'
     row_number = st.session_state[button_key].row
     label = st.session_state[button_key].label
@@ -203,6 +207,7 @@ def execute_table_action(button_number):
     if label == 'Delete' and status in ['Alert', 'Conditional trade']:
         alert = st.session_state['data_table'].loc[ticket, 'source_object']
         st.session_state['alerts'].discard(alert)
+        reload_table()
 
     if label == 'Close':
         assert status == 'Open'
@@ -216,16 +221,23 @@ def execute_table_action(button_number):
         st.session_state['dialog_data'] = {'reason': 'erase', 'ticket': ticket}
 
     if label == 'Edit':
+        assert status == 'Open'
+        st.session_state['dialog_data'] = {'reason': 'edit', 'ticket': ticket}
+
+    if label == 'Modify':
         pass
 
-
-    if label not in ['Erase', 'Edit', 'Modify']:
-        st.session_state['update_data_table'] = True
-    
     st.rerun()
 
-def erase_trade(ticket):
-    edit_trade_data(ticket, delete = True)
+def execute_action_and_dismiss_dialog(reason, ticket):
+    if reason == 'erase':
+        edit_trade_data(ticket, delete = True)
+    if reason == 'edit':
+        #if ########
+        pass
+    if reason == 'modify':
+        pass
+    #dialog this trade's status has changed, please try again
     st.rerun()
 
 #hide, delete(alert), close, delete(pending), erase, edit, modify

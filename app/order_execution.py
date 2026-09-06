@@ -6,6 +6,8 @@ from math import floor
 from trades_data import get_trade_data_to_edit, edit_trade_data
 
 
+#Add error handling for all actions
+
 def get_deviation(symbol):
     display = (SYMBOL_DATA[symbol]['display'] if symbol in SYMBOL_DATA else DEFAULTS['display'])
     max_deviation_percentage = 0.05 if display == 'basis' else 0.5
@@ -83,6 +85,7 @@ def limit_or_stop_order(symbol, lots, direction, execution_price, SL = None, TP 
 
 def change_SLTP_open(ticket, SL = None, TP = None):
 
+    #positions = ... catch exception
     position = mt5.positions_get(ticket = ticket)[0]
     
     request = {'action': mt5.TRADE_ACTION_SLTP, 
