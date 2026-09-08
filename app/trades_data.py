@@ -3,9 +3,10 @@
 import pandas as pd
 import streamlit as st
 import MetaTrader5 as mt5
-from constants import DATA_PATH, TRADE_DATA_COLUMNS_TO_TYPES, SYMBOL_DATA, OUT_DEAL_REASONS
+from constants import DATA_PATH, TRADE_DATA_COLUMNS_TO_TYPES, SYMBOL_DATA, OUT_DEAL_REASONS, WINDOW_WHEN_DATA_IS_CONSIDERED_LOCAL
 from backend import scale_point
 from get_live_data import get_current_server_time, get_actual_timestamp, get_last_update_server_time, register_update_time
+from time import time
 
 
 def load_trades_data():
@@ -204,6 +205,7 @@ def update_closing_PL(data, data_source, PL, ticket, trades_data, current_accoun
 def get_trade_data_to_edit(ticket, data_source, operation_type): #Need to fix this flow, break it down in more functions
     
     current_account_info = mt5.account_info()
+    current_timestamp = time()
     trades_data = st.session_state['trades_data']
 
     data = {}
@@ -231,7 +233,7 @@ def get_trade_data_to_edit(ticket, data_source, operation_type): #Need to fix th
                 'open_price': open_price, 
                 
                 'display': SYMBOL_DATA[symbol]['display']}
-        
+ 
         if data_source == 'local':
             data['balance_at_set'] = round(current_account_info.balance)
             data['equity_at_set'] = round(current_account_info.equity)
@@ -310,7 +312,7 @@ def get_trade_data_to_edit(ticket, data_source, operation_type): #Need to fix th
                 'equity_at_set': round(current_account_info.equity), 
                 
                 'display': SYMBOL_DATA[symbol]['display']}
-
+        
         data = update_SL_TP(data, data_source, 'set', SL, TP, set_price, lots, symbol, current_account_info)
 
     if operation_type == 'edited':
@@ -364,6 +366,9 @@ def get_trade_data_to_edit(ticket, data_source, operation_type): #Need to fix th
                 'points_bp': round(scale_point(close_price - open_price, 'normalized', open_price, symbol, true_normalization = True), 1), 
                 'P/L_abs': PL}
 
+        if current_timestamp - data['close_timestamp'] < WINDOW_WHEN_DATA_IS_CONSIDERED_LOCAL:
+            data_source = 'local'
+        
         data = update_closing_PL(data, data_source, PL, ticket, trades_data, current_account_info)
 
     if operation_type == 'opened':
@@ -382,6 +387,9 @@ def get_trade_data_to_edit(ticket, data_source, operation_type): #Need to fix th
                 'open_server_time': position.time, 
                 'open_timestamp': get_actual_timestamp(position.time), 
                 'open_price': open_price}
+        
+        if current_timestamp - data['open_timestamp'] < WINDOW_WHEN_DATA_IS_CONSIDERED_LOCAL:
+            data_source = 'local'
         
         if data_source == 'local':
             data['balance_at_open'] = round(current_account_info.balance)
@@ -493,7 +501,6 @@ def update_ticket_data(ticket, data_source, category): #change data source here 
     else:
         data = get_trade_data_to_edit(ticket, data_source, category)
         edit_trade_data(ticket, data)
-
 
 def update_all_trades_data(from_server_time = None):
     if from_server_time is None:

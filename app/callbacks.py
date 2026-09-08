@@ -149,7 +149,7 @@ def set_alert():
     st.session_state['alerts'].add(alert)
     reload_table()
 
-def set_conditional_trade(direction):
+def set_conditional_trade(direction): ###############################
     symbol = st.session_state['selected_symbol']
     trigger_price = st.session_state['alert_price']
     bid = st.session_state['bars_data'].current_bid
@@ -182,17 +182,14 @@ def set_conditional_trade(direction):
     reload_table()
 
 
-def execute_table_action(button_number):   #This callback is executed inside data_table fragment, 
-                                           #and as a callback inside a fragment, when the action button, 
-                                           #is clicked, it only triggers a fragment rerun.
-                                           #st.rerun is used at the end to fix this and avoid input lag.
+def execute_table_action(button_number):   #Called from a fragment, needs manual full-app rerun at the end
     button_key = f'action_button_{button_number}_state'
     row_number = st.session_state[button_key].row
     label = st.session_state[button_key].label
     row = st.session_state['displayed_table'].iloc[row_number]
     ticket = int(row.name)
-
     status = row['Status']
+    check_execution = False
 
     if label == 'Hide':
         assert status == 'Closed'
@@ -207,14 +204,15 @@ def execute_table_action(button_number):   #This callback is executed inside dat
     if label == 'Delete' and status in ['Alert', 'Conditional trade']:
         alert = st.session_state['data_table'].loc[ticket, 'source_object']
         st.session_state['alerts'].discard(alert)
-        reload_table()
 
     if label == 'Close':
         assert status == 'Open'
-        order_execution.close_position(ticket = ticket)
+        result = order_execution.close_position(ticket = ticket)
+        check_execution = True
 
     if label == 'Delete' and status == 'Pending':
-        order_execution.delete_pending_order(ticket = ticket)
+        result = order_execution.delete_pending_order(ticket = ticket)
+        check_execution = True
 
     if label == 'Erase':
         assert status == 'Closed'
@@ -225,22 +223,46 @@ def execute_table_action(button_number):   #This callback is executed inside dat
         st.session_state['dialog_data'] = {'reason': 'edit', 'ticket': ticket}
 
     if label == 'Modify':
-        pass
+        assert status == 'Pending'
+        st.session_state['dialog_data'] = {'reason': 'modify', 'ticket': ticket}
+
+    if check_execution:
+        if result is None:
+            st.session_state['dialog_data'] = {'reason': 'not_found'}
+        elif result.retcode != mt5.TRADE_RETCODE_DONE:
+            st.session_state['dialog_data'] = {'reason': 'error', 'error_code': result.retcode}
 
     st.rerun()
 
-def execute_action_and_dismiss_dialog(reason, ticket):
+def execute_action_and_dismiss_dialog(reason, ticket):   #Called from a dialog, needs manual full-app rerun at the end
+    check_execution = False
+
     if reason == 'erase':
         edit_trade_data(ticket, delete = True)
+
     if reason == 'edit':
-        #if ########
-        pass
+        new_SL = get_usable_price_level(st.session_state['SL'])
+        new_TP = get_usable_price_level(st.session_state['TP'])
+        result = order_execution.change_SLTP_open(ticket, new_SL, new_TP)
+        check_execution = True
+    
     if reason == 'modify':
-        pass
-    #dialog this trade's status has changed, please try again
+        new_SL = get_usable_price_level(st.session_state['SL'])
+        new_TP = get_usable_price_level(st.session_state['TP'])
+        new_entry = get_usable_price_level(st.session_state['entry'])
+        result = order_execution.change_price_and_SLTP_pending(ticket, new_entry, new_SL, new_TP)
+        check_execution = True
+
+    if check_execution:
+        if result is None:
+            st.session_state['dialog_data'] = {'reason': 'not_found'}
+        elif result.retcode == mt5.TRADE_RETCODE_DONE:
+            st.session_state['dialog_data'] = {'reason': 'success'}
+        else:
+            st.session_state['dialog_data'] = {'reason': 'error', 'error_code': result.retcode}
+
     st.rerun()
 
-#hide, delete(alert), close, delete(pending), erase, edit, modify
 
 
 

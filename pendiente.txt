@@ -1,26 +1,11 @@
 
 
-check bug when closing open trade via button?? double close
-
-add edit callback, then all of modify
-add selected trade actions: close/delete, edit, erase button for closed orders
-add order execution error handling
-handle dialog colision with alert
-
-actions
-closed: hide, erase
-open: edit, close
-pending: modify, delete
-alert: delete
-
-add confirmation box to delete closed trades
 
 fix BL BS buttons alignment (updated streamlit)
-check warning
+check warnings
+confirmation of b/s in dialog box. checkbox for confirmation on/off
 
-add settings box
 
-save eq balance and pl acc percent equity and balance if trade closed in the last x mins (data source in update ticket function? or similar)
 add table and alerts callbacks?
 
 volume min y step en order execution
@@ -34,8 +19,11 @@ función dibujar un precio en el gráfico, por número o +- de base, dibujar la 
 show sltp en el gráfico checkbox
 add update risk callback before setting an operation
 confirmation of b/s in dialog box. checkbox for confirmation on/off
+add order execution error handling for market and pending??
 order history in graph
 add 'zoom' square in the graph?
+
+add settings box: checkbox for confirmation dialog of market b/s, normalization default y range, default +- tpsl
 
 cambiar path mt5
 refactor graph (load all from backmost timestamp to now, reload on.. change of scale? change of timeframe? is it worth to re do it all?)
@@ -47,10 +35,13 @@ aviso? fin de los datos mt5
 move remaining candle time to price lines?
 colores open n closed market
 ticker navigation and naming
+trade limit if losses (in data etc)
+alert sounds
 colores (markdown RR string y table data)
 local h/l
 implementación trading range según la nota
 correr múltiples a la vez? para comparar gráficos normalizados
+weekly and infinite display of data table
 
 weekend bugs
 

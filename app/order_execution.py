@@ -85,8 +85,10 @@ def limit_or_stop_order(symbol, lots, direction, execution_price, SL = None, TP 
 
 def change_SLTP_open(ticket, SL = None, TP = None):
 
-    #positions = ... catch exception
-    position = mt5.positions_get(ticket = ticket)[0]
+    positions = mt5.positions_get(ticket = ticket)
+    if not positions:
+        return(None)
+    position = positions[0]
     
     request = {'action': mt5.TRADE_ACTION_SLTP, 
                'position': ticket, 
@@ -107,7 +109,10 @@ def change_SLTP_open(ticket, SL = None, TP = None):
 
 def change_price_and_SLTP_pending(ticket, execution_price = None, SL = None, TP = None):
 
-    order = mt5.orders_get(ticket = ticket)[0]
+    orders = mt5.orders_get(ticket = ticket)
+    if not orders:
+        return(None)
+    order = orders[0]
     
     request = {'action': mt5.TRADE_ACTION_MODIFY, 
                'order': ticket, 
@@ -132,6 +137,10 @@ def change_price_and_SLTP_pending(ticket, execution_price = None, SL = None, TP 
 
 def delete_pending_order(ticket):
 
+    orders = mt5.orders_get(ticket = ticket)
+    if not orders:
+        return(None)
+
     request = {'action': mt5.TRADE_ACTION_REMOVE, 
                'order': ticket}
 
@@ -144,7 +153,10 @@ def delete_pending_order(ticket):
 
 def close_position(ticket):
 
-    position = mt5.positions_get(ticket = ticket)[0]
+    positions = mt5.positions_get(ticket = ticket)
+    if not positions:
+        return(None)
+    position = positions[0]
 
     if position.type == mt5.ORDER_TYPE_BUY:
         close_order_type = mt5.ORDER_TYPE_SELL
@@ -165,26 +177,6 @@ def close_position(ticket):
         edit_trade_data(ticket, data)
 
     return(result)
-
-
-
-"""
-
-"price": price,
-order
-Order ticket. Required for modifying pending orders
-position
-Position ticket. Fill it when changing and closing a position for its clear identification. Usually, it is the same as the ticket of the order that opened the position.
-
-
-TRADE_ACTION_SLTP                   = 6      # Modify Stop Loss and Take Profit values of an opened position
-TRADE_ACTION_MODIFY                 = 7      # Modify the parameters of the order placed previously
-TRADE_ACTION_REMOVE                 = 8      # Delete the pending order placed previously
-
-"""
-
-
-
 
 
 

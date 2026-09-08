@@ -239,7 +239,7 @@ def zoom_buttons():
 
 def symbol_dropdown():
     st.selectbox('Ticker', 
-                constants.SYMBOL_DATA.keys(),  
+                constants.SHOWN_SYMBOLS,  
                 key = 'selected_symbol', 
                 index = 0, 
                 on_change = callbacks.full_update)
@@ -315,18 +315,21 @@ def SL_and_TP_input():
     with TP_column:
         st.number_input('TP', 
                         key = 'TP', 
-                        value = bid, 
+                        value = float(bid), 
                         step = step, 
                         format = format, 
                         on_change = callbacks.update_risk)
 
 def entry_display():
     bid = 0.0 if st.session_state['bars_data'].current_bid is None else st.session_state['bars_data'].current_bid
+    digits = st.session_state['bars_data'].shown_digits
+    format = f'%0.{digits}f'
     step = get_SLTP_step()
     st.number_input('Entry', 
                     key = 'entry', 
                     value = bid, 
                     step = step, 
+                    format = format, 
                     disabled = True)
 
 
@@ -498,19 +501,27 @@ def conditional_operations_widgets():
 
 @st.fragment(key = 'dialog_fragment')
 def open_dialog():
-    reason = st.session_state['dialog_data']['reason']
-    ticket = st.session_state['dialog_data']['ticket']
+    data = st.session_state['dialog_data']
+    reason = data['reason']
     st.session_state['dialog_data'] = None
     
     if reason == 'erase':
-        dialog_boxes.erase_closed_trade_dialog(ticket)
+        dialog_boxes.erase_closed_trade(data['ticket'])
 
     if reason == 'edit':
-        dialog_boxes.edit_open_trade_dialog(ticket)
+        dialog_boxes.edit_open_trade(data['ticket'])
 
     if reason == 'modify':
-        pass
+        dialog_boxes.modify_pending_order(data['ticket'])
 
+    if reason == 'success':
+        dialog_boxes.success()
+
+    if reason == 'not_found':
+        dialog_boxes.not_found()
+
+    if reason == 'error':
+        dialog_boxes.error(data['error_code'])
 
 
 

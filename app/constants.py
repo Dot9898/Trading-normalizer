@@ -13,7 +13,9 @@ DATA_TABLE_UPDATE_INTERVAL = 5.0 ###########
 MAX_BARS_IN_GRAPH = 1000
 GRAPH_HEIGHT = 450
 SHOW_ORDER_TYPES = True
+WINDOW_WHEN_DATA_IS_CONSIDERED_LOCAL = 30
 
+SHOWN_SYMBOLS = ['US500', 'BTCUSD']
 SYMBOL_DATA = {'US500': {'ideal_ppb': 0.75, 
                          'margin_req': 0.005, 
                          'display': 'basis', 
@@ -49,7 +51,7 @@ SHOWN_ALERTS_DATA_COLUMNS = {'manual': ['Time', 'Status', 'Operation', 'Progress
                              'conditional_trade': ['Time', 'Status', 'Operation'], 
                              'open': ['Time', 'Status', 'Operation', 'Progress', 'P/L'], 
                              'close': ['Time', 'Status', 'Operation', 'Progress', 'P/L', 'Close reason']}
-SHOWN_ACTIONS_DATA_COLUMNS = {'modify': ['Time', 'Status', 'Operation', 'Current entry', 'Current SL', 'Current TP'], 
+SHOWN_ACTIONS_DATA_COLUMNS = {'modify': ['Status', 'Operation', 'Current entry', 'Current SL', 'Current TP'], 
                               'edit': ['Time', 'Status', 'Operation', 'Progress', 'P/L', 'Current SL', 'Current TP'], 
                               'erase': ['Time', 'Status', 'Operation', 'Progress', 'P/L', 'Close reason']}
 
@@ -106,14 +108,6 @@ TRADE_DATA_COLUMNS_TO_TYPES = {'status': 'string',
                                 'display': 'string', 
                                 'is_shown': 'boolean'}
 
-OUT_DEAL_REASONS = {mt5.DEAL_REASON_CLIENT: 'manual', 
-                    mt5.DEAL_REASON_MOBILE: 'manual', 
-                    mt5.DEAL_REASON_WEB: 'manual', 
-                    mt5.DEAL_REASON_EXPERT: 'manual', 
-                    mt5.DEAL_REASON_SL: 'SL', 
-                    mt5.DEAL_REASON_TP: 'TP', 
-                    mt5.DEAL_REASON_SO: 'stop_out'}
-
 
 #Labels
 
@@ -165,6 +159,101 @@ CHART_COLORS = {'fill': {'green_and_red': {'positive': GREEN, 'negative': RED},
                 'stroke': {'green_and_red': {'positive': GREEN, 'negative': RED}, 
                         'black_and_white': {'positive': WHITE, 'negative': WHITE}}, 
                 'price_lines': {'bid': BLUE, 'ask': RED}}
+
+
+#MT5 Codes
+
+OUT_DEAL_REASONS = {mt5.DEAL_REASON_CLIENT: 'manual', 
+                    mt5.DEAL_REASON_MOBILE: 'manual', 
+                    mt5.DEAL_REASON_WEB: 'manual', 
+                    mt5.DEAL_REASON_EXPERT: 'manual', 
+                    mt5.DEAL_REASON_SL: 'SL', 
+                    mt5.DEAL_REASON_TP: 'TP', 
+                    mt5.DEAL_REASON_SO: 'stop_out'}
+
+ERROR_CODE_TO_DETAILS = {10004: {'name': 'TRADE_RETCODE_REQUOTE',
+                                'description': 'Requote'},
+                        10006: {'name': 'TRADE_RETCODE_REJECT',
+                                'description': 'Request rejected'},
+                        10007: {'name': 'TRADE_RETCODE_CANCEL',
+                                'description': 'Request canceled by trader'},
+                        10008: {'name': 'TRADE_RETCODE_PLACED',
+                                'description': 'Order placed'},
+                        10009: {'name': 'TRADE_RETCODE_DONE',
+                                'description': 'Request completed'},
+                        10010: {'name': 'TRADE_RETCODE_DONE_PARTIAL',
+                                'description': 'Only part of the request was completed'},
+                        10011: {'name': 'TRADE_RETCODE_ERROR',
+                                'description': 'Request processing error'},
+                        10012: {'name': 'TRADE_RETCODE_TIMEOUT',
+                                'description': 'Request canceled by timeout'},
+                        10013: {'name': 'TRADE_RETCODE_INVALID',
+                                'description': 'Invalid request'},
+                        10014: {'name': 'TRADE_RETCODE_INVALID_VOLUME',
+                                'description': 'Invalid volume in the request'},
+                        10015: {'name': 'TRADE_RETCODE_INVALID_PRICE',
+                                'description': 'Invalid price in the request'},
+                        10016: {'name': 'TRADE_RETCODE_INVALID_STOPS',
+                                'description': 'Invalid stops in the request'},
+                        10017: {'name': 'TRADE_RETCODE_TRADE_DISABLED',
+                                'description': 'Trade is disabled'},
+                        10018: {'name': 'TRADE_RETCODE_MARKET_CLOSED',
+                                'description': 'Market is closed'},
+                        10019: {'name': 'TRADE_RETCODE_NO_MONEY',
+                                'description': 'There is not enough money to complete the request'},
+                        10020: {'name': 'TRADE_RETCODE_PRICE_CHANGED',
+                                'description': 'Prices changed'},
+                        10021: {'name': 'TRADE_RETCODE_PRICE_OFF',
+                                'description': 'There are no quotes to process the request'},
+                        10022: {'name': 'TRADE_RETCODE_INVALID_EXPIRATION',
+                                'description': 'Invalid order expiration date in the request'},
+                        10023: {'name': 'TRADE_RETCODE_ORDER_CHANGED',
+                                'description': 'Order state changed'},
+                        10024: {'name': 'TRADE_RETCODE_TOO_MANY_REQUESTS',
+                                'description': 'Too frequent requests'},
+                        10025: {'name': 'TRADE_RETCODE_NO_CHANGES',
+                                'description': 'No changes in request'},
+                        10026: {'name': 'TRADE_RETCODE_SERVER_DISABLES_AT',
+                                'description': 'Autotrading disabled by server'},
+                        10027: {'name': 'TRADE_RETCODE_CLIENT_DISABLES_AT',
+                                'description': 'Autotrading disabled by client terminal'},
+                        10028: {'name': 'TRADE_RETCODE_LOCKED',
+                                'description': 'Request locked for processing'},
+                        10029: {'name': 'TRADE_RETCODE_FROZEN',
+                                'description': 'Order or position frozen'},
+                        10030: {'name': 'TRADE_RETCODE_INVALID_FILL',
+                                'description': 'Invalid order filling type'},
+                        10031: {'name': 'TRADE_RETCODE_CONNECTION',
+                                'description': 'No connection with the trade server'},
+                        10032: {'name': 'TRADE_RETCODE_ONLY_REAL',
+                                'description': 'Operation is allowed only for live accounts'},
+                        10033: {'name': 'TRADE_RETCODE_LIMIT_ORDERS',
+                                'description': 'The number of pending orders has reached the limit'},
+                        10034: {'name': 'TRADE_RETCODE_LIMIT_VOLUME',
+                                'description': 'The volume of orders and positions for the symbol has reached the limit'},
+                        10035: {'name': 'TRADE_RETCODE_INVALID_ORDER',
+                                'description': 'Incorrect or prohibited order type'},
+                        10036: {'name': 'TRADE_RETCODE_POSITION_CLOSED',
+                                'description': 'Position with the specified POSITION_IDENTIFIER has already been closed'},
+                        10038: {'name': 'TRADE_RETCODE_INVALID_CLOSE_VOLUME',
+                                'description': 'A close volume exceeds the current position volume'},
+                        10039: {'name': 'TRADE_RETCODE_CLOSE_ORDER_EXIST',
+                                'description': 'A close order already exists for a specified position'},
+                        10040: {'name': 'TRADE_RETCODE_LIMIT_POSITIONS',
+                                'description': 'The number of open positions simultaneously present on an account has reached the limit'},
+                        10041: {'name': 'TRADE_RETCODE_REJECT_CANCEL',
+                                'description': 'The pending order activation request is rejected, the order is canceled'},
+                        10042: {'name': 'TRADE_RETCODE_LONG_ONLY',
+                                'description': 'The request is rejected because only long positions are allowed for the symbol'},
+                        10043: {'name': 'TRADE_RETCODE_SHORT_ONLY',
+                                'description': 'The request is rejected because only short positions are allowed for the symbol'},
+                        10044: {'name': 'TRADE_RETCODE_CLOSE_ONLY',
+                                'description': 'The request is rejected because only position closing is allowed for the symbol'},
+                        10045: {'name': 'TRADE_RETCODE_FIFO_CLOSE',
+                                'description': 'The request is rejected because position closing is allowed only by FIFO rule'},
+                        10046: {'name': 'TRADE_RETCODE_HEDGE_PROHIBITED',
+                                'description': 'The request is rejected because opposite positions on a single symbol are disabled'}
+}
 
 
 #Time
@@ -250,7 +339,6 @@ ZOOM_VARIABLE_SETTINGS = {'selected_timeframe': {'hour': mt5.TIMEFRAME_M1,
 
 
 #Others
-
 
 ROOT_PATH = Path(__file__).resolve().parent.parent
 DATA_PATH = ROOT_PATH / 'data'
