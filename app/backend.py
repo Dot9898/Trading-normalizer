@@ -113,15 +113,15 @@ def floor_with_step(value, step):
     step = Decimal(str(step))
     return(float((value / step).quantize(0, rounding = ROUND_FLOOR) * step))
 
-def get_usable_lotsize(execution_price = 'current'):
+def get_usable_lotsize(execution_price_abs: str | float = 'current'):
     bars = st.session_state['bars_data']
     symbol_info = mt5.symbol_info(bars.symbol)
 
     equity = mt5.account_info().equity
-    current_price = symbol_info.bid
-    if execution_price == 'current':
-        execution_price = current_price  
-    scale = bars.selected_scale
+    current_price_abs = symbol_info.bid
+    if execution_price_abs == 'current':
+        execution_price_abs = current_price_abs  
+    scale = bars.data_scale
 
     pppt = None
     ppb = None
@@ -130,7 +130,7 @@ def get_usable_lotsize(execution_price = 'current'):
     if scale == 'normalized':
         ppb = st.session_state['ppb']
 
-    exact_lotsize = get_lotsize_from_ppb_or_pppt(current_price, execution_price, equity, pppt, ppb)
+    exact_lotsize = get_lotsize_from_ppb_or_pppt(current_price_abs, execution_price_abs, equity, pppt, ppb)
     
     if exact_lotsize < symbol_info.volume_min:
         lotsize = 0
@@ -147,5 +147,8 @@ def get_usable_price_level(value):
 
     absolute_price = unscale_point_wrt_current_values(value)
     usable_level = round(absolute_price, symbol_info.digits)
+
+    if usable_level < 0:
+        wsable_level = 0
 
     return(usable_level)

@@ -36,6 +36,8 @@ def market_order(symbol, lots, direction, SL = None, TP = None):
         request['tp'] = float(TP)
 
     result = mt5.order_send(request)
+    if result is None:
+        return(None)
 
     if result.retcode == mt5.TRADE_RETCODE_DONE:
         ticket = result.order
@@ -75,6 +77,8 @@ def limit_or_stop_order(symbol, lots, direction, execution_price, SL = None, TP 
         request['tp'] = float(TP)
 
     result = mt5.order_send(request)
+    if result is None:
+        return(None)
 
     if result.retcode == mt5.TRADE_RETCODE_DONE:
         ticket = result.order
@@ -87,7 +91,7 @@ def change_SLTP_open(ticket, SL = None, TP = None):
 
     positions = mt5.positions_get(ticket = ticket)
     if not positions:
-        return(None)
+        return('not_found')
     position = positions[0]
     
     request = {'action': mt5.TRADE_ACTION_SLTP, 
@@ -100,6 +104,8 @@ def change_SLTP_open(ticket, SL = None, TP = None):
         request['tp'] = float(TP)
 
     result = mt5.order_send(request)
+    if result is None:
+        return(None)
 
     if result.retcode == mt5.TRADE_RETCODE_DONE:
         data = get_trade_data_to_edit(ticket, 'local', 'edited')
@@ -111,7 +117,7 @@ def change_price_and_SLTP_pending(ticket, execution_price = None, SL = None, TP 
 
     orders = mt5.orders_get(ticket = ticket)
     if not orders:
-        return(None)
+        return('not_found')
     order = orders[0]
     
     request = {'action': mt5.TRADE_ACTION_MODIFY, 
@@ -128,6 +134,8 @@ def change_price_and_SLTP_pending(ticket, execution_price = None, SL = None, TP 
         request['tp'] = float(TP)
 
     result = mt5.order_send(request)
+    if result is None:
+        return(None)
 
     if result.retcode == mt5.TRADE_RETCODE_DONE:
         data = get_trade_data_to_edit(ticket, 'local', 'modified')

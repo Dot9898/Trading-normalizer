@@ -3,9 +3,9 @@
 
 fix BL BS buttons alignment (updated streamlit)
 check warnings
-confirmation of b/s in dialog box. checkbox for confirmation on/off
+confirmation of b/s in dialog box. checkbox for confirmation on/off. if confirmation off, disable sltp
 
-
+add callback to change values when changing scale
 add table and alerts callbacks?
 
 volume min y step en order execution
@@ -20,6 +20,7 @@ show sltp en el gráfico checkbox
 add update risk callback before setting an operation
 confirmation of b/s in dialog box. checkbox for confirmation on/off
 add order execution error handling for market and pending??
+file cleanup
 order history in graph
 add 'zoom' square in the graph?
 

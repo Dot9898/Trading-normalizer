@@ -247,8 +247,8 @@ def symbol_dropdown():
 def is_order_button_disabled(direction):
     SL = st.session_state['SL']
     TP = st.session_state['TP']
-    enabled = (SL <= TP if direction == 'buy' 
-               else SL >= TP if direction == 'sell' 
+    enabled = (SL < TP if direction == 'buy' 
+               else SL > TP if direction == 'sell' 
                else False)
     return(not enabled)
 
@@ -258,13 +258,15 @@ def market_order_buttons():
         st.button('Sell', 
                   key = 'sell_button', 
                   disabled = is_order_button_disabled('sell'), 
-                  #on_click = pass, 
+                  on_click = callbacks.place_order, 
+                  args = ['market', 'sell'], 
                   width = 'stretch')
     with buy_column:
         st.button('Buy', 
                   key = 'buy_button', 
                   disabled = is_order_button_disabled('buy'), 
-                  #on_click = pass, 
+                  on_click = callbacks.place_order, 
+                  args = ['market', 'buy'], 
                   width = 'stretch')
 
 def limit_order_buttons():
@@ -273,13 +275,15 @@ def limit_order_buttons():
         st.button('Sell limit\n\nSell stop', 
                   key = 'limit_sell_button', 
                   disabled = is_order_button_disabled('sell'), 
-                  #on_click = pass,
+                  on_click = callbacks.place_order, 
+                  args = ['pending', 'sell'], 
                   width = 'stretch')
     with buy_limit_column:
         st.button('Buy limit\n\nBuy stop', 
                   key = 'limit_buy_button', 
                   disabled = is_order_button_disabled('buy'), 
-                  #on_click = pass,
+                  on_click = callbacks.place_order, 
+                  args = ['pending', 'buy'], 
                   width = 'stretch')
 
 def get_SLTP_step():
@@ -392,6 +396,7 @@ def max_loss_input():
                     max_value = float(0), 
                     value = -10.0, 
                     step = 0.5, 
+                    format = '%0.1f', 
                     on_change = callbacks.update_risk)
 
 def RR_dropdown():
@@ -502,26 +507,21 @@ def conditional_operations_widgets():
 @st.fragment(key = 'dialog_fragment')
 def open_dialog():
     data = st.session_state['dialog_data']
-    reason = data['reason']
     st.session_state['dialog_data'] = None
+    reason = data['reason']
+
+    if reason in ['open', 'set']:
+        dialog_boxes.place_order(reason, data['direction'])
     
-    if reason == 'erase':
-        dialog_boxes.erase_closed_trade(data['ticket'])
+    if reason in ['edit', 'modify', 'erase']:
+        dialog_boxes.modify_trade_data(reason, data['ticket'])
 
-    if reason == 'edit':
-        dialog_boxes.edit_open_trade(data['ticket'])
-
-    if reason == 'modify':
-        dialog_boxes.modify_pending_order(data['ticket'])
-
-    if reason == 'success':
-        dialog_boxes.success()
-
-    if reason == 'not_found':
-        dialog_boxes.not_found()
-
+    if reason in ['success', 'not_found', 'null_lotsize']:
+        dialog_boxes.bare_text(reason)
+    
     if reason == 'error':
-        dialog_boxes.error(data['error_code'])
+        dialog_boxes.bare_text(reason, data['error_code'])
+
 
 
 

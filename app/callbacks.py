@@ -6,7 +6,7 @@ import MetaTrader5 as mt5
 import constants
 import risk_calculation
 import order_execution
-from backend import normalize_point_wrt_current_price, unscale_point_wrt_current_values, get_usable_price_level
+from backend import normalize_point_wrt_current_price, unscale_point_wrt_current_values, get_usable_price_level, get_usable_lotsize
 from trades_data import edit_trade_data
 from alerts import Alert
 
@@ -149,13 +149,13 @@ def set_alert():
     st.session_state['alerts'].add(alert)
     reload_table()
 
-def set_conditional_trade(direction): ###############################
+def set_conditional_trade(direction):
     symbol = st.session_state['selected_symbol']
     trigger_price = st.session_state['alert_price']
     bid = st.session_state['bars_data'].current_bid
     more_or_less = 'more' if bid <= trigger_price else 'less'
     trigger_price_abs = unscale_point_wrt_current_values(trigger_price)
-    lots = 0.1   ################################################################################
+    lots = get_usable_lotsize(trigger_price_abs)
     
     execution_price = st.session_state['entry']
     execution_price_abs = get_usable_price_level(execution_price)
@@ -181,8 +181,15 @@ def set_conditional_trade(direction): ###############################
     st.session_state['alerts'].add(trade_alert)
     reload_table()
 
+def place_order(order_type, direction):
+    if order_type == 'market':
+        st.session_state['dialog_data'] = {'reason': 'open', 'direction': direction}
+    if order_type == 'pending':
+        st.session_state['dialog_data'] = {'reason': 'set', 'direction': direction}
 
-def execute_table_action(button_number):   #Called from a fragment, needs manual full-app rerun at the end
+#This function and the next are called from a inside fragment, 
+#they use a manual full-app rerun at the end to avoid input lag after being executed
+def execute_table_action(button_number):
     button_key = f'action_button_{button_number}_state'
     row_number = st.session_state[button_key].row
     label = st.session_state[button_key].label
@@ -234,28 +241,52 @@ def execute_table_action(button_number):   #Called from a fragment, needs manual
 
     st.rerun()
 
-def execute_action_and_dismiss_dialog(reason, ticket):   #Called from a dialog, needs manual full-app rerun at the end
-    check_execution = False
+def execute_action_and_dismiss_dialog(reason, direction = None, ticket = None):
+    check_execution = True
 
     if reason == 'erase':
         edit_trade_data(ticket, delete = True)
+        check_execution = False
+
+    if reason == 'open':
+        symbol = st.session_state['selected_symbol']
+        lots = get_usable_lotsize(execution_price_abs = 'current')
+        if lots == 0:
+            result = 'null_lotsize'
+        else:
+            SL = get_usable_price_level(st.session_state['SL'])
+            TP = get_usable_price_level(st.session_state['TP'])
+            result = order_execution.market_order(symbol, lots, direction, SL, TP)
+
+    if reason == 'set':
+        symbol = st.session_state['selected_symbol']
+        entry_abs = get_usable_price_level(st.session_state['entry'])
+        lots = get_usable_lotsize(execution_price_abs = entry_abs)
+        if lots == 0:
+            result = 'null_lotsize'
+        else:
+            SL = get_usable_price_level(st.session_state['SL'])
+            TP = get_usable_price_level(st.session_state['TP'])
+            result = order_execution.limit_or_stop_order(symbol, lots, direction, entry_abs, SL, TP)
 
     if reason == 'edit':
         new_SL = get_usable_price_level(st.session_state['SL'])
         new_TP = get_usable_price_level(st.session_state['TP'])
         result = order_execution.change_SLTP_open(ticket, new_SL, new_TP)
-        check_execution = True
     
     if reason == 'modify':
         new_SL = get_usable_price_level(st.session_state['SL'])
         new_TP = get_usable_price_level(st.session_state['TP'])
         new_entry = get_usable_price_level(st.session_state['entry'])
         result = order_execution.change_price_and_SLTP_pending(ticket, new_entry, new_SL, new_TP)
-        check_execution = True
 
     if check_execution:
-        if result is None:
+        if result == 'not_found':
             st.session_state['dialog_data'] = {'reason': 'not_found'}
+        elif result == 'null_lotsize':
+            st.session_state['dialog_data'] = {'reason': 'null_lotsize'}
+        elif result is None:
+            st.session_state['dialog_data'] = {'reason': 'error', 'error_code': None}
         elif result.retcode == mt5.TRADE_RETCODE_DONE:
             st.session_state['dialog_data'] = {'reason': 'success'}
         else:

@@ -171,7 +171,9 @@ OUT_DEAL_REASONS = {mt5.DEAL_REASON_CLIENT: 'manual',
                     mt5.DEAL_REASON_TP: 'TP', 
                     mt5.DEAL_REASON_SO: 'stop_out'}
 
-ERROR_CODE_TO_DETAILS = {10004: {'name': 'TRADE_RETCODE_REQUOTE',
+ERROR_CODE_TO_DETAILS = {None: {'name': 'UNKNOWN', 
+                                'description': 'Unknown error'}, 
+                        10004: {'name': 'TRADE_RETCODE_REQUOTE',
                                 'description': 'Requote'},
                         10006: {'name': 'TRADE_RETCODE_REJECT',
                                 'description': 'Request rejected'},
