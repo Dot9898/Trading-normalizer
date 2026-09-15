@@ -9,8 +9,8 @@ from format_functions import add_sign, capitalize_first, format_timestamp
 from alerts import update_open_and_close_alerts
 from trades_data import update_all_trades_data
 
-import warnings
-warnings.filterwarnings('ignore', message = 'The behavior of DataFrame concatenation with empty or all-NA entries is deprecated')
+#import warnings
+#warnings.filterwarnings('ignore', message = 'The behavior of DataFrame concatenation with empty or all-NA entries is deprecated')
 ##########
 
 
@@ -198,14 +198,12 @@ def update_alerts_data_table(table):
                 table.at[row.Index, 'Operation'] = operation
 
 
-def update_data_table(full_update = False):
-
-    if st.session_state['update_data_table']:
+def update_data_table():
+    
+    if st.session_state['update_data_table']:   #Full update
+        print('full update here')
         st.session_state['update_data_table'] = False
-        full_update = True
-
-    if full_update:
-        update_all_trades_data()
+        update_all_trades_data(data_source = 'local')
         update_open_and_close_alerts()
         timezone = st.session_state['selected_timezone']
         st.session_state['trades_data_table'] = generate_trades_data_table(timezone)

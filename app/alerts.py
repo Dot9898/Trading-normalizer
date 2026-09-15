@@ -91,33 +91,6 @@ class Alert:
 
         notification_dialog(self.reason)
 
-def get_execution_data(alert):
-    if alert.ticket in st.session_state['data_table'].index:
-        data = st.session_state['data_table'].loc[alert.ticket].copy()
-    else:                     #The alert was instantly executed and didn't make it to the table
-        data = pd.Series()    #That should only be possible with manual and conditional trade alerts
-
-    bars = st.session_state['bars_data']
-
-    if alert.reason == 'manual':
-        data['Time'] = format_timestamp(get_current_server_time(), st.session_state['selected_timezone'])
-        data['Status'] = 'Executed'
-        data['Progress'] = bars.current_bid
-        data['Operation'] = f'Alert {alert.symbol}'
-
-    if alert.reason == 'conditional_trade':
-        data['Time'] = format_timestamp(get_current_server_time(), st.session_state['selected_timezone'])
-        data['Status'] = 'Set'
-        direction = alert.conditional_trade_data['direction'].capitalize()
-        order_type = alert.conditional_trade_data['order_type']
-        operation = f'{direction} {order_type} {alert.symbol}'
-        if bars.data_scale == 'normalized' and bars.symbol == alert.symbol:
-            execution_price_abs = alert.conditional_trade_data['execution_price']
-            execution_price_bp = scale_point(execution_price_abs, 'normalized', bars.normalization_base, alert.symbol, rounded = True)
-            operation = f'{operation} at {execution_price_bp}'
-        data['Operation'] = operation
-        
-    return(data)
 
 def load_alerts():
     alerts = set()
@@ -155,7 +128,34 @@ def notify_executions_in_serie():   #Used inside a fragment
     alert.notify_execution(data)
     del st.session_state['alerts_pending_notification'][0]
 
-#@st.fragment(run_every = POLLING_INTERVAL)
+def get_execution_data(alert):
+    if alert.ticket in st.session_state['data_table'].index:
+        data = st.session_state['data_table'].loc[alert.ticket].copy()
+    else:                     #The alert was instantly executed and didn't make it to the table
+        data = pd.Series()    #That should only be possible with manual and conditional trade alerts
+
+    bars = st.session_state['bars_data']
+
+    if alert.reason == 'manual':
+        data['Time'] = format_timestamp(get_current_server_time(), st.session_state['selected_timezone'])
+        data['Status'] = 'Executed'
+        data['Progress'] = bars.current_bid
+        data['Operation'] = f'Alert {alert.symbol}'
+
+    if alert.reason == 'conditional_trade':
+        data['Time'] = format_timestamp(get_current_server_time(), st.session_state['selected_timezone'])
+        data['Status'] = 'Set'
+        direction = alert.conditional_trade_data['direction'].capitalize()
+        order_type = alert.conditional_trade_data['order_type']
+        operation = f'{direction} {order_type} {alert.symbol}'
+        if bars.data_scale == 'normalized' and bars.symbol == alert.symbol:
+            execution_price_abs = alert.conditional_trade_data['execution_price']
+            execution_price_bp = scale_point(execution_price_abs, 'normalized', bars.normalization_base, alert.symbol, rounded = True)
+            operation = f'{operation} at {execution_price_bp}'
+        data['Operation'] = operation
+        
+    return(data)
+
 def alert_check():
     to_remove = []
     for alert in st.session_state['alerts']:
@@ -170,7 +170,6 @@ def alert_check():
         st.session_state['alerts'].discard(alert)
     if to_remove:
         st.session_state['update_data_table'] = True
-        #ADD TO JUST EXECUTED, TO SEE THE ALERT
 
 
 

@@ -6,8 +6,6 @@ from math import floor
 from trades_data import get_trade_data_to_edit, edit_trade_data
 
 
-#Add error handling for all actions
-
 def get_deviation(symbol):
     display = (SYMBOL_DATA[symbol]['display'] if symbol in SYMBOL_DATA else DEFAULTS['display'])
     max_deviation_percentage = 0.05 if display == 'basis' else 0.5
@@ -179,7 +177,7 @@ def close_position(ticket):
                'type_filling': mt5.ORDER_FILLING_IOC}
     
     result = mt5.order_send(request)
-
+    
     if result.retcode == mt5.TRADE_RETCODE_DONE:
         data = get_trade_data_to_edit(ticket, 'local', 'closed')
         edit_trade_data(ticket, data)

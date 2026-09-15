@@ -130,10 +130,13 @@ def get_usable_lotsize(execution_price_abs: str | float = 'current'):
     if scale == 'normalized':
         ppb = st.session_state['ppb']
 
-    exact_lotsize = get_lotsize_from_ppb_or_pppt(current_price_abs, execution_price_abs, equity, pppt, ppb)
+    if ppb == 0 or pppt == 0 or current_price_abs in [0, None] or execution_price_abs in [0, None]:
+        exact_lotsize = 0
+    else:
+        exact_lotsize = get_lotsize_from_ppb_or_pppt(current_price_abs, execution_price_abs, equity, pppt, ppb)
     
     if exact_lotsize < symbol_info.volume_min:
-        lotsize = 0
+        lotsize = 0.0
     elif exact_lotsize >= symbol_info.volume_max:
         lotsize = symbol_info.volume_max
     else:

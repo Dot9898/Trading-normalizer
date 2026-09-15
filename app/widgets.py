@@ -7,7 +7,6 @@ import format_functions
 import callbacks
 from numpy import log10
 from format_functions import no_tag_text
-from trades_data import edit_trade_data
 from alerts import alert_check, notify_executions_in_serie
 from data_table import update_data_table
 import dialog_boxes
@@ -18,13 +17,12 @@ def timezone_dropdown():
                 key = 'selected_timezone', 
                 index = 1, 
                 format_func = format_functions.timezone_format, 
-                on_change = callbacks.reload_graph)
+                on_change = callbacks.reload_graph_and_table)
 
 def timeframe_dropdown():
     st.selectbox('Time frame', 
                 constants.TIMEFRAME_LABEL.keys(), 
                 key = 'selected_timeframe', 
-                index = 1, 
                 format_func = lambda timeframe: constants.TIMEFRAME_LABEL[timeframe], 
                 on_change = callbacks.reload_graph)
 
@@ -32,17 +30,17 @@ def scale_dropdown():
     st.selectbox('Scale', 
                 constants.SCALES,  
                 key = 'selected_scale', 
-                index = 1, 
                 format_func = str.title, 
-                on_change = callbacks.full_update)
+                on_change = callbacks.full_update, 
+                args = [False])
     
 def normalization_base_name_dropdown():
     st.selectbox('Zero', 
                 constants.NORMALIZATION_BASES, 
                 key = 'selected_normalization_base_name', 
-                index = 1 if callbacks.is_0930_to_1800() else 3, 
                 format_func = lambda name: name.capitalize().replace('_', ' '), 
-                on_change = callbacks.reload_graph)
+                on_change = callbacks.full_update, 
+                args = [False])
 
 
 def X_range_widgets(what_widgets):
@@ -242,7 +240,8 @@ def symbol_dropdown():
                 constants.SHOWN_SYMBOLS,  
                 key = 'selected_symbol', 
                 index = 0, 
-                on_change = callbacks.full_update)
+                on_change = callbacks.full_update, 
+                args = [True])
 
 def is_order_button_disabled(direction):
     SL = st.session_state['SL']
@@ -277,14 +276,16 @@ def limit_order_buttons():
                   disabled = is_order_button_disabled('sell'), 
                   on_click = callbacks.place_order, 
                   args = ['pending', 'sell'], 
-                  width = 'stretch')
+                  width = 'stretch', 
+                  wrap = True)
     with buy_limit_column:
         st.button('Buy limit\n\nBuy stop', 
                   key = 'limit_buy_button', 
                   disabled = is_order_button_disabled('buy'), 
                   on_click = callbacks.place_order, 
                   args = ['pending', 'buy'], 
-                  width = 'stretch')
+                  width = 'stretch', 
+                  wrap = True)
 
 def get_SLTP_step():
     if st.session_state['selected_scale'] == 'logarithmic':
@@ -306,6 +307,8 @@ def SL_and_TP_input():
     step = get_SLTP_step()
     digits = st.session_state['bars_data'].shown_digits
     format = f'%0.{digits}f'
+    if st.session_state['update_SLTP']:
+        callbacks.update_SLTP()
     SL_column, TP_column = st.columns(2)
 
     with SL_column:
@@ -443,8 +446,8 @@ def alert_price_input():
                     value = bid, 
                     step = step, 
                     format = format, 
-                    label_visibility = 'collapsed', 
-                    on_change = callbacks.reload_graph)
+                    label_visibility = 'collapsed')
+                    #on_change = callbacks.reload_graph)
 
 def set_alert_button():
     st.button('Set alert', 
@@ -504,31 +507,6 @@ def conditional_operations_widgets():
             set_conditional_trade_button('buy')
 
 
-@st.fragment(key = 'dialog_fragment')
-def open_dialog():
-    data = st.session_state['dialog_data']
-    st.session_state['dialog_data'] = None
-    reason = data['reason']
-
-    if reason in ['open', 'set']:
-        dialog_boxes.place_order(reason, data['direction'])
-    
-    if reason in ['edit', 'modify', 'erase']:
-        dialog_boxes.modify_trade_data(reason, data['ticket'])
-
-    if reason in ['success', 'not_found', 'null_lotsize']:
-        dialog_boxes.bare_text(reason)
-    
-    if reason == 'error':
-        dialog_boxes.bare_text(reason, data['error_code'])
-
-
-
-
-
-
-
-
 @st.fragment(run_every = constants.POLLING_INTERVAL)
 def data_table():
     if st.session_state['first_run']:
@@ -557,7 +535,29 @@ def data_table():
                  column_order = constants.SHOWN_TRADES_DATA_COLUMNS, 
                  column_config = column_config, 
                  placeholder = '-', 
-                 height = 271) #set height #############################
+                 height = constants.DATA_TABLE_HEIGHT)
+
+@st.fragment(key = 'dialog_fragment')
+def open_dialog():
+    data = st.session_state['dialog_data']
+    st.session_state['dialog_data'] = None
+    reason = data['reason']
+
+    if reason in ['open', 'set']:
+        dialog_boxes.place_order(reason, data['direction'])
+    
+    if reason in ['edit', 'modify', 'erase']:
+        dialog_boxes.modify_trade_data(reason, data['ticket'])
+
+    if reason in ['success', 'not_found', 'null_lotsize']:
+        dialog_boxes.bare_text(reason)
+    
+    if reason == 'error':
+        dialog_boxes.bare_text(reason, data['error_code'])
+
+
+
+
 
 
 

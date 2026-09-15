@@ -21,7 +21,7 @@ def load_trades_data():
     trades_data = trades_data.set_index('ticket')
     
     st.session_state['trades_data'] = trades_data
-    update_all_trades_data()
+    update_all_trades_data(data_source = 'server')
 
 def save_trades_data_to_file():
     trades_data_path = DATA_PATH / 'trades_data.csv'
@@ -63,8 +63,8 @@ def edit_trade_data(ticket, data_to_edit: dict | None = None, delete = False):
         for column, new_value in data_to_edit.items():
             trades_data.at[ticket, column] = new_value
 
-    st.session_state['update_data_table'] = True
     save_trades_data_to_file()
+    st.session_state['update_data_table'] = True #Why is it needed? it creates a loop when edit or modify runs
 
 def get_update_categories(from_server_time):
     
@@ -99,6 +99,8 @@ def get_update_categories(from_server_time):
                        if trades_data.at[ticket, 'status'] == 'pending']
     open_tickets = [ticket for ticket in trades_data.index 
                     if trades_data.at[ticket, 'status'] == 'open']
+    closed_tickets = [ticket for ticket in trades_data.index 
+                    if trades_data.at[ticket, 'status'] == 'closed']
     current_orders_tickets = [order.ticket for order in current_orders]
     current_positions_tickets = [position.ticket for position in current_positions]
     deal_history_tickets = [deal.position_id for deal in deals_history]
@@ -140,7 +142,7 @@ def get_update_categories(from_server_time):
     
     for deal in deals_history:
         ticket = deal.position_id
-        if ticket not in (pending_tickets + open_tickets):
+        if ticket not in (pending_tickets + open_tickets + closed_tickets): #Must include closed tickets to avoid edge cases
             if deal.entry == mt5.DEAL_ENTRY_OUT:
                 if ticket in history_pending_order_tickets:
                     category[ticket] = 'set_opened_and_closed'
@@ -207,7 +209,7 @@ def get_trade_data_to_edit(ticket, data_source, operation_type): #Need to fix th
     current_account_info = mt5.account_info()
     current_timestamp = time()
     trades_data = st.session_state['trades_data']
-
+    print('tp', operation_type)
     data = {}
 
     if operation_type == 'market_opened':
@@ -219,7 +221,7 @@ def get_trade_data_to_edit(ticket, data_source, operation_type): #Need to fix th
         open_price = position.price_open
         symbol = position.symbol
         lots = position.volume
-
+    
         data = {'status': 'open', 
                 
                 'symbol': symbol, 
@@ -233,7 +235,7 @@ def get_trade_data_to_edit(ticket, data_source, operation_type): #Need to fix th
                 'open_price': open_price, 
                 
                 'display': SYMBOL_DATA[symbol]['display']}
- 
+        
         if data_source == 'local':
             data['balance_at_set'] = round(current_account_info.balance)
             data['equity_at_set'] = round(current_account_info.equity)
@@ -324,7 +326,6 @@ def get_trade_data_to_edit(ticket, data_source, operation_type): #Need to fix th
         open_price = position.price_open
         symbol = position.symbol
         lots = position.volume
-
         data = update_SL_TP(data, data_source, 'edited', SL, TP, open_price, lots, symbol, current_account_info)
 
     if operation_type == 'modified':
@@ -502,12 +503,12 @@ def update_ticket_data(ticket, data_source, category): #change data source here 
         data = get_trade_data_to_edit(ticket, data_source, category)
         edit_trade_data(ticket, data)
 
-def update_all_trades_data(from_server_time = None):
+def update_all_trades_data(data_source, from_server_time = None):
     if from_server_time is None:
         from_server_time = get_last_update_server_time()
     categories = get_update_categories(from_server_time)
     for ticket, category in categories.items():
-        update_ticket_data(ticket, 'server', category)
+        update_ticket_data(ticket, data_source, category)
     sort_trades_data()
     register_update_time()
 

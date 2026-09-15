@@ -6,7 +6,7 @@ import MetaTrader5 as mt5
 import constants
 import risk_calculation
 import order_execution
-from backend import normalize_point_wrt_current_price, unscale_point_wrt_current_values, get_usable_price_level, get_usable_lotsize
+from backend import scale_point_wrt_current_values, normalize_point_wrt_current_price, unscale_point_wrt_current_values, get_usable_price_level, get_usable_lotsize
 from trades_data import edit_trade_data
 from alerts import Alert
 
@@ -14,8 +14,12 @@ from alerts import Alert
 def reload_graph():
     st.session_state['reload_Bars'] = True
 
-def reload_table(): #Change for update data table full up = True everywhere
+def reload_table():
     st.session_state['update_data_table'] = True
+
+def reload_graph_and_table():
+    reload_graph()
+    reload_table()
 
 def is_0930_to_1800():
     ny_time = datetime.now(tz = constants.TIMEZONES['New York'])
@@ -67,6 +71,24 @@ def update_entry():
     entry = risk_calculation.get_entry(tp, sl, risk, reward)
     st.session_state['entry'] = entry
 
+def update_SLTP():
+    st.session_state['SL'] = scale_point_wrt_current_values(st.session_state['old_SL_abs'], rounded = True)
+    st.session_state['TP'] = scale_point_wrt_current_values(st.session_state['old_TP_abs'], rounded = True)
+    update_risk()
+    st.session_state['update_SLTP'] = False
+
+def save_old_SLTP_then_update(reset):
+    if reset:
+        bid = mt5.symbol_info_tick(st.session_state['selected_symbol']).bid
+        SL_abs = bid
+        TP_abs = bid
+    else:
+        SL_abs = unscale_point_wrt_current_values(st.session_state['SL'])
+        TP_abs = unscale_point_wrt_current_values(st.session_state['TP'])
+    st.session_state['old_SL_abs'] = SL_abs
+    st.session_state['old_TP_abs'] = TP_abs
+    st.session_state['update_SLTP'] = True
+
 def update_ppb():
     displayed_tp, displayed_sl = st.session_state['TP'], st.session_state['SL']
     tp, sl = normalize_point_wrt_current_price(displayed_tp), normalize_point_wrt_current_price(displayed_sl)
@@ -99,14 +121,8 @@ def update_max_ppb():
     st.session_state['max_ppb'] = max_ppb
 
 def update_lotsize(): #Always used right after update_ppb
-    current_price = st.session_state['bars_data'].current_bid
-    equity = mt5.account_info().equity
-    ppb = st.session_state['ppb']
-    if ppb == 0 or current_price in [0, None]:
-        lotsize = 0
-    else:
-        lotsize = risk_calculation.get_lotsize_from_ppb_or_pppt(current_price, current_price, equity = equity, ppb = ppb)
-    st.session_state['lotsize'] = lotsize
+    entry = st.session_state['entry']
+    st.session_state['lotsize'] = get_usable_lotsize(execution_price_abs = entry)
 
 def update_max_lotsize():
     update_max_ppb()
@@ -130,16 +146,18 @@ def update_risk():
     update_ppb()
     update_pppt()
     update_lotsize()
-    update_max_lotsize()
     update_max_ppb()
+    update_max_lotsize()
 
-def full_update(): #when checking all callbacks UPDATE THIS FUNCTION TO INCLUDE ALERTS, DATA TABLE
+def full_update(reset_SLTP):
     update_risk()
     reload_graph()
     reload_table()
+    save_old_SLTP_then_update(reset_SLTP)
 
 
 def set_alert():
+    update_risk()
     symbol = st.session_state['selected_symbol']
     price = st.session_state['alert_price']
     bid = st.session_state['bars_data'].current_bid
@@ -150,6 +168,7 @@ def set_alert():
     reload_table()
 
 def set_conditional_trade(direction):
+    update_risk()
     symbol = st.session_state['selected_symbol']
     trigger_price = st.session_state['alert_price']
     bid = st.session_state['bars_data'].current_bid
@@ -181,15 +200,19 @@ def set_conditional_trade(direction):
     st.session_state['alerts'].add(trade_alert)
     reload_table()
 
-def place_order(order_type, direction):
+def place_order(order_type, direction):   #If successful, updates data table via order edit_trade_data call
+    update_risk()
     if order_type == 'market':
         st.session_state['dialog_data'] = {'reason': 'open', 'direction': direction}
     if order_type == 'pending':
         st.session_state['dialog_data'] = {'reason': 'set', 'direction': direction}
 
-#This function and the next are called from a inside fragment, 
-#they use a manual full-app rerun at the end to avoid input lag after being executed
 def execute_table_action(button_number):
+    """
+    This function and the next are called from a inside fragment.
+    They use a manual full-app rerun at the end to avoid input lag after being executed.
+    """
+
     button_key = f'action_button_{button_number}_state'
     row_number = st.session_state[button_key].row
     label = st.session_state[button_key].label
@@ -214,6 +237,7 @@ def execute_table_action(button_number):
 
     if label == 'Close':
         assert status == 'Open'
+        update_risk()
         result = order_execution.close_position(ticket = ticket)
         check_execution = True
 
@@ -227,10 +251,12 @@ def execute_table_action(button_number):
 
     if label == 'Edit':
         assert status == 'Open'
+        update_risk()
         st.session_state['dialog_data'] = {'reason': 'edit', 'ticket': ticket}
 
     if label == 'Modify':
         assert status == 'Pending'
+        update_risk()
         st.session_state['dialog_data'] = {'reason': 'modify', 'ticket': ticket}
 
     if check_execution:

@@ -9,7 +9,7 @@ from graph import generate_graph_in_fragment
 from callbacks import is_0930_to_1800, reload_table
 from trades_data import load_trades_data
 from alerts import load_alerts, alert_check
-from data_table import update_data_table
+
 
 
 
@@ -75,6 +75,8 @@ if 'reward' not in st.session_state:
     st.session_state['reward'] = 0
 if 'dialog_data' not in st.session_state:
     st.session_state['dialog_data'] = None
+if 'update_SLTP' not in st.session_state:
+    st.session_state['update_SLTP'] = False
 
 
 
@@ -218,6 +220,7 @@ if st.session_state['dialog_data'] is not None:
 
 if st.session_state['first_run']:
     reload_table()
+    #st.session_state['update_SLTP'] = True
     st.session_state['first_run'] = False
     st.rerun()
 
@@ -228,6 +231,7 @@ st.write('test')
 st.write(f'dialog open {st.session_state['dialog_open']}')
 
 st.write(f"Streamlit version: {st.__version__}")
+st.write(st.session_state['alerts'])
 
 import MetaTrader5 as mt5
 from order_execution import change_SLTP_open, market_order, close_position, delete_pending_order, change_price_and_SLTP_pending, limit_or_stop_order
@@ -271,15 +275,15 @@ for i in hdls:
 
 st.button('UPDATE DATA TEST', 
           on_click = update_all_trades_data, 
-          args = [None])
+          args = 'local')
 
 
 
-@st.fragment(run_every = 60.0)
-def reload_table_test():
-    reload_table()
+#@st.fragment(run_every = 60.0)
+#def reload_table_test():
+#    reload_table()
 
-reload_table_test()
+#reload_table_test()
 
 
 

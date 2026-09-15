@@ -1,56 +1,58 @@
 
 
 
-fix BL BS buttons alignment (updated streamlit)
-check warnings
-confirmation of b/s in dialog box. checkbox for confirmation on/off. if confirmation off, disable sltp
+
+fix permanent modified and edited calls via st.session_state['update_data_table'] = True line 67 trades data
+
+add real max ppb and lsize to risk callback
+
+
+cargando en 1 min timeframe?
+
+
+
+add update risk callback before setting an operation
 
 add callback to change values when changing scale
+add callback to change entry when changing tpsl
+warnings
 add table and alerts callbacks?
-
-volume min y step en order execution
-infor ordenes y posiciones existentes (show, delete, and edit buttons)
-when to apply updates? check all callbacks, in particular risk (ppb, ppt, lotsize, maxes).
-add extra button to TP PL to auto set +-20 (changeable in a number input)
+show account data
+add max ppb update
+when to apply updates? data table open pending timing and check all callbacks, in particular risk (ppb, ppt, lotsize, maxes)
 disable everything in logarithmic view
 
-cuando trade es cerrada, guardarla y mostrar info (% etc) (full trade local storage with checks for shown or not)
+simplify frontend
+deslizador de ancho de gráfico
 función dibujar un precio en el gráfico, por número o +- de base, dibujar la línea
+move remaining candle time to price lines
 show sltp en el gráfico checkbox
-add update risk callback before setting an operation
-confirmation of b/s in dialog box. checkbox for confirmation on/off
-add order execution error handling for market and pending??
+callbacks: SLTPENTRY, alert checkbox, alert level: soft graph (just a s state); graph navigation: soft graph? maybe it works auto
+
+cambiar x shift según timeframe (flechitas), fix navigation callbacks
+add settings box: checkbox for confirmation dialog of market b/s, normalization default y range, default +- tpsl
+add extra button to TP PL to auto set +-20 (changeable in a number input)
 file cleanup
+
 order history in graph
 add 'zoom' square in the graph?
 
-add settings box: checkbox for confirmation dialog of market b/s, normalization default y range, default +- tpsl
 
 cambiar path mt5
-refactor graph (load all from backmost timestamp to now, reload on.. change of scale? change of timeframe? is it worth to re do it all?)
 
-
-deslizador de ancho de gráfico
-aviso symbol no en mt5
-aviso? fin de los datos mt5
-move remaining candle time to price lines?
 colores open n closed market
-ticker navigation and naming
 trade limit if losses (in data etc)
 alert sounds
 colores (markdown RR string y table data)
-local h/l
-implementación trading range según la nota
-correr múltiples a la vez? para comparar gráficos normalizados
 weekly and infinite display of data table
 
-weekend bugs
+local h/l
+implementación trading range según la nota
 
-cambiar x shift según timeframe (flechitas)
-add option to show absolute values or not
-
-register that using a 'close by' breaks everything
 trailing stops
+
+weekend bugs?
+if too slow, refactor graph (load all from backmost timestamp to now, reload on.. change of scale? change of timeframe?
 
 
 
