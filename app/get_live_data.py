@@ -62,16 +62,16 @@ class Bars:
         self.timezone = timezone
         self.data_scale = data_scale
         self.normalization_base_name = normalization_base_name
-
+        
         include_symbol(self.symbol)
-
+        
         #Fixed data
         self.name = mt5.symbol_info(self.symbol).description
         self.digits = mt5.symbol_info(self.symbol).digits
         self.shown_digits = self.get_shown_digits()
         self.normalization_factor = self.get_normalization_factor()
         #self.spread = round(mt5.symbol_info(self.symbol).spread / (10 ** self.digits), self.digits) #absolute
-
+        
         #Data updated on full update, when a new bar appears
         self.first_bar_time = None
         self.last_bar_time = None
@@ -83,8 +83,9 @@ class Bars:
         self.max_price = None
         self.min_price = None
         self.date_label = None
-
+        
         #Data updated on soft update, every tick
+        self.current_account_info = None
         self.current_server_time = None
         self.current_bar = None
         self.current_bar_open_time = None
@@ -93,7 +94,7 @@ class Bars:
         self.current_bid = None
         self.current_ask = None
         self.too_many_bars = False
-
+        
         self.full_update()
 
     def update_server_times_of_interest(self):
@@ -283,6 +284,7 @@ class Bars:
     
     def update_current_data(self):
         current_symbol_info = mt5.symbol_info_tick(self.symbol)
+        self.current_account_info = mt5.account_info()
         self.current_server_time = current_symbol_info.time
         self.current_candle_time = self.current_server_time % SECONDS[self.timeframe]
         self.remaining_candle_time = SECONDS[self.timeframe] - self.current_candle_time

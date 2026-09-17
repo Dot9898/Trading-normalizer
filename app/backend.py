@@ -4,9 +4,9 @@ from numpy import log10
 import streamlit as st
 import pandas as pd
 import MetaTrader5 as mt5
-from constants import SYMBOL_DATA, DEFAULTS, DATA_PATH
+from constants import SYMBOL_DATA, DEFAULTS
 from decimal import Decimal, ROUND_FLOOR
-from risk_calculation import get_lotsize_from_ppb_or_pppt
+from risk_calculation import get_lotsize_from_ppb_or_pppt, get_current_ppb_from_lotsize
 
 
 def initialize_MetaTrader():
@@ -28,6 +28,14 @@ def get_rounding_digits(symbol, scale):
     elif scale == 'logarithmic':
         return(6)
 
+
+def is_equivalent(A, B):
+    """Checks equality with None-like values treated as equals"""
+    if pd.isna(A) and pd.isna(B):
+        return(True)
+    if A == B:
+        return(True)
+    return(False)
 
 def scale_point(value, data_scale, normalization_base = None, symbol = None, true_normalization = False, rounded = False):
 
@@ -155,3 +163,33 @@ def get_usable_price_level(value):
         wsable_level = 0
 
     return(usable_level)
+
+
+def get_used_ppb_and_margin_req(include_pending):   #Gives approximate ppb to avoid multiple MT5 calls
+    trades_data = st.session_state['trades_data']
+    equity = st.session_state['bars_data'].current_account_info.equity
+    data = {}
+    
+    for trade in trades_data.itertuples():
+        if trade.status in ['closed'] if include_pending else ['closed', 'pending']:
+            continue
+        
+        lotsize = trade.volume
+        execution_price = (trade.set_price if trade.status == 'pending' 
+                           else trade.open_price if trade.status == 'open' 
+                           else None)
+
+        ppb = get_current_ppb_from_lotsize(lotsize, current_price = execution_price, equity = equity)
+        margin_req = SYMBOL_DATA[trade.symbol]['margin_req']
+        data[trade.Index] = {'ppb': ppb, 'margin_req': margin_req}
+
+    return(data)
+
+
+
+
+
+
+
+
+

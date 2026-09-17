@@ -6,7 +6,7 @@ from constants import LABEL_SPACING
 import widgets
 from get_live_data import Graph_range
 from graph import generate_graph_in_fragment
-from callbacks import is_0930_to_1800, reload_table
+from callbacks import is_0930_to_1800, reload_table, goto, save_old_SLTP_then_update
 from trades_data import load_trades_data
 from alerts import load_alerts, alert_check
 
@@ -37,6 +37,9 @@ st.set_page_config(layout = 'wide')
 
 if 'mt5_initialized' not in st.session_state:
     st.session_state['mt5_initialized'] = initialize_MetaTrader()
+if 'first_run' not in st.session_state:
+    st.session_state['first_run'] = True
+    goto('now')
 if 'trades_data' not in st.session_state:
     load_trades_data()
 if 'alerts' not in st.session_state:
@@ -51,22 +54,18 @@ if 'orders_to_delete' not in st.session_state:
     st.session_state['orders_to_delete'] = set()
 if 'dialog_open' not in st.session_state:
     st.session_state['dialog_open'] = False
-if 'first_run' not in st.session_state:
-    st.session_state['first_run'] = True
 if 'bars_data' not in st.session_state:
     st.session_state['bars_data'] = None
 if 'reload_Bars' not in st.session_state:
     st.session_state['reload_Bars'] = True
 if 'reload_table' not in st.session_state:
     st.session_state['reload_table'] = True
+if 'update_maxes' not in st.session_state:
+    st.session_state['update_maxes'] = True
+if 'selected_symbol' not in st.session_state:
+    st.session_state['selected_symbol'] = 'US500'
 if 'selected_scale' not in st.session_state:
     st.session_state['selected_scale'] = 'normalized'
-if 'selected_normalization_base_name' not in st.session_state:
-    st.session_state['selected_normalization_base_name'] = 'market_open' if is_0930_to_1800() else 'server_1:00'
-if 'extra_shift' not in st.session_state:
-    st.session_state['extra_shift'] = 0
-if 'extra_shift_unit' not in st.session_state:
-    st.session_state['extra_shift_unit'] = 'hours'
 if 'custom_y_range' not in st.session_state:
     st.session_state['custom_y_range'] = False
 if 'risk' not in st.session_state:
@@ -77,6 +76,8 @@ if 'dialog_data' not in st.session_state:
     st.session_state['dialog_data'] = None
 if 'update_SLTP' not in st.session_state:
     st.session_state['update_SLTP'] = False
+if 'selected_normalization_base_name' not in st.session_state:
+    st.session_state['selected_normalization_base_name'] = None
 
 
 
@@ -216,11 +217,10 @@ with trade_column:
 if st.session_state['dialog_data'] is not None:
     widgets.open_dialog()
 
-
+widgets.reload_table_and_maxes()
 
 if st.session_state['first_run']:
-    reload_table()
-    #st.session_state['update_SLTP'] = True
+    save_old_SLTP_then_update(reset = True)
     st.session_state['first_run'] = False
     st.rerun()
 
@@ -246,11 +246,13 @@ def lmocallback():
     #st.session_state['order_return'] = close_position(325121823)
     pass
 #mt5.positions_get(ticket = ticket)
+
 st.button('reload table', 
           on_click = reload_table)
 
-st.button('LIMIT ORDER TEST', 
-          on_click = lmocallback)
+from callbacks import update_max_ppb_and_lotsize
+st.button('update max ppb and lotsize', 
+          on_click = update_max_ppb_and_lotsize)
 
 if 'order_return' in st.session_state:
     st.write(st.session_state['order_return'])
@@ -272,10 +274,6 @@ for i in hord:
 st.write('deals history')
 for i in hdls:
     st.write(i)
-
-st.button('UPDATE DATA TEST', 
-          on_click = update_all_trades_data, 
-          args = 'local')
 
 
 

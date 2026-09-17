@@ -68,9 +68,9 @@ def generate_trades_data_table(timezone):
     table.index.name = 'ticket'
 
     for trade in trades_data.itertuples():
-
+        
         status = trade.status
-
+        
         server_timestamp = (trade.open_server_time if trade.status == 'open' 
                             else trade.close_server_time if trade.status == 'closed' 
                             else pd.NA)
@@ -107,7 +107,7 @@ def generate_trades_data_table(timezone):
         if trade.status == 'pending':
             action_button_1_text = 'Modify' if trade.symbol == current_symbol else pd.NA
             action_button_2_text = 'Delete'
-
+        
         table.loc[trade.Index] = [status.capitalize(), time, operation, close_reason, progress, PL_percent, 
                                   action_button_1_text, action_button_2_text, server_timestamp, trade.is_shown, trade]
     
@@ -201,7 +201,6 @@ def update_alerts_data_table(table):
 def update_data_table():
     
     if st.session_state['update_data_table']:   #Full update
-        print('full update here')
         st.session_state['update_data_table'] = False
         update_all_trades_data(data_source = 'local')
         update_open_and_close_alerts()

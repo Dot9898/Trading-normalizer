@@ -32,7 +32,7 @@ def scale_dropdown():
                 key = 'selected_scale', 
                 format_func = str.title, 
                 on_change = callbacks.full_update, 
-                args = [False])
+                args = [False, True])
     
 def normalization_base_name_dropdown():
     st.selectbox('Zero', 
@@ -40,7 +40,7 @@ def normalization_base_name_dropdown():
                 key = 'selected_normalization_base_name', 
                 format_func = lambda name: name.capitalize().replace('_', ' '), 
                 on_change = callbacks.full_update, 
-                args = [False])
+                args = [False, False])
 
 
 def X_range_widgets(what_widgets):
@@ -49,7 +49,6 @@ def X_range_widgets(what_widgets):
         st.selectbox('From', 
                     constants.INTERESTING_TIMES, 
                     key = 'first_bar', 
-                    index = 1, 
                     format_func = lambda name: name.capitalize().replace('_', ' '), 
                     on_change = callbacks.reset_X_shifts)
         
@@ -64,7 +63,6 @@ def X_range_widgets(what_widgets):
             st.selectbox('Unit', 
                         constants.SHIFT_UNITS, 
                         key = 'left_shift_unit', 
-                        index = 1, 
                         label_visibility = 'collapsed', 
                         format_func = str.capitalize, 
                         on_change = callbacks.reload_graph)
@@ -87,7 +85,6 @@ def X_range_widgets(what_widgets):
             st.selectbox('Unit', 
                         constants.SHIFT_UNITS, 
                         key = 'right_shift_unit', 
-                        index = 1, 
                         label_visibility = 'collapsed', 
                         format_func = str.capitalize, 
                         on_change = callbacks.reload_graph)
@@ -104,7 +101,6 @@ def X_range_widgets(what_widgets):
             st.selectbox('Unit', 
                         constants.SHIFT_UNITS, 
                         key = 'extra_shift_unit', 
-                        index = 1, 
                         label_visibility = 'collapsed', 
                         format_func = str.capitalize, 
                         on_change = callbacks.reload_graph)
@@ -239,9 +235,8 @@ def symbol_dropdown():
     st.selectbox('Ticker', 
                 constants.SHOWN_SYMBOLS,  
                 key = 'selected_symbol', 
-                index = 0, 
                 on_change = callbacks.full_update, 
-                args = [True])
+                args = [True, True])
 
 def is_order_button_disabled(direction):
     SL = st.session_state['SL']
@@ -303,7 +298,6 @@ def get_SLTP_step():
     return(float(step))
 
 def SL_and_TP_input():
-    bid = st.session_state['bars_data'].current_bid
     step = get_SLTP_step()
     digits = st.session_state['bars_data'].shown_digits
     format = f'%0.{digits}f'
@@ -314,7 +308,6 @@ def SL_and_TP_input():
     with SL_column:
         st.number_input('SL', 
                         key = 'SL', 
-                        value = float(bid), 
                         step = step, 
                         format = format, 
                         on_change = callbacks.update_risk)
@@ -322,24 +315,21 @@ def SL_and_TP_input():
     with TP_column:
         st.number_input('TP', 
                         key = 'TP', 
-                        value = float(bid), 
                         step = step, 
                         format = format, 
                         on_change = callbacks.update_risk)
 
 def entry_display():
-    bid = 0.0 if st.session_state['bars_data'].current_bid is None else st.session_state['bars_data'].current_bid
     digits = st.session_state['bars_data'].shown_digits
     format = f'%0.{digits}f'
     step = get_SLTP_step()
     st.number_input('Entry', 
                     key = 'entry', 
-                    value = bid, 
                     step = step, 
                     format = format, 
                     disabled = True)
 
-
+#
 def ppb_display():
     symbol = st.session_state['selected_symbol']
     warning_number = constants.SYMBOL_DATA[symbol]['ideal_ppb'] if symbol in constants.SYMBOL_DATA else None
@@ -350,15 +340,16 @@ def ppb_display():
     
     st.number_input(f'PPB {label}', 
                     key = 'ppb', 
-                    value = 0.0, 
                     step = 0.00001, 
                     format = '%0.2f', 
                     disabled = True)
 
+@st.fragment(run_every = constants.DATA_TABLE_AND_MAXES_UPDATE_INTERVAL)
 def max_ppb_display():
+    if st.session_state['update_maxes']:
+        callbacks.update_max_ppb_and_lotsize()
     st.number_input('Max PPB', 
                     key = 'max_ppb', 
-                    value = 0.0, 
                     step = 0.00001, 
                     format = '%0.2f', 
                     disabled = True)
@@ -366,7 +357,6 @@ def max_ppb_display():
 def pppt_display():
     st.number_input('PPPT', 
                     key = 'pppt', 
-                    value = 0.0, 
                     step = 0.00001, 
                     format = '%0.2f', 
                     disabled = True)
@@ -379,15 +369,16 @@ def get_lotsize_step():
 def lotsize_display():
     st.number_input('Lotsize', 
                     key = 'lotsize', 
-                    value = 0.0, 
                     step = get_lotsize_step(), 
                     format = '%0.2f', 
                     disabled = True)
 
+@st.fragment(run_every = constants.DATA_TABLE_AND_MAXES_UPDATE_INTERVAL)
 def max_lotsize_display():
+    if st.session_state['update_maxes']:
+        callbacks.update_max_ppb_and_lotsize()
     st.number_input('Max lotsize', 
                     key = 'max_lotsize', 
-                    value = 0.0, 
                     step = get_lotsize_step(), 
                     format = '%0.2f', 
                     disabled = True)
@@ -506,6 +497,11 @@ def conditional_operations_widgets():
         with sell_column:
             set_conditional_trade_button('buy')
 
+
+@st.fragment(run_every = constants.DATA_TABLE_AND_MAXES_UPDATE_INTERVAL)
+def reload_table_and_maxes():
+    st.session_state['update_maxes'] = True
+    st.session_state['update_data_table'] = True
 
 @st.fragment(run_every = constants.POLLING_INTERVAL)
 def data_table():

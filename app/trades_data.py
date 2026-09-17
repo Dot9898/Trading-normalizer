@@ -4,7 +4,7 @@ import pandas as pd
 import streamlit as st
 import MetaTrader5 as mt5
 from constants import DATA_PATH, TRADE_DATA_COLUMNS_TO_TYPES, SYMBOL_DATA, OUT_DEAL_REASONS, WINDOW_WHEN_DATA_IS_CONSIDERED_LOCAL
-from backend import scale_point
+from backend import scale_point, is_equivalent
 from get_live_data import get_current_server_time, get_actual_timestamp, get_last_update_server_time, register_update_time
 from time import time
 
@@ -64,7 +64,33 @@ def edit_trade_data(ticket, data_to_edit: dict | None = None, delete = False):
             trades_data.at[ticket, column] = new_value
 
     save_trades_data_to_file()
-    st.session_state['update_data_table'] = True #Why is it needed? it creates a loop when edit or modify runs
+    st.session_state['update_data_table'] = True
+
+def has_changed(ticket, ticket_type):
+    trades_data = st.session_state['trades_data']
+    operation = (mt5.positions_get(ticket = ticket)[0] if ticket_type == 'position' 
+                 else mt5.orders_get(ticket = ticket)[0] if ticket_type == 'order' 
+                 else None)
+
+    old_SL = trades_data.at[ticket, 'SL_abs']
+    old_TP = trades_data.at[ticket, 'TP_abs']
+    current_SL = None if operation.sl == 0 else operation.sl
+    current_TP = None if operation.tp == 0 else operation.tp
+
+    changed = False
+
+    if not is_equivalent(old_SL, current_SL):
+        changed = True
+    if not is_equivalent(old_TP, current_TP):
+        changed = True
+
+    if ticket_type == 'order':
+        old_entry = trades_data.at[ticket, 'set_price']
+        current_entry = operation.price_open
+        if not is_equivalent(old_entry, current_entry):
+            changed = True
+    #print('changed', changed)
+    return(changed)
 
 def get_update_categories(from_server_time):
     
@@ -114,7 +140,8 @@ def get_update_categories(from_server_time):
 
     for ticket in pending_tickets:
         if ticket in current_orders_tickets:
-            category[ticket] = 'modified'
+            if has_changed(ticket, 'order'):
+                category[ticket] = 'modified'
         elif ticket in current_positions_tickets:
             category[ticket] = 'opened'
         else:
@@ -125,7 +152,8 @@ def get_update_categories(from_server_time):
         
     for ticket in open_tickets:
         if ticket in current_positions_tickets:
-            category[ticket] = 'edited'
+            if has_changed(ticket, 'position'):
+                category[ticket] = 'edited'
         else:
             category[ticket] = 'closed'
 
@@ -205,11 +233,13 @@ def update_closing_PL(data, data_source, PL, ticket, trades_data, current_accoun
     return(data)
 
 def get_trade_data_to_edit(ticket, data_source, operation_type): #Need to fix this flow, break it down in more functions
-    
-    current_account_info = mt5.account_info()
-    current_timestamp = time()
     trades_data = st.session_state['trades_data']
-    print('tp', operation_type)
+    if 'bars_data' in st.session_state:
+        current_account_info = st.session_state['bars_data'].current_account_info
+    else:
+        current_account_info = mt5.account_info()
+    current_timestamp = time()
+    #print('edit category', operation_type)
     data = {}
 
     if operation_type == 'market_opened':
@@ -494,7 +524,7 @@ def get_trade_data_to_edit(ticket, data_source, operation_type): #Need to fix th
 
     return(data)
 
-def update_ticket_data(ticket, data_source, category): #change data source here based on category
+def update_ticket_data(ticket, data_source, category):
     
     if category == 'deleted':
         edit_trade_data(ticket, delete = True)

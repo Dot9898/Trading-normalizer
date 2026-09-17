@@ -6,7 +6,7 @@ import MetaTrader5 as mt5
 import constants
 import risk_calculation
 import order_execution
-from backend import scale_point_wrt_current_values, normalize_point_wrt_current_price, unscale_point_wrt_current_values, get_usable_price_level, get_usable_lotsize
+from backend import scale_point_wrt_current_values, normalize_point_wrt_current_price, unscale_point_wrt_current_values, get_usable_price_level, get_usable_lotsize, get_used_ppb_and_margin_req
 from trades_data import edit_trade_data
 from alerts import Alert
 
@@ -112,22 +112,22 @@ def update_pppt(): #Always used right after update_ppb
     st.session_state['pppt'] = pppt
 
 def update_max_ppb():
+    pending_and_open_data = get_used_ppb_and_margin_req(include_pending = True)
     symbol = st.session_state['selected_symbol']
     margin_req = constants.SYMBOL_DATA[symbol]['margin_req'] if symbol in constants.SYMBOL_DATA else None
     if margin_req in [0, None]:
         max_ppb = 0
     else:
-        max_ppb = risk_calculation.get_max_ppb(margin_req)
-    st.session_state['max_ppb'] = max_ppb
+        max_ppb = risk_calculation.get_max_usable_ppb(pending_and_open_data, margin_req)
+    st.session_state['max_ppb'] = round(max_ppb, 5)
 
 def update_lotsize(): #Always used right after update_ppb
     entry = st.session_state['entry']
     st.session_state['lotsize'] = get_usable_lotsize(execution_price_abs = entry)
 
-def update_max_lotsize():
-    update_max_ppb()
+def update_max_lotsize(): #Always used right after update_max_ppb
     current_price = st.session_state['bars_data'].current_bid
-    equity = mt5.account_info().equity
+    equity = st.session_state['bars_data'].current_account_info.equity
     max_ppb = st.session_state['max_ppb']
     if max_ppb == 0 or current_price in [0, None]:
         max_lotsize = 0
@@ -146,11 +146,16 @@ def update_risk():
     update_ppb()
     update_pppt()
     update_lotsize()
+
+def update_max_ppb_and_lotsize():
     update_max_ppb()
     update_max_lotsize()
+    st.session_state['update_maxes'] = False
 
-def full_update(reset_SLTP):
+def full_update(reset_SLTP, update_maxes):
     update_risk()
+    if update_maxes:
+        update_max_ppb_and_lotsize()
     reload_graph()
     reload_table()
     save_old_SLTP_then_update(reset_SLTP)
@@ -262,7 +267,10 @@ def execute_table_action(button_number):
     if check_execution:
         if result is None:
             st.session_state['dialog_data'] = {'reason': 'not_found'}
-        elif result.retcode != mt5.TRADE_RETCODE_DONE:
+        elif result.retcode == mt5.TRADE_RETCODE_DONE:
+            if label in ['Close', 'Delete']:
+                update_max_ppb_and_lotsize()
+        else:
             st.session_state['dialog_data'] = {'reason': 'error', 'error_code': result.retcode}
 
     st.rerun()
@@ -299,7 +307,7 @@ def execute_action_and_dismiss_dialog(reason, direction = None, ticket = None):
         new_SL = get_usable_price_level(st.session_state['SL'])
         new_TP = get_usable_price_level(st.session_state['TP'])
         result = order_execution.change_SLTP_open(ticket, new_SL, new_TP)
-    
+
     if reason == 'modify':
         new_SL = get_usable_price_level(st.session_state['SL'])
         new_TP = get_usable_price_level(st.session_state['TP'])
@@ -315,6 +323,8 @@ def execute_action_and_dismiss_dialog(reason, direction = None, ticket = None):
             st.session_state['dialog_data'] = {'reason': 'error', 'error_code': None}
         elif result.retcode == mt5.TRADE_RETCODE_DONE:
             st.session_state['dialog_data'] = {'reason': 'success'}
+            if reason in ['open', 'set']:
+                update_max_ppb_and_lotsize()
         else:
             st.session_state['dialog_data'] = {'reason': 'error', 'error_code': result.retcode}
 
