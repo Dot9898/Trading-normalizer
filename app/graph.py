@@ -87,7 +87,7 @@ def altair_candlestick_graph(bars_data: Bars, price_range, colors):
     
     #TODO: BACKGROUND COLOR BASED ON MARKET HOURS OR CLOSED MARKET
 
-    chart = (sticks + candles + price_lines).properties(title = alt.TitleParams(text = name, anchor = 'middle'))
+    chart = (sticks + candles + price_lines).properties(title = alt.TitleParams(text = name, anchor = 'middle', offset = 20))
 
     return(chart)
 
@@ -108,10 +108,6 @@ def generate_graph_in_fragment(symbol, timeframe, graph_range, timezone, data_sc
     else:
         graph = altair_candlestick_graph(bars_data, price_range, graph_colors)
         st.altair_chart(graph, width = 'stretch', height = GRAPH_HEIGHT)#, key = 'graph')
-
-
-
-
 
 
 

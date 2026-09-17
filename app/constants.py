@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 import MetaTrader5 as mt5
 
-
+GRAPH_COLORS = 'black_and_white'
 #Parameters
 
 POLLING_INTERVAL = 0.5
@@ -34,6 +34,27 @@ SYMBOL_DATA = {'US500': {'ideal_ppb': 0.75,
                           'display': 'percent', 
                           'digits': 2, 
                           'power': 2}}
+
+SESSION_STATE_DEFAULTS = {'data_table': None, 
+                          'update_data_table': True, 
+                          'alerts_pending_notification': [], 
+                          'orders_to_delete': set(), 
+                          'dialog_open': False, 
+                          'bars_data': None, 
+                          'reload_Bars': True, 
+                          'reload_table': True, 
+                          'update_maxes': True, 
+                          'selected_timezone': 'New York', 
+                          'selected_symbol': 'US500', 
+                          'selected_scale': 'normalized', 
+                          'maxloss': -10.0, 
+                          'RR': (1, 2), 
+                          'custom_y_range': False, 
+                          'risk': 0, 
+                          'reward': 0, 
+                          'dialog_data': None, 
+                          'update_SLTP': False, 
+                          'selected_normalization_base_name': None}
 
 
 #Groups

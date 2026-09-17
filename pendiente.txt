@@ -1,9 +1,8 @@
 
 
 
-fix session state init in frontend
-warnings
 clean frontend
+check open dialog and data table + maxes update spot
 
 when to apply updates? data table open pending timing and check all callbacks, in particular risk (ppb, ppt, lotsize, maxes)
 show account data
@@ -13,12 +12,14 @@ deslizador de ancho de gráfico
 función dibujar un precio en el gráfico, por número o +- de base, dibujar la línea
 move remaining candle time to price lines
 show sltp en el gráfico checkbox
+reload graph by layer? is it more efficient?
 callbacks: SLTPENTRY, alert checkbox, alert level: soft graph (just a s state); graph navigation: soft graph? maybe it works auto
-data table and graph height
 
 cambiar x shift según timeframe (flechitas), fix navigation callbacks
 add settings box: checkbox for confirmation dialog of market b/s, normalization default y range, default +- tpsl
 add extra button to TP PL to auto set +-20 (changeable in a number input)
+fix prices widget design
+data table and graph height
 file cleanup + imports
 
 order history in graph

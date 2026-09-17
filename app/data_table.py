@@ -9,10 +9,6 @@ from format_functions import add_sign, capitalize_first, format_timestamp
 from alerts import update_open_and_close_alerts
 from trades_data import update_all_trades_data
 
-#import warnings
-#warnings.filterwarnings('ignore', message = 'The behavior of DataFrame concatenation with empty or all-NA entries is deprecated')
-##########
-
 
 def get_RR_string(price, SL, TP):
     if pd.isna(price) or pd.isna(SL) or pd.isna(TP):

@@ -57,8 +57,7 @@ def edit_trade_data(ticket, data_to_edit: dict | None = None, delete = False):
             return
 
         if ticket not in trades_data.index:
-            trades_data.loc[ticket] = pd.NA
-            trades_data.at[ticket, 'is_shown'] = True
+            trades_data.loc[ticket, 'is_shown'] = True
 
         for column, new_value in data_to_edit.items():
             trades_data.at[ticket, column] = new_value

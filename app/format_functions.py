@@ -32,6 +32,9 @@ def add_sign(number, percent = False):
 def capitalize_first(string):
     return(string[0].upper() + string[1:])
 
+def add_vertical_spacing(pixels):
+    st.markdown(f"<div style='height: {pixels}px;'></div>", unsafe_allow_html = True)
+
 def no_tag_text(text, alignment, font_size, font_weight):
     st.html(f"""
     <h5 style="

@@ -1,228 +1,151 @@
 
 
 import streamlit as st
-from backend import initialize_MetaTrader
-from constants import LABEL_SPACING
+from backend import init_session_state, init_session_state_functions, initialize_MetaTrader
+from constants import SESSION_STATE_DEFAULTS, LABEL_SPACING
 import widgets
 from get_live_data import Graph_range
 from graph import generate_graph_in_fragment
-from callbacks import is_0930_to_1800, reload_table, goto, save_old_SLTP_then_update
+from callbacks import reload_table, goto, save_old_SLTP_then_update
+from format_functions import add_vertical_spacing
 from trades_data import load_trades_data
-from alerts import load_alerts, alert_check
+from alerts import load_alerts
+
+SESSION_STATE_DEFAULT_FUNCTIONS = {'mt5_initialized': {'function': initialize_MetaTrader, 
+                                                       'args': [], 
+                                                       'assign': True, 
+                                                       'value': 'return_value'}, 
+                                   'first_run': {'function': goto, 
+                                                 'args': ['now'], 
+                                                 'assign': True, 
+                                                 'value': True}, 
+                                   'trades_data': {'function': load_trades_data, 
+                                                   'args': [], 
+                                                   'assign': False}, 
+                                   'alerts': {'function': load_alerts, 
+                                              'args': [], 
+                                              'assign': False}}
 
 
 
-
+#---------------------------------------------------------------------------------------------------------
 from get_live_data import get_remaining_candle_time
 from constants import POLLING_INTERVAL
 @st.fragment(run_every = POLLING_INTERVAL)
 def print_remaining_time_test():
     st.subheader(get_remaining_candle_time(st.session_state['bars_data'].timeframe), text_alignment = 'center')
-
-
-
-
-def add_vertical_spacing(pixels):
-    st.markdown(f"<div style='height: {pixels}px;'></div>", unsafe_allow_html = True)
-
-
-
-#---
-graph_colors = 'black_and_white'
-#---
+#---------------------------------------------------------------------------------------------------------
 
 
 
 st.set_page_config(layout = 'wide')
 
-if 'mt5_initialized' not in st.session_state:
-    st.session_state['mt5_initialized'] = initialize_MetaTrader()
-if 'first_run' not in st.session_state:
-    st.session_state['first_run'] = True
-    goto('now')
-if 'trades_data' not in st.session_state:
-    load_trades_data()
-if 'alerts' not in st.session_state:
-    load_alerts()
-if 'data_table' not in st.session_state:
-    st.session_state['data_table'] = None
-if 'update_data_table' not in st.session_state:
-    st.session_state['update_data_table'] = True
-if 'alerts_pending_notification' not in st.session_state:
-    st.session_state['alerts_pending_notification'] = []
-if 'orders_to_delete' not in st.session_state:
-    st.session_state['orders_to_delete'] = set()
-if 'dialog_open' not in st.session_state:
-    st.session_state['dialog_open'] = False
-if 'bars_data' not in st.session_state:
-    st.session_state['bars_data'] = None
-if 'reload_Bars' not in st.session_state:
-    st.session_state['reload_Bars'] = True
-if 'reload_table' not in st.session_state:
-    st.session_state['reload_table'] = True
-if 'update_maxes' not in st.session_state:
-    st.session_state['update_maxes'] = True
-if 'selected_symbol' not in st.session_state:
-    st.session_state['selected_symbol'] = 'US500'
-if 'selected_scale' not in st.session_state:
-    st.session_state['selected_scale'] = 'normalized'
-if 'custom_y_range' not in st.session_state:
-    st.session_state['custom_y_range'] = False
-if 'risk' not in st.session_state:
-    st.session_state['risk'] = 0
-if 'reward' not in st.session_state:
-    st.session_state['reward'] = 0
-if 'dialog_data' not in st.session_state:
-    st.session_state['dialog_data'] = None
-if 'update_SLTP' not in st.session_state:
-    st.session_state['update_SLTP'] = False
-if 'selected_normalization_base_name' not in st.session_state:
-    st.session_state['selected_normalization_base_name'] = None
-
-
-
+init_session_state(SESSION_STATE_DEFAULTS)
+init_session_state_functions(SESSION_STATE_DEFAULT_FUNCTIONS)
 
 
 graph_column, trade_column = st.columns(2)
 
-with trade_column:
-
-    orders_column, info_column = st.columns(2)
-
-    with orders_column:
-        widgets.symbol_dropdown()
-
 with graph_column:
-    
-    timezone_column, timeframe_column, scale_column, zero_column = st.columns(4)
-    with timezone_column:
+
+    upper_graph_subcolumns = st.columns(4)
+    with upper_graph_subcolumns[0]:
         widgets.timezone_dropdown()
-    with timeframe_column:
+    with upper_graph_subcolumns[1]:
         widgets.timeframe_dropdown()
-    with scale_column:
+    with upper_graph_subcolumns[2]:
         widgets.scale_dropdown()
     if st.session_state['selected_scale'] == 'normalized':
-        with zero_column:
+        with upper_graph_subcolumns[3]:
             widgets.normalization_base_name_dropdown()
 
     graph_spot = st.container()
 
-    precise_range_control_column, basic_range_control_column = st.columns(2)
-
-    with precise_range_control_column:
-        from_column, to_column = st.columns(2)
-        with from_column:
+    range_control_column, range_buttons_column = st.columns(2)
+    with range_control_column:
+        range_subcolumns = st.columns(2)
+        with range_subcolumns[0]:
             widgets.X_range_widgets('first_bar')
-        with to_column:
+        with range_subcolumns[1]:
             widgets.X_range_widgets('last_bar')
         widgets.Y_range_widgets()
-    
-    with basic_range_control_column:
+    with range_buttons_column:
         add_vertical_spacing(LABEL_SPACING)
-        X_navigation_column, Y_navigation_column = st.columns(2)
-        with X_navigation_column:
+        range_buttons_subcolumns = st.columns(2)
+        with range_buttons_subcolumns[0]:
             widgets.X_navigation_buttons()
-        with Y_navigation_column:
+        with range_buttons_subcolumns[1]:
             widgets.Y_navigation_buttons()
         widgets.zoom_buttons()
 
-
-with info_column:
-    risk_spot = st.container()
-    widgets.RR_and_maxloss_widgets()
-
-
-
-
-##########Frontend done until here
-
-
-with graph_spot:
-
-    graph_range = Graph_range(first_bar = st.session_state['first_bar'], 
-                              left_shift = st.session_state['left_shift'], 
-                              left_shift_unit = st.session_state['left_shift_unit'], 
-                              last_bar = st.session_state['last_bar'], 
-                              right_shift = st.session_state['right_shift'], 
-                              right_shift_unit = st.session_state['right_shift_unit'], 
-                              extra_shift = st.session_state['extra_shift'], 
-                              extra_shift_unit = st.session_state['extra_shift_unit'])
-    
-    if st.session_state['custom_y_range']:
-        price_range = [st.session_state['y_min'], st.session_state['y_max']]
-    else:
-        price_range = 'auto'
-
-    generate_graph_in_fragment(symbol = st.session_state['selected_symbol'], 
-                               timeframe = st.session_state['selected_timeframe'], 
-                               graph_range = graph_range, 
-                               timezone = st.session_state['selected_timezone'], 
-                               data_scale = st.session_state['selected_scale'], 
-                               normalization_base_name = st.session_state['selected_normalization_base_name'], 
-                               price_range = price_range,
-                               graph_colors = graph_colors)
-
-#############
-
-
-    
-with orders_column:
-    prices_container = st.container()
-    with prices_container:
-        widgets.print_prices_test()
-    market_order_container = st.container()
-    widgets.SL_and_TP_input()
-    with market_order_container:
-        widgets.market_order_buttons()
-    widgets.limit_order_buttons()
-    widgets.entry_display()
-
-with risk_spot:
-    
-    if st.session_state['selected_scale'] == 'absolute':
-        pppt_column, lotsize_column, max_lotsize_column = st.columns(3)
-        with pppt_column:
-            widgets.pppt_display()
-        with lotsize_column:
-            widgets.lotsize_display()
-        with max_lotsize_column:
-            widgets.max_lotsize_display()
-
-    if st.session_state['selected_scale'] == 'normalized':
-        ppb_column, max_ppb_column = st.columns(2)
-        with ppb_column:
-            widgets.ppb_display()
-        with max_ppb_column:
-            widgets.max_ppb_display()
-    
-    if st.session_state['selected_scale'] == 'logarithmic':
-        lotsize_column, max_lotsize_column = st.columns(2)
-        with lotsize_column:
-            widgets.lotsize_display()
-        with max_lotsize_column:
-            widgets.max_lotsize_display()
-
-with info_column:
-    widgets.alerts_and_account_data_and_hidden_trades_checkboxes()
-    widgets.conditional_operations_widgets()
-    
-with info_column:
-    if not st.session_state['conditionals_checkbox']:
-        st.header('')
-    print_remaining_time_test()
+    with graph_spot:
+        widgets.generate_graph()
 
 with trade_column:
+    orders_column, risk_column = st.columns(2)
+
+    with orders_column:
+        widgets.symbol_dropdown()
+        with st.container():
+            widgets.print_prices_test()
+        widgets.market_order_buttons() #add container if needed
+        widgets.SL_and_TP_input()
+        widgets.limit_order_buttons()
+        widgets.entry_display()
+
+    with risk_column:
+        
+        if st.session_state['selected_scale'] == 'absolute':
+            risk_subcolumns = st.columns(3)
+            with risk_subcolumns[0]:
+                widgets.pppt_display()
+            with risk_subcolumns[1]:
+                widgets.lotsize_display()
+            with risk_subcolumns[2]:
+                widgets.max_lotsize_display()
+
+        if st.session_state['selected_scale'] == 'normalized':
+            risk_subcolumns = st.columns(2)
+            with risk_subcolumns[0]:
+                widgets.ppb_display()
+            with risk_subcolumns[1]:
+                widgets.max_ppb_display()
+        
+        if st.session_state['selected_scale'] == 'logarithmic':
+            risk_subcolumns = st.columns(2)
+            with risk_subcolumns[0]:
+                widgets.lotsize_display()
+            with risk_subcolumns[1]:
+                widgets.max_lotsize_display()
+
+        widgets.RR_and_maxloss_widgets()
+        widgets.alerts_and_account_data_and_hidden_trades_checkboxes()
+        widgets.alerts_and_conditional_trades_widgets()
+
+        if not st.session_state['conditionals_checkbox']: ####delete after moving remaining time
+            st.header('')
+        print_remaining_time_test()
+
     widgets.data_table()
 
+widgets.reload_table_and_maxes()
 if st.session_state['dialog_data'] is not None:
     widgets.open_dialog()
-
-widgets.reload_table_and_maxes()
 
 if st.session_state['first_run']:
     save_old_SLTP_then_update(reset = True)
     st.session_state['first_run'] = False
     st.rerun()
+
+
+
+
+
+#---------------------------------------------------------------------------------------------
+
+
+
+
 
 
 st.write('')
@@ -274,14 +197,5 @@ for i in hord:
 st.write('deals history')
 for i in hdls:
     st.write(i)
-
-
-
-#@st.fragment(run_every = 60.0)
-#def reload_table_test():
-#    reload_table()
-
-#reload_table_test()
-
 
 

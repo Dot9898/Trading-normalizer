@@ -9,6 +9,27 @@ from decimal import Decimal, ROUND_FLOOR
 from risk_calculation import get_lotsize_from_ppb_or_pppt, get_current_ppb_from_lotsize
 
 
+def init_session_state(defaults: dict):
+    for key in defaults:
+        if key not in st.session_state:
+            st.session_state[key] = defaults[key]
+
+def init_session_state_functions(default_funcs: dict):
+    for key, defaults in default_funcs.items():
+        if key not in st.session_state:
+            function = defaults['function']
+            args = defaults['args']
+            assign = defaults['assign']
+
+            return_value = function(*args)
+
+            if assign:
+                value_to_assign = defaults['value']
+                if value_to_assign == 'return_value':
+                    st.session_state[key] = return_value
+                else:
+                    st.session_state[key] = value_to_assign
+
 def initialize_MetaTrader():
     mt5.initialize('D:/Dot/FX/Pepperstone MT5/terminal64.exe')
 

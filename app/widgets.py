@@ -10,12 +10,14 @@ from format_functions import no_tag_text
 from alerts import alert_check, notify_executions_in_serie
 from data_table import update_data_table
 import dialog_boxes
+from get_live_data import Graph_range
+from graph import generate_graph_in_fragment
+
 
 def timezone_dropdown():
     st.selectbox('Time zone', 
                 constants.SHOWN_TIMEZONES, 
                 key = 'selected_timezone', 
-                index = 1, 
                 format_func = format_functions.timezone_format, 
                 on_change = callbacks.reload_graph_and_table)
 
@@ -41,6 +43,32 @@ def normalization_base_name_dropdown():
                 format_func = lambda name: name.capitalize().replace('_', ' '), 
                 on_change = callbacks.full_update, 
                 args = [False, False])
+
+
+def generate_graph():
+
+    graph_range = Graph_range(first_bar = st.session_state['first_bar'], 
+                              left_shift = st.session_state['left_shift'], 
+                              left_shift_unit = st.session_state['left_shift_unit'], 
+                              last_bar = st.session_state['last_bar'], 
+                              right_shift = st.session_state['right_shift'], 
+                              right_shift_unit = st.session_state['right_shift_unit'], 
+                              extra_shift = st.session_state['extra_shift'], 
+                              extra_shift_unit = st.session_state['extra_shift_unit'])
+    
+    if st.session_state['custom_y_range']:
+        price_range = [st.session_state['y_min'], st.session_state['y_max']]
+    else:
+        price_range = 'auto'
+
+    generate_graph_in_fragment(symbol = st.session_state['selected_symbol'], 
+                               timeframe = st.session_state['selected_timeframe'], 
+                               graph_range = graph_range, 
+                               timezone = st.session_state['selected_timezone'], 
+                               data_scale = st.session_state['selected_scale'], 
+                               normalization_base_name = st.session_state['selected_normalization_base_name'], 
+                               price_range = price_range,
+                               graph_colors = constants.GRAPH_COLORS)
 
 
 def X_range_widgets(what_widgets):
@@ -239,6 +267,8 @@ def symbol_dropdown():
                 args = [True, True])
 
 def is_order_button_disabled(direction):
+    if st.session_state['first_run']:
+        return(True)
     SL = st.session_state['SL']
     TP = st.session_state['TP']
     enabled = (SL < TP if direction == 'buy' 
@@ -329,7 +359,7 @@ def entry_display():
                     format = format, 
                     disabled = True)
 
-#
+
 def ppb_display():
     symbol = st.session_state['selected_symbol']
     warning_number = constants.SYMBOL_DATA[symbol]['ideal_ppb'] if symbol in constants.SYMBOL_DATA else None
@@ -388,7 +418,6 @@ def max_loss_input():
                     key = 'maxloss', 
                     min_value = -100.0, 
                     max_value = float(0), 
-                    value = -10.0, 
                     step = 0.5, 
                     format = '%0.1f', 
                     on_change = callbacks.update_risk)
@@ -397,10 +426,9 @@ def RR_dropdown():
     st.selectbox('RR ratio', 
                 constants.RR, 
                 key = 'RR', 
-                index = 2, 
                 format_func = format_functions.RR_format, 
                 on_change = callbacks.update_risk)
-    
+
 def RR_and_maxloss_widgets():
     risk_column, reward_column = st.columns(2)
     
@@ -474,7 +502,7 @@ def alerts_and_account_data_and_hidden_trades_checkboxes():
                     key = 'show_hidden_checkbox', 
                     value = False)
 
-def conditional_operations_widgets():
+def alerts_and_conditional_trades_widgets():
     if st.session_state['conditionals_checkbox']:
 
         text_column, price_column = st.columns(2)
@@ -490,7 +518,6 @@ def conditional_operations_widgets():
 
         buy_column, alert_column, sell_column = st.columns(3)
         with buy_column:
-            st.write()
             set_conditional_trade_button('sell')
         with alert_column:
             set_alert_button()
@@ -538,13 +565,13 @@ def open_dialog():
     data = st.session_state['dialog_data']
     st.session_state['dialog_data'] = None
     reason = data['reason']
-
+    
     if reason in ['open', 'set']:
         dialog_boxes.place_order(reason, data['direction'])
     
     if reason in ['edit', 'modify', 'erase']:
         dialog_boxes.modify_trade_data(reason, data['ticket'])
-
+    
     if reason in ['success', 'not_found', 'null_lotsize']:
         dialog_boxes.bare_text(reason)
     
