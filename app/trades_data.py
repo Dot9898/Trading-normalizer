@@ -544,12 +544,5 @@ def update_all_trades_data(data_source, from_server_time = None):
 
 
 
-#Pensar cuándo quiero updatear la data polleando del server:
-#Cuando se ejecuta una alert (set conditional, open, close, alert)
-#Al iniciar el programa
-#Cada cierto tiempo, para revisar acciones remotas del usuario al server (desktop client, mobile), o actualizar las abiertas, pendientes, history
-
-
-
 
 

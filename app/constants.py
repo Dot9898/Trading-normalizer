@@ -53,8 +53,7 @@ SESSION_STATE_DEFAULTS = {'data_table': None,
                           'risk': 0, 
                           'reward': 0, 
                           'dialog_data': None, 
-                          'update_SLTP': False, 
-                          'selected_normalization_base_name': None}
+                          'update_SLTP': False}
 
 
 #Groups

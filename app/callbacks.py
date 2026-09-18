@@ -27,6 +27,9 @@ def is_0930_to_1800():
         return(True)
     return(False)
 
+def set_normalization_base():
+    st.session_state['selected_normalization_base_name'] = 'market_open' if is_0930_to_1800() else 'server_1:00'
+
 
 def goto(when):
     for key, setting in constants.ZOOM_FIXED_SETTINGS.items():
@@ -120,6 +123,9 @@ def update_max_ppb():
     else:
         max_ppb = risk_calculation.get_max_usable_ppb(pending_and_open_data, margin_req)
     st.session_state['max_ppb'] = round(max_ppb, 5)
+    
+    available = risk_calculation.get_available_fraction_of_account(pending_and_open_data)
+    st.session_state['available_fraction_of_account'] = available
 
 def update_lotsize(): #Always used right after update_ppb
     entry = st.session_state['entry']
@@ -152,14 +158,18 @@ def update_max_ppb_and_lotsize():
     update_max_lotsize()
     st.session_state['update_maxes'] = False
 
-def full_update(reset_SLTP, update_maxes):
-    update_risk()
-    if update_maxes:
-        update_max_ppb_and_lotsize()
+def full_update(reset_SLTP, update_maxes, force_set_normalization_base):
+    if force_set_normalization_base:
+        set_normalization_base()
     reload_graph()
     reload_table()
-    save_old_SLTP_then_update(reset_SLTP)
+    save_old_SLTP_then_update(reset_SLTP) #Includes risk
+    if update_maxes:
+        update_max_ppb_and_lotsize()
 
+
+def uncheck_checkbox(key):
+    st.session_state[key] = False
 
 def set_alert():
     update_risk()

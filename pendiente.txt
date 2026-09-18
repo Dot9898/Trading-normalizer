@@ -1,13 +1,5 @@
 
 
-
-clean frontend
-check open dialog and data table + maxes update spot
-
-when to apply updates? data table open pending timing and check all callbacks, in particular risk (ppb, ppt, lotsize, maxes)
-show account data
-disable everything in logarithmic view
-
 deslizador de ancho de gráfico
 función dibujar un precio en el gráfico, por número o +- de base, dibujar la línea
 move remaining candle time to price lines
@@ -18,6 +10,7 @@ callbacks: SLTPENTRY, alert checkbox, alert level: soft graph (just a s state); 
 cambiar x shift según timeframe (flechitas), fix navigation callbacks
 add settings box: checkbox for confirmation dialog of market b/s, normalization default y range, default +- tpsl
 add extra button to TP PL to auto set +-20 (changeable in a number input)
+move hide trades checkbox? design wise
 fix prices widget design
 data table and graph height
 file cleanup + imports
@@ -30,6 +23,7 @@ cambiar path mt5
 
 colores open n closed market
 trade limit if losses (in data etc)
+add setting or constant to disable account balance show
 alert sounds
 colores (markdown RR string y table data)
 weekly and infinite display of data table

@@ -6,7 +6,7 @@ import constants
 import format_functions
 import callbacks
 from numpy import log10
-from format_functions import no_tag_text
+from format_functions import no_tag_text, as_percent, round_balance, small_linebreak_caption
 from alerts import alert_check, notify_executions_in_serie
 from data_table import update_data_table
 import dialog_boxes
@@ -34,15 +34,15 @@ def scale_dropdown():
                 key = 'selected_scale', 
                 format_func = str.title, 
                 on_change = callbacks.full_update, 
-                args = [False, True])
-    
+                args = [False, True, True])
+
 def normalization_base_name_dropdown():
     st.selectbox('Zero', 
                 constants.NORMALIZATION_BASES, 
                 key = 'selected_normalization_base_name', 
                 format_func = lambda name: name.capitalize().replace('_', ' '), 
                 on_change = callbacks.full_update, 
-                args = [False, False])
+                args = [False, False, False])
 
 
 def generate_graph():
@@ -264,10 +264,12 @@ def symbol_dropdown():
                 constants.SHOWN_SYMBOLS,  
                 key = 'selected_symbol', 
                 on_change = callbacks.full_update, 
-                args = [True, True])
+                args = [True, True, False])
 
 def is_order_button_disabled(direction):
     if st.session_state['first_run']:
+        return(True)
+    if st.session_state['selected_scale'] == 'logarithmic':
         return(True)
     SL = st.session_state['SL']
     TP = st.session_state['TP']
@@ -328,6 +330,7 @@ def get_SLTP_step():
     return(float(step))
 
 def SL_and_TP_input():
+    disabled = st.session_state['selected_scale'] == 'logarithmic'
     step = get_SLTP_step()
     digits = st.session_state['bars_data'].shown_digits
     format = f'%0.{digits}f'
@@ -338,6 +341,7 @@ def SL_and_TP_input():
     with SL_column:
         st.number_input('SL', 
                         key = 'SL', 
+                        disabled = disabled, 
                         step = step, 
                         format = format, 
                         on_change = callbacks.update_risk)
@@ -345,6 +349,7 @@ def SL_and_TP_input():
     with TP_column:
         st.number_input('TP', 
                         key = 'TP', 
+                        disabled = disabled, 
                         step = step, 
                         format = format, 
                         on_change = callbacks.update_risk)
@@ -444,6 +449,7 @@ def RR_and_maxloss_widgets():
                             min_value = 0.0, 
                             value = 0.0, 
                             step = 0.1, 
+                            format = '%0.1f', 
                             on_change = callbacks.update_risk)
         with reward_column:
             st.number_input('Reward', 
@@ -451,10 +457,36 @@ def RR_and_maxloss_widgets():
                             min_value = 0.0, 
                             value = 0.0, 
                             step = 0.1, 
+                            format = '%0.1f', 
                             on_change = callbacks.update_risk)
 
 
+def settings_checkboxes():
+    conditionals_column, account_data_column = st.columns(2)
+    with conditionals_column:
+        st.checkbox('Set alert', 
+                    key = 'alerts_checkbox', 
+                    on_change = callbacks.uncheck_checkbox, 
+                    args = ['account_data_checkbox'])
+    with account_data_column:
+        st.checkbox('Show account data', 
+                    key = 'account_data_checkbox', 
+                    on_change = callbacks.uncheck_checkbox, 
+                    args = ['alerts_checkbox'])
+        st.checkbox('Show hidden trades', 
+                    key = 'show_hidden_checkbox')
+
+def account_data_info():
+    available_percent = as_percent(st.session_state['available_fraction_of_account'])
+    account_info = st.session_state['bars_data'].current_account_info
+    rounded_balance = round_balance(account_info.balance)
+
+    margin_text = f'Margin available: {available_percent}'
+    balance_text = f'Balance: ${rounded_balance}'
+    small_linebreak_caption(margin_text, balance_text, alignment = 'right')
+
 def alert_price_input():
+    disabled = st.session_state['selected_scale'] == 'logarithmic'
     bid = st.session_state['bars_data'].current_bid
     step = get_SLTP_step()
     digits = st.session_state['bars_data'].shown_digits
@@ -462,6 +494,7 @@ def alert_price_input():
 
     st.number_input('Price', 
                     key = 'alert_price', 
+                    disabled = disabled, 
                     value = bid, 
                     step = step, 
                     format = format, 
@@ -469,8 +502,10 @@ def alert_price_input():
                     #on_change = callbacks.reload_graph)
 
 def set_alert_button():
+    disabled = st.session_state['selected_scale'] == 'logarithmic'
     st.button('Set alert', 
                 key = 'alert_button', 
+                disabled = disabled, 
                 on_click = callbacks.set_alert, 
                 width = 'stretch')
 
@@ -490,39 +525,26 @@ def set_conditional_trade_button(direction):
                     args = ['buy'], 
                     width = 'stretch')
 
-def alerts_and_account_data_and_hidden_trades_checkboxes():
-    conditionals_column, account_data_column = st.columns(2)
-    with conditionals_column:
-        st.checkbox('Set alert', 
-                    key = 'conditionals_checkbox')
-    with account_data_column:
-        st.checkbox('Show account data', 
-                    key = 'account_data_checkbox')
-        st.checkbox('Show hidden trades', 
-                    key = 'show_hidden_checkbox', 
-                    value = False)
-
 def alerts_and_conditional_trades_widgets():
-    if st.session_state['conditionals_checkbox']:
+    text_column, price_column = st.columns(2)
 
-        text_column, price_column = st.columns(2)
-        with price_column:
-            alert_price_input()
+    with price_column:
+        alert_price_input()
 
-        price = st.session_state['alert_price']
-        bid = st.session_state['bars_data'].current_bid
-        sign = '≥' if bid <= price else '≤'
+    price = st.session_state['alert_price']
+    bid = st.session_state['bars_data'].current_bid
+    sign = '≥' if bid <= price else '≤'
 
-        with text_column:
-            no_tag_text(f'If price {sign}', font_size = '1.5rem', font_weight = '600', alignment = 'center')
+    with text_column:
+        no_tag_text(f'If price {sign}', font_size = '1.5rem', font_weight = '600', alignment = 'center')
 
-        buy_column, alert_column, sell_column = st.columns(3)
-        with buy_column:
-            set_conditional_trade_button('sell')
-        with alert_column:
-            set_alert_button()
-        with sell_column:
-            set_conditional_trade_button('buy')
+    buy_column, alert_column, sell_column = st.columns(3)
+    with buy_column:
+        set_conditional_trade_button('sell')
+    with alert_column:
+        set_alert_button()
+    with sell_column:
+        set_conditional_trade_button('buy')
 
 
 @st.fragment(run_every = constants.DATA_TABLE_AND_MAXES_UPDATE_INTERVAL)

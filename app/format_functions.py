@@ -1,8 +1,8 @@
 
 
 import streamlit as st
-import pandas as pd
 from datetime import datetime, timezone
+from backend import floor_with_step
 from constants import TIMEZONES, DATA_TABLE_DATE_FORMAT
 from get_live_data import get_actual_timestamp
 
@@ -29,11 +29,41 @@ def add_sign(number, percent = False):
         formatted = f'{formatted}%'
     return(formatted)
 
+def as_percent(number, digits = 1):
+    return(f'{round(number * 100, digits)}%')
+
+def round_balance(number):
+    if number < 1:
+        return(0)
+    if number < 50:
+        return(round(number))
+    
+    rounded_balance = str(round(number))
+    digits_qty = len(rounded_balance)
+    power = digits_qty - 2
+    first_digit = int(rounded_balance[0])
+    
+    if first_digit == 1:
+        step = 5
+        power = power - 1
+    elif first_digit in [2, 3, 4]:
+        step = 1
+    else:
+        step = 2
+
+    step = step * 10 ** power
+    return(int(floor_with_step(number, step)))
+
 def capitalize_first(string):
     return(string[0].upper() + string[1:])
 
 def add_vertical_spacing(pixels):
     st.markdown(f"<div style='height: {pixels}px;'></div>", unsafe_allow_html = True)
+
+def small_linebreak_caption(first_line, second_line, alignment = 'left'):
+    st.caption(f'{first_line}<br>{second_line}', 
+               unsafe_allow_html = True, 
+               text_alignment = alignment)
 
 def no_tag_text(text, alignment, font_size, font_weight):
     st.html(f"""

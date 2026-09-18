@@ -4,9 +4,7 @@ import streamlit as st
 from backend import init_session_state, init_session_state_functions, initialize_MetaTrader
 from constants import SESSION_STATE_DEFAULTS, LABEL_SPACING
 import widgets
-from get_live_data import Graph_range
-from graph import generate_graph_in_fragment
-from callbacks import reload_table, goto, save_old_SLTP_then_update
+from callbacks import reload_table, set_normalization_base, goto, save_old_SLTP_then_update
 from format_functions import add_vertical_spacing
 from trades_data import load_trades_data
 from alerts import load_alerts
@@ -24,7 +22,10 @@ SESSION_STATE_DEFAULT_FUNCTIONS = {'mt5_initialized': {'function': initialize_Me
                                                    'assign': False}, 
                                    'alerts': {'function': load_alerts, 
                                               'args': [], 
-                                              'assign': False}}
+                                              'assign': False}, 
+                                   'selected_normalization_base_name': {'function': set_normalization_base, 
+                                                                        'args': [], 
+                                                                        'assign': False}}
 
 
 
@@ -40,9 +41,8 @@ def print_remaining_time_test():
 
 st.set_page_config(layout = 'wide')
 
-init_session_state(SESSION_STATE_DEFAULTS)
 init_session_state_functions(SESSION_STATE_DEFAULT_FUNCTIONS)
-
+init_session_state(SESSION_STATE_DEFAULTS)
 
 graph_column, trade_column = st.columns(2)
 
@@ -119,11 +119,14 @@ with trade_column:
                 widgets.max_lotsize_display()
 
         widgets.RR_and_maxloss_widgets()
-        widgets.alerts_and_account_data_and_hidden_trades_checkboxes()
-        widgets.alerts_and_conditional_trades_widgets()
+        widgets.settings_checkboxes()
+        if st.session_state['alerts_checkbox']:
+            widgets.alerts_and_conditional_trades_widgets()
+        if st.session_state['account_data_checkbox']:
+            widgets.account_data_info()
 
-        if not st.session_state['conditionals_checkbox']: ####delete after moving remaining time
-            st.header('')
+        #else: ####delete after moving remaining time
+        #    st.header('')
         print_remaining_time_test()
 
     widgets.data_table()

@@ -1,33 +1,36 @@
+
+
 import pandas as pd
 import streamlit as st
-
-df = pd.DataFrame(
-    {
-        "name": ["Alice", "Bob", "Charlie"],
-        "view": [":material/visibility: View"] * 3,
-    }
-)
-
-def handle_view():
-    click = st.session_state.view_click
-    st.toast(f"Viewing row {click['row']}: {df.iloc[click['row']]['name']}")
-
-st.dataframe(
-    df,
-    column_config={
-        "view": st.column_config.ButtonColumn(
-            "", type="tertiary", on_click=handle_view, key="view_click"
-        ),
-    },
-    hide_index=True,
-)
+from backend import floor_with_step
 
 
-def hide_cback():
-    pass
+def round_balance(number):
+    if number < 1:
+        return(0)
+    if number < 50:
+        return(round(number))
+    
+    rounded_balance = str(round(number))
+    digits_qty = len(rounded_balance)
+    power = digits_qty - 2
+    first_digit = int(rounded_balance[0])
+    
+    if first_digit == 1:
+        step = 5
+        power = power - 1
+    elif first_digit in [2, 3, 4]:
+        step = 1
+    else:
+        step = 2
 
-extra_df_entry = pd.DataFrame({'show': ['Hide' if closed else 'test']})
+    step = step * 10 ** power
+    return(int(floor_with_step(number, step)))
 
-column_config = {'show': st.column_config.ButtonColumn('', on_click = hide_cback, key = 'full_row_returned_in_this_key')}
+
+test_values = [5, 27, 97, 107, 378, 450, 893, 1181, 1513, 2270, 2370]
+
+for value in test_values:
+    print(value, 'rounded:', round_balance(value))
 
 
