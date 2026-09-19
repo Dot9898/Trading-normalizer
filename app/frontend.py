@@ -2,7 +2,7 @@
 
 import streamlit as st
 from backend import init_session_state, init_session_state_functions, initialize_MetaTrader
-from constants import SESSION_STATE_DEFAULTS, LABEL_SPACING
+from constants import SESSION_STATE_DEFAULTS, LABEL_SPACING, MIN_LEFT_WIDTH, MIN_RIGHT_WIDTH
 import widgets
 from callbacks import reload_table, set_normalization_base, goto, save_old_SLTP_then_update
 from format_functions import add_vertical_spacing
@@ -35,6 +35,8 @@ from constants import POLLING_INTERVAL
 @st.fragment(run_every = POLLING_INTERVAL)
 def print_remaining_time_test():
     st.subheader(get_remaining_candle_time(st.session_state['bars_data'].timeframe), text_alignment = 'center')
+
+graph_width = 5
 #---------------------------------------------------------------------------------------------------------
 
 
@@ -44,7 +46,8 @@ st.set_page_config(layout = 'wide')
 init_session_state_functions(SESSION_STATE_DEFAULT_FUNCTIONS)
 init_session_state(SESSION_STATE_DEFAULTS)
 
-graph_column, trade_column = st.columns(2)
+
+graph_column, trade_column = st.columns([MIN_LEFT_WIDTH + graph_width, MIN_RIGHT_WIDTH - graph_width])
 
 with graph_column:
 

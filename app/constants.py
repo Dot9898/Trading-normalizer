@@ -11,12 +11,15 @@ GRAPH_COLORS = 'black_and_white'
 POLLING_INTERVAL = 0.5
 DATA_TABLE_AND_MAXES_UPDATE_INTERVAL = 5.0
 MAX_BARS_IN_GRAPH = 1000
-GRAPH_HEIGHT = 450
-DATA_TABLE_HEIGHT = 270
+TOTAL_WIDTH = 16
+MIN_GRAPH_WIDTH = 4  #poner min y max normales desde 4 hasta 12 o similar en el slider y eliminar estas constantes y las de abajo
+GRAPH_HEIGHT = 550
+GRAPH_TITLE_SEPARATION = 5
+DATA_TABLE_HEIGHT = 370
 SHOW_ORDER_TYPES = True
 WINDOW_WHEN_DATA_IS_CONSIDERED_LOCAL = 30
 
-SHOWN_SYMBOLS = ['US500', 'BTCUSD']
+SHOWN_SYMBOLS = ['US500', 'BTCUSD', 'ETHUSD']
 SYMBOL_DATA = {'US500': {'ideal_ppb': 0.75, 
                          'margin_req': 0.005, 
                          'display': 'basis', 
@@ -175,11 +178,34 @@ RED = '#FF4D4D'
 BLUE = '#3B82F6'
 GREEN = '#4CAF50'
 
-CHART_COLORS = {'fill': {'green_and_red': {'positive': GREEN, 'negative': RED}, 
-                        'black_and_white': {'positive': WHITE, 'negative': BLACK}}, 
-                'stroke': {'green_and_red': {'positive': GREEN, 'negative': RED}, 
-                        'black_and_white': {'positive': WHITE, 'negative': WHITE}}, 
-                'price_lines': {'bid': BLUE, 'ask': RED}}
+CHART_CANDLESTICK_COLORS = {'fill': {'green_and_red': {'positive': GREEN, 'negative': RED}, 
+                                     'black_and_white': {'positive': WHITE, 'negative': BLACK}}, 
+                            'stroke': {'green_and_red': {'positive': GREEN, 'negative': RED}, 
+                                       'black_and_white': {'positive': WHITE, 'negative': WHITE}}}
+
+CHART_LINES_COLORS = {'bid': BLUE, 
+                      'ask': RED, 
+                      'SL': RED, 
+                      'TP': GREEN, 
+                      'open_SL': RED, 
+                      'open_TP': GREEN, 
+                      'set_price': GREEN, 
+                      'set_SL': GREEN, 
+                      'set_TP': GREEN, 
+                      'alert': GREEN, 
+                      'conditonal_trade_trigger': GREEN}
+
+CHART_LINES_OPACITY = {'bid': 1.0, 
+                       'ask': 1.0, 
+                       'SL': 1.0, 
+                       'TP': 1.0, 
+                       'open_SL': 0.8, 
+                       'open_TP': 0.8, 
+                       'set_price': 0.6, 
+                       'set_SL': 0.6,  
+                       'set_TP': 0.6, 
+                       'alert': 1.0, 
+                       'conditonal_trade_trigger': 0.4}
 
 
 #MT5 Codes
@@ -372,14 +398,18 @@ DEFAULTS = {'ideal_ppb': None,
             'digits': 1, 
             'power': 4}
 
+WHITE_SPACE = ' '
 EMPTY_SPACE = '\u200b'
 EMPTY_SPACE_2 = '\u200c'
 LABEL_SPACING = 28
 
+MIN_LEFT_WIDTH = MIN_GRAPH_WIDTH - 1
+MIN_RIGHT_WIDTH = TOTAL_WIDTH - (MIN_GRAPH_WIDTH - 1)
 
 
 
 
+#reorder this and add graphic constants tab
 
 
 

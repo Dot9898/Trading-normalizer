@@ -1,18 +1,23 @@
 
 
-deslizador de ancho de gráfico
 función dibujar un precio en el gráfico, por número o +- de base, dibujar la línea
 move remaining candle time to price lines
-show sltp en el gráfico checkbox
 reload graph by layer? is it more efficient?
+clean constants and graph files
+fix graph descuadrándose al bajar con flechita
+
+show sltp en el gráfico checkbox
 callbacks: SLTPENTRY, alert checkbox, alert level: soft graph (just a s state); graph navigation: soft graph? maybe it works auto
 
 cambiar x shift según timeframe (flechitas), fix navigation callbacks
+settings con ruedita
 add settings box: checkbox for confirmation dialog of market b/s, normalization default y range, default +- tpsl
+deslizador de ancho de gráfico en los settings
 add extra button to TP PL to auto set +-20 (changeable in a number input)
 move hide trades checkbox? design wise
 fix prices widget design
-data table and graph height
+data table and graph height + fix entry spot? or whole design, to have more of the data table visible
+git ignore
 file cleanup + imports
 
 order history in graph

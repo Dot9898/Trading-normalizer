@@ -14,6 +14,14 @@ from get_live_data import Graph_range
 from graph import generate_graph_in_fragment
 
 
+def graph_width_slider():
+    st.slider('Graph width', 
+              key = 'graph_width_slider', 
+              min_value = 1, 
+              max_value = 9, 
+              step = 1, 
+              value = 5) #delete and add to defaults
+
 def timezone_dropdown():
     st.selectbox('Time zone', 
                 constants.SHOWN_TIMEZONES, 
