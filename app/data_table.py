@@ -8,6 +8,7 @@ from backend import scale_point, unscale_point_wrt_current_values
 from format_functions import add_sign, capitalize_first, format_timestamp
 from alerts import update_open_and_close_alerts
 from trades_data import update_all_trades_data
+from graph import update_lines_data
 
 
 def get_RR_string(price, SL, TP):
@@ -147,7 +148,7 @@ def generate_alerts_data_table():
 
     return(table)
 
-def update_trades_data_table(table):
+def update_trades_data_table(table): #change equity call to bars
     bars = st.session_state['bars_data']
     if (table['Status'] == 'Open').any():
         equity = mt5.account_info().equity
@@ -195,7 +196,7 @@ def update_alerts_data_table(table):
 
 
 def update_data_table():
-    
+
     if st.session_state['update_data_table']:   #Full update
         st.session_state['update_data_table'] = False
         update_all_trades_data(data_source = 'local')
@@ -210,6 +211,10 @@ def update_data_table():
     data_table = pd.concat([st.session_state['trades_data_table'], st.session_state['alerts_data_table']])
     data_table.sort_values(by = ['Status'], kind = 'stable', inplace = True)
     st.session_state['data_table'] = data_table
+
+    if st.session_state['update_graph_lines']:
+        st.session_state['update_graph_lines'] = False
+        update_lines_data('trades_and_alerts_levels')
 
 
 

@@ -1,10 +1,11 @@
 
 
-función dibujar un precio en el gráfico, por número o +- de base, dibujar la línea
+order lines dfs considering layering (inside them)
 move remaining candle time to price lines
-reload graph by layer? is it more efficient?
 clean constants and graph files
 fix graph descuadrándose al bajar con flechita
+
+reload graph by layer? is it more efficient?
 
 show sltp en el gráfico checkbox
 callbacks: SLTPENTRY, alert checkbox, alert level: soft graph (just a s state); graph navigation: soft graph? maybe it works auto
@@ -13,6 +14,7 @@ cambiar x shift según timeframe (flechitas), fix navigation callbacks
 settings con ruedita
 add settings box: checkbox for confirmation dialog of market b/s, normalization default y range, default +- tpsl
 deslizador de ancho de gráfico en los settings
+show order types or not in settings (graph lines and data table)
 add extra button to TP PL to auto set +-20 (changeable in a number input)
 move hide trades checkbox? design wise
 fix prices widget design
@@ -30,7 +32,7 @@ colores open n closed market
 trade limit if losses (in data etc)
 add setting or constant to disable account balance show
 alert sounds
-colores (markdown RR string y table data)
+colores (markdown RR string y table data) test cond trades lines
 weekly and infinite display of data table
 
 local h/l

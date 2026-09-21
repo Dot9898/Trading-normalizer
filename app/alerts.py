@@ -69,11 +69,11 @@ class Alert:
         if self.reason == 'conditional_trade':
             trade_data = self.conditional_trade_data
             ordd = limit_or_stop_order(trade_data['symbol'], 
-                                trade_data['lots'], 
-                                trade_data['direction'], 
-                                trade_data['execution_price'], 
-                                trade_data['SL'], 
-                                trade_data['TP'])
+                                    trade_data['lots'], 
+                                    trade_data['direction'], 
+                                    trade_data['execution_price'], 
+                                    trade_data['SL'], 
+                                    trade_data['TP'])
             st.session_state['order_return'] = ordd
     
     def notify_execution(self, data):

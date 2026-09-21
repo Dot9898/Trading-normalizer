@@ -8,6 +8,7 @@ from callbacks import reload_table, set_normalization_base, goto, save_old_SLTP_
 from format_functions import add_vertical_spacing
 from trades_data import load_trades_data
 from alerts import load_alerts
+from graph import load_lines_data
 
 SESSION_STATE_DEFAULT_FUNCTIONS = {'mt5_initialized': {'function': initialize_MetaTrader, 
                                                        'args': [], 
@@ -23,6 +24,9 @@ SESSION_STATE_DEFAULT_FUNCTIONS = {'mt5_initialized': {'function': initialize_Me
                                    'alerts': {'function': load_alerts, 
                                               'args': [], 
                                               'assign': False}, 
+                                   'lines_data': {'function': load_lines_data, 
+                                                  'args': [], 
+                                                  'assign': False}, 
                                    'selected_normalization_base_name': {'function': set_normalization_base, 
                                                                         'args': [], 
                                                                         'assign': False}}
@@ -134,7 +138,7 @@ with trade_column:
 
     widgets.data_table()
 
-widgets.reload_table_and_maxes()
+widgets.reload_table_and_lines_and_maxes()
 if st.session_state['dialog_data'] is not None:
     widgets.open_dialog()
 

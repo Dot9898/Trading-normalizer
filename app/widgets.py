@@ -11,7 +11,7 @@ from alerts import alert_check, notify_executions_in_serie
 from data_table import update_data_table
 import dialog_boxes
 from get_live_data import Graph_range
-from graph import generate_graph_in_fragment
+from graph import generate_graph_in_fragment, update_lines_data
 
 
 def graph_width_slider():
@@ -75,7 +75,8 @@ def generate_graph():
                                timezone = st.session_state['selected_timezone'], 
                                data_scale = st.session_state['selected_scale'], 
                                normalization_base_name = st.session_state['selected_normalization_base_name'], 
-                               price_range = price_range,
+                               price_range = price_range, 
+                               lines_data = st.session_state['lines_data'], 
                                graph_colors = constants.GRAPH_COLORS)
 
 
@@ -474,8 +475,7 @@ def settings_checkboxes():
     with conditionals_column:
         st.checkbox('Set alert', 
                     key = 'alerts_checkbox', 
-                    on_change = callbacks.uncheck_checkbox, 
-                    args = ['account_data_checkbox'])
+                    on_change = callbacks.alerts_checkbox_callback)
     with account_data_column:
         st.checkbox('Show account data', 
                     key = 'account_data_checkbox', 
@@ -506,8 +506,9 @@ def alert_price_input():
                     value = bid, 
                     step = step, 
                     format = format, 
-                    label_visibility = 'collapsed')
-                    #on_change = callbacks.reload_graph)
+                    label_visibility = 'collapsed', 
+                    on_change = update_lines_data, 
+                    args = ['current_levels'])
 
 def set_alert_button():
     disabled = st.session_state['selected_scale'] == 'logarithmic'
@@ -556,9 +557,10 @@ def alerts_and_conditional_trades_widgets():
 
 
 @st.fragment(run_every = constants.DATA_TABLE_AND_MAXES_UPDATE_INTERVAL)
-def reload_table_and_maxes():
+def reload_table_and_lines_and_maxes():
     st.session_state['update_maxes'] = True
     st.session_state['update_data_table'] = True
+    st.session_state['update_graph_lines'] = True
 
 @st.fragment(run_every = constants.POLLING_INTERVAL)
 def data_table():

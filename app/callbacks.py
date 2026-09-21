@@ -9,6 +9,7 @@ import order_execution
 from backend import scale_point_wrt_current_values, normalize_point_wrt_current_price, unscale_point_wrt_current_values, get_usable_price_level, get_usable_lotsize, get_used_ppb_and_margin_req
 from trades_data import edit_trade_data
 from alerts import Alert
+from graph import update_lines_data
 
 
 def reload_graph():
@@ -16,6 +17,9 @@ def reload_graph():
 
 def reload_table():
     st.session_state['update_data_table'] = True
+
+def update_trades_and_alerts_lines():
+    st.session_state['update_graph_lines'] = True
 
 def reload_graph_and_table():
     reload_graph()
@@ -152,6 +156,7 @@ def update_risk():
     update_ppb()
     update_pppt()
     update_lotsize()
+    update_lines_data('current_levels')
 
 def update_max_ppb_and_lotsize():
     update_max_ppb()
@@ -166,10 +171,15 @@ def full_update(reset_SLTP, update_maxes, force_set_normalization_base):
     save_old_SLTP_then_update(reset_SLTP) #Includes risk
     if update_maxes:
         update_max_ppb_and_lotsize()
+    update_trades_and_alerts_lines()
 
 
 def uncheck_checkbox(key):
     st.session_state[key] = False
+
+def alerts_checkbox_callback():
+    uncheck_checkbox('account_data_checkbox')
+    update_lines_data('current_levels')
 
 def set_alert():
     update_risk()

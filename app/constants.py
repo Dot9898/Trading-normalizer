@@ -8,7 +8,7 @@ import MetaTrader5 as mt5
 GRAPH_COLORS = 'black_and_white'
 #Parameters
 
-POLLING_INTERVAL = 0.5
+POLLING_INTERVAL = 1.0
 DATA_TABLE_AND_MAXES_UPDATE_INTERVAL = 5.0
 MAX_BARS_IN_GRAPH = 1000
 TOTAL_WIDTH = 16
@@ -56,7 +56,8 @@ SESSION_STATE_DEFAULTS = {'data_table': None,
                           'risk': 0, 
                           'reward': 0, 
                           'dialog_data': None, 
-                          'update_SLTP': False}
+                          'update_SLTP': False, 
+                          'update_graph_lines': True}
 
 
 #Groups
@@ -187,24 +188,28 @@ CHART_LINES_COLORS = {'bid': BLUE,
                       'ask': RED, 
                       'SL': RED, 
                       'TP': GREEN, 
+                      'entry': GREEN, 
+                      'alert_price': GREEN, 
                       'open_SL': RED, 
                       'open_TP': GREEN, 
-                      'set_price': GREEN, 
-                      'set_SL': GREEN, 
-                      'set_TP': GREEN, 
-                      'alert': GREEN, 
+                      'pending_entry': GREEN, 
+                      'pending_SL': GREEN, 
+                      'pending_TP': GREEN, 
+                      'placed_alert': GREEN, 
                       'conditonal_trade_trigger': GREEN}
 
 CHART_LINES_OPACITY = {'bid': 1.0, 
                        'ask': 1.0, 
                        'SL': 1.0, 
                        'TP': 1.0, 
+                       'entry': 0.8, 
+                       'alert_price': 1.0, #?
                        'open_SL': 0.8, 
                        'open_TP': 0.8, 
-                       'set_price': 0.6, 
-                       'set_SL': 0.6,  
-                       'set_TP': 0.6, 
-                       'alert': 1.0, 
+                       'pending_entry': 0.6, 
+                       'pending_SL': 0.6,  
+                       'pending_TP': 0.6, 
+                       'placed_alert': 1.0, 
                        'conditonal_trade_trigger': 0.4}
 
 
@@ -398,7 +403,8 @@ DEFAULTS = {'ideal_ppb': None,
             'digits': 1, 
             'power': 4}
 
-WHITE_SPACE = ' '
+WHITE_SPACE = ' '
+LARGER_WHITE_SPACE = ' '
 EMPTY_SPACE = '\u200b'
 EMPTY_SPACE_2 = '\u200c'
 LABEL_SPACING = 28

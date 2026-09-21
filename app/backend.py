@@ -54,9 +54,10 @@ def is_equivalent(A, B):
     """Checks equality with None-like values treated as equals"""
     if pd.isna(A) and pd.isna(B):
         return(True)
+    if pd.isna(A) or pd.isna(B):
+        return(False)
     if A == B:
         return(True)
-    return(False)
 
 def scale_point(value, data_scale, normalization_base = None, symbol = None, true_normalization = False, rounded = False):
 
