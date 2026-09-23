@@ -5,28 +5,30 @@ import streamlit as st
 import altair as alt
 from constants import CHART_CANDLESTICK_COLORS, CHART_LINES_COLORS, CHART_LINES_OPACITY, POLLING_INTERVAL, GRAPH_HEIGHT, GRAPH_TITLE_SEPARATION, WHITE_SPACE
 from backend import scale_point_wrt_current_values
-from get_live_data import Bars
+from get_live_data import Bars, get_remaining_candle_time
 from format_functions import timezone_format
 
+
+#ADD GRAPH STYLE AS A CONSTANT
 
 #add constants of padding etc
 #check subfunctions parameters order etc and clean main function
 
 
 def load_lines_data():
-    current_prices = pd.DataFrame(index = ['bid', 'ask'], 
-                                  columns = ['line_type', 'price', 'label'])
-    current_levels = pd.DataFrame(index = ['SL', 'TP', 'entry', 'alert_price'], 
-                                  columns = ['line_type', 'price', 'label'])
+    bid = pd.DataFrame(index = ['bid'], columns = ['line_type', 'price', 'label'])
+    ask = pd.DataFrame(index = ['ask'], columns = ['line_type', 'price', 'label'])
+    current_levels = pd.DataFrame(index = ['SL', 'TP', 'entry', 'alert_price'], columns = ['line_type', 'price', 'label'])
     trades_and_alerts_levels = pd.DataFrame(columns = ['line_type', 'price', 'label'])
     
-    lines_data = {'current_prices': current_prices, 
+    lines_data = {'bid': bid, 
+                  'ask': ask, 
                   'current_levels': current_levels, 
                   'trades_and_alerts_levels': trades_and_alerts_levels}
     st.session_state['lines_data'] = lines_data
 
 
-def get_base_chart(bars, colors, date_label, timezone):
+def get_base_chart(bars, dummy_bars, colors, date_label, timezone):
 
     candlestick_color = (
         alt.when('datum.is_positive')
@@ -37,11 +39,14 @@ def get_base_chart(bars, colors, date_label, timezone):
         alt.when('datum.is_positive')
         .then(alt.value(CHART_CANDLESTICK_COLORS['stroke'][colors]['positive']))
         .otherwise(alt.value(CHART_CANDLESTICK_COLORS['stroke'][colors]['negative'])))
-    
+
+    all_bars = pd.concat([bars[['axis_label', 'time']], dummy_bars[['axis_label', 'time']]])
+    sorted_labels = all_bars.sort_values('time')['axis_label']
+
     base = alt.Chart(bars).encode(
         alt.X('axis_label:O', 
             axis = alt.Axis(labelAngle = 0, title = [date_label, f'{timezone_format(timezone)} time']), 
-            scale = alt.Scale(paddingInner = 0.35, paddingOuter = 0.5), 
+            scale = alt.Scale(domain = sorted_labels, paddingInner = 0.35, paddingOuter = 0.5), 
             sort = alt.SortField('time', order = 'ascending')), 
         color = candlestick_color, 
         stroke = stroke_color
@@ -96,11 +101,12 @@ def lines_layer(lines_data): #add constants for everything
 
     labels = alt.Chart(lines_data).mark_text(
         clip = True, 
+        lineBreak = '\n',
         align = 'right', 
-        baseline = 'bottom', 
-        dx = -2, 
-        dy = -3, 
-        fontSize = 13, 
+        baseline = 'top' if 'bid' in lines_data.index else 'bottom', 
+        dx = -4, 
+        dy = 3 if 'bid' in lines_data.index else -3, 
+        fontSize = 15 if ('bid' in lines_data.index or 'ask' in lines_data.index) else 13, 
         tooltip = None)
 
     labels = labels.encode(
@@ -115,6 +121,7 @@ def lines_layer(lines_data): #add constants for everything
 def altair_candlestick_graph(bars_data: Bars, price_range, lines_data, colors):
 
     bars = bars_data.bars
+    dummy_bars = bars_data.dummy_bars
     name = bars_data.name
     timezone = bars_data.timezone
     data_scale = bars_data.data_scale
@@ -122,32 +129,38 @@ def altair_candlestick_graph(bars_data: Bars, price_range, lines_data, colors):
         price_range = [bars_data.min_price, bars_data.max_price]
     date_label = '' if bars_data.date_label is None else bars_data.date_label
 
-    base = get_base_chart(bars, colors, date_label, timezone)
+    base = get_base_chart(bars, dummy_bars, colors, date_label, timezone)
     candlesticks = candlesticks_layer(base, price_range, data_scale)
 
-    price_lines = lines_layer(lines_data['current_prices'])
+    bid_line = lines_layer(lines_data['bid'])
+    ask_line = lines_layer(lines_data['ask'])
     SLTP_lines = lines_layer(lines_data['current_levels'])
     trades_and_alert_lines = lines_layer(lines_data['trades_and_alerts_levels'])
 
-    chart = (candlesticks + SLTP_lines + trades_and_alert_lines + price_lines).properties(
-            title = alt.TitleParams(text = name, anchor = 'middle', offset = GRAPH_TITLE_SEPARATION))
+    chart = (candlesticks + SLTP_lines + trades_and_alert_lines + ask_line + bid_line).properties(
+             title = alt.TitleParams(text = name, anchor = 'middle', offset = GRAPH_TITLE_SEPARATION))
 
     return(chart)
 
 
 
-#check every rounding. rounding for trade levels already rounded
+
+
+
 def update_lines_data(category):
+    """Order matters for layering"""
+
     lines_data = st.session_state['lines_data']
     bars = st.session_state['bars_data']
 
-    if category == 'current_prices': #add time as label
-        prices_data = lines_data['current_prices']
+    if category == 'current_prices':
+        ask_data = lines_data['ask']
+        bid_data = lines_data['bid']
 
-        bid = bars.current_bid
         ask = bars.current_ask
-        prices_data.loc['bid'] = ['bid', bid, 'bid_label']
-        prices_data.loc['ask'] = ['ask', ask, 'ask_label']
+        bid = bars.current_bid
+        ask_data.loc['ask'] = ['ask', ask, f'{ask}']
+        bid_data.loc['bid'] = ['bid', bid, f'{bid}\n{get_remaining_candle_time(bars.timeframe)}']
 
     if category == 'current_levels':
         levels_data = lines_data['current_levels']
@@ -192,6 +205,13 @@ def update_lines_data(category):
                 table_levels_data.loc[f'{ticket}_SL'] = ['open_SL', SL, f'{direction} SL{WHITE_SPACE}{SL}']
                 table_levels_data.loc[f'{ticket}_TP'] = ['open_TP', TP, f'{direction} TP{WHITE_SPACE}{TP}']
 
+            if status == 'Alert':
+                alert = source
+                ticket = alert.ticket
+
+                alert_price = scale_point_wrt_current_values(source.absolute_price, rounded = True)
+                table_levels_data.loc[ticket] = ['placed_alert', alert_price, f'Alert{WHITE_SPACE}{alert_price}']
+
             if status == 'Pending':
                 trade = source
                 ticket = trade.Index
@@ -204,13 +224,6 @@ def update_lines_data(category):
                 table_levels_data.loc[f'{ticket}_SL'] = ['pending_SL', SL, f'{direction} {order_type} SL{WHITE_SPACE}{SL}']
                 table_levels_data.loc[f'{ticket}_TP'] = ['pending_TP', TP, f'{direction} {order_type} TP{WHITE_SPACE}{TP}']
                 table_levels_data.loc[f'{ticket}_entry'] = ['pending_entry', entry, f'{direction} {order_type}{WHITE_SPACE}{entry}']
-
-            if status == 'Alert':
-                alert = source
-                ticket = alert.ticket
-
-                alert_price = scale_point_wrt_current_values(source.absolute_price, rounded = True)
-                table_levels_data.loc[ticket] = ['placed_alert', alert_price, f'Alert{WHITE_SPACE}{alert_price}']
 
             if status == 'Conditional trade':
                 alert = source

@@ -32,17 +32,9 @@ SESSION_STATE_DEFAULT_FUNCTIONS = {'mt5_initialized': {'function': initialize_Me
                                                                         'assign': False}}
 
 
-
 #---------------------------------------------------------------------------------------------------------
-from get_live_data import get_remaining_candle_time
-from constants import POLLING_INTERVAL
-@st.fragment(run_every = POLLING_INTERVAL)
-def print_remaining_time_test():
-    st.subheader(get_remaining_candle_time(st.session_state['bars_data'].timeframe), text_alignment = 'center')
-
 graph_width = 5
 #---------------------------------------------------------------------------------------------------------
-
 
 
 st.set_page_config(layout = 'wide')
@@ -93,12 +85,10 @@ with trade_column:
 
     with orders_column:
         widgets.symbol_dropdown()
-        with st.container():
-            widgets.print_prices_test()
-        widgets.market_order_buttons() #add container if needed
         widgets.SL_and_TP_input()
-        widgets.limit_order_buttons()
         widgets.entry_display()
+        widgets.market_order_buttons()
+        widgets.limit_order_buttons()
 
     with risk_column:
         
@@ -131,10 +121,6 @@ with trade_column:
             widgets.alerts_and_conditional_trades_widgets()
         if st.session_state['account_data_checkbox']:
             widgets.account_data_info()
-
-        #else: ####delete after moving remaining time
-        #    st.header('')
-        print_remaining_time_test()
 
     widgets.data_table()
 

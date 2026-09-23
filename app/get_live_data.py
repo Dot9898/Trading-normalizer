@@ -6,7 +6,7 @@ from numpy import log10
 from time import time
 import MetaTrader5 as mt5
 from backend import include_symbol
-from constants import SECONDS, TIMEZONES, CHART_AXIS_TIME_FORMAT, HOUR, DAY, WEEK, OFFSET_SECONDS, EMPTY_SPACE, EMPTY_SPACE_2, MAX_BARS_IN_GRAPH, NORMALIZATION_PRECISION, SYMBOL_DATA, DEFAULTS, REMAINING_CANDLE_TIME_FORMAT, DATA_PATH
+from constants import SECONDS, TIMEZONES, CHART_AXIS_TIME_FORMAT, HOUR, DAY, WEEK, OFFSET_SECONDS, EMPTY_SPACE, EMPTY_SPACE_2, MAX_BARS_IN_GRAPH, NORMALIZATION_PRECISION, SYMBOL_DATA, DEFAULTS, REMAINING_CANDLE_TIME_FORMAT, DATA_PATH, GRAPH_EMPTY_SPACE_FRACTION, EMPTY_SPACE_3
 
 
 class Graph_range:
@@ -80,6 +80,7 @@ class Bars:
         self.server_times_of_interest = None
         self.last_current_bar_open_time = None
         self.bars = None
+        self.dummy_bars = None
         self.max_price = None
         self.min_price = None
         self.date_label = None
@@ -114,7 +115,7 @@ class Bars:
         for key in ['market_open', 'market_close', 'server_1:00', 'New_York_day_start']:
             if server_time_of[key] > current_server_time:
                 server_time_of[key] = server_time_of[key] - DAY
-        
+
         server_time_of['week_market_open'] = NY_week_start + int(9.5 * HOUR)
         server_time_of['server_week_1:00'] = server_week_start + 1 * HOUR
         server_time_of['New_York_week_start'] = NY_week_start
@@ -122,7 +123,7 @@ class Bars:
         for key in ['week_market_open', 'server_week_1:00', 'New_York_week_start']:
             if server_time_of[key] > current_server_time:
                 server_time_of[key] = server_time_of[key] - WEEK
-        
+
         server_time_of['now'] = current_server_time
 
         self.server_times_of_interest = server_time_of
@@ -176,7 +177,7 @@ class Bars:
             self.shows_current_bar = True
         else:
             self.shows_current_bar = False
-    
+
     @staticmethod
     def get_actual_timestamp(server_time):
 
@@ -214,15 +215,33 @@ class Bars:
         else:
             bars['datetime'] = pd.to_datetime(bars['timestamp'], unit = 's', utc = True)
             bars['datetime'] = bars['datetime'].dt.tz_convert(TIMEZONES[timezone])
-    
+
     @staticmethod
-    def create_label_columns(bars: pd.DataFrame, timeframe):
+    def create_label_columns(bars: pd.DataFrame, timeframe, empty_space_character = EMPTY_SPACE):
         bars['date_label'] = bars['datetime'].dt.strftime('%e %b %Y')
         bars['time_label'] = bars['datetime'].dt.strftime('%H:%M')
-        empty_spaces = [EMPTY_SPACE * index for index in range(len(bars))] #Needed to bypass Altair axis defaulting to local timezone
+        empty_spaces = [empty_space_character * index for index in range(len(bars))] #Needed to bypass Altair axis defaulting to local timezone
         if len(bars) == 1:
-            empty_spaces = [EMPTY_SPACE_2] #Avoids current bar label colliding with the first bar label when they have the same HH:MM.
+            empty_spaces = [EMPTY_SPACE_3] #Avoids current bar label colliding with the first bar label when they have the same HH:MM.
         bars['axis_label'] = bars['datetime'].dt.strftime(CHART_AXIS_TIME_FORMAT[timeframe]) + empty_spaces
+
+    def get_dummy_bars(self):
+        if not self.shows_current_bar:
+            return(pd.DataFrame({'time': [], 'axis_label': []}))
+        
+        first_bar_time = self.bars['time'].iloc[0]
+        last_bar_time = self.bars['time'].iloc[-1]
+        original_time = last_bar_time - first_bar_time
+
+        extra_time = original_time * GRAPH_EMPTY_SPACE_FRACTION/(1 - GRAPH_EMPTY_SPACE_FRACTION)
+        extra_bars = int(extra_time // SECONDS[self.timeframe])
+        extra_bars_times = [last_bar_time + i * SECONDS[self.timeframe] for i in range(extra_bars)]
+
+        dummy_bars = pd.DataFrame({'time': extra_bars_times})
+        dummy_bars['timestamp'] = dummy_bars['time'].apply(self.get_actual_timestamp)
+        self.create_datetime_column(dummy_bars, self.timezone)
+        self.create_label_columns(dummy_bars, self.timeframe, empty_space_character = EMPTY_SPACE_2)
+        return(dummy_bars)
 
     def scale_point(self, value):
 
@@ -236,7 +255,7 @@ class Bars:
         
         if self.data_scale == 'logarithmic':
             return(round(log10(value), self.shown_digits))
-    
+
     def scale_data(self, bars: pd.DataFrame):
         columns = ['open', 'high', 'low', 'close']
 
@@ -281,7 +300,7 @@ class Bars:
         self.create_label_columns(current_bar, self.timeframe)
         self.scale_data(current_bar)
         return(current_bar)
-    
+
     def update_current_data(self):
         current_symbol_info = mt5.symbol_info_tick(self.symbol)
         self.current_account_info = mt5.account_info()
@@ -301,6 +320,7 @@ class Bars:
         self.update_current_bar_visibility()
         self.bars = self.get_bars()
         if not self.bars.empty:
+            self.dummy_bars = self.get_dummy_bars()
             self.max_price = self.bars['high'].max()
             self.min_price = self.bars['low'].min()
             self.date_label = f'{self.bars['date_label'].iloc[0]} - {self.bars['date_label'].iloc[-1]}'

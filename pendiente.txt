@@ -1,21 +1,21 @@
 
 
-order lines dfs considering layering (inside them)
-move remaining candle time to price lines
+upd tr c cl
 clean constants and graph files
-fix graph descuadrándose al bajar con flechita
+cambiar x shift según timeframe (flechitas), fix navigation callbacks
+a warning of conversion when pending open?
 
-reload graph by layer? is it more efficient?
-
+settings con ruedita
+settings en un solo dict en session state, que cambia en el settings dialog
+add graph extra space as a setting
+add settings box: checkbox for confirmation dialog of market b/s, normalization default y range, default +- tpsl
 show sltp en el gráfico checkbox
 callbacks: SLTPENTRY, alert checkbox, alert level: soft graph (just a s state); graph navigation: soft graph? maybe it works auto
-
-cambiar x shift según timeframe (flechitas), fix navigation callbacks
-settings con ruedita
-add settings box: checkbox for confirmation dialog of market b/s, normalization default y range, default +- tpsl
 deslizador de ancho de gráfico en los settings
 show order types or not in settings (graph lines and data table)
 add extra button to TP PL to auto set +-20 (changeable in a number input)
+line priority?? a set of values maybe? do not update the dfs, just avoid rendering the labels. passing over the set can work
+change alerts checkbox to bottom like custom y
 move hide trades checkbox? design wise
 fix prices widget design
 data table and graph height + fix entry spot? or whole design, to have more of the data table visible
@@ -25,6 +25,7 @@ file cleanup + imports
 order history in graph
 add 'zoom' square in the graph?
 
+update altair?
 
 cambiar path mt5
 
