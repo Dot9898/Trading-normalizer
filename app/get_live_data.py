@@ -6,12 +6,13 @@ from numpy import log10
 from time import time
 import MetaTrader5 as mt5
 from backend import include_symbol
-from constants import SECONDS, TIMEZONES, CHART_AXIS_TIME_FORMAT, HOUR, DAY, WEEK, OFFSET_SECONDS, EMPTY_SPACE, EMPTY_SPACE_2, MAX_BARS_IN_GRAPH, SYMBOL_DATA, DEFAULTS, REMAINING_CANDLE_TIME_FORMAT, DATA_PATH, GRAPH_EMPTY_SPACE_FRACTION, EMPTY_SPACE_3
+from constants import SECONDS, TIMEZONES, CHART_AXIS_TIME_FORMAT, HOUR, DAY, WEEK, OFFSET_SECONDS, EMPTY_SPACE, EMPTY_SPACE_2, MAX_BARS_IN_GRAPH, SYMBOL_DATA, DEFAULTS, REMAINING_CANDLE_TIME_FORMAT, DATA_PATH, EMPTY_SPACE_3
 
 
 class Graph_range:
     
-    def __init__(self, first_bar, left_shift, left_shift_unit, last_bar, right_shift, right_shift_unit, extra_shift, extra_shift_unit):
+    def __init__(self, empty_graph_fraction, first_bar, left_shift, left_shift_unit, last_bar, right_shift, right_shift_unit, extra_shift, extra_shift_unit):
+        self.empty_graph_fraction = empty_graph_fraction
         self.first_bar = first_bar
         self.last_bar = last_bar
         self.left_shift = left_shift
@@ -53,7 +54,7 @@ class Graph_range:
 
 class Bars:
 
-    def __init__(self, symbol, timeframe, graph_range: Graph_range, timezone, data_scale, normalization_base_name = None):
+    def __init__(self, symbol, timeframe, graph_range: Graph_range, timezone, data_scale, normalization_base_name):
         
         #Data set by the user
         self.symbol = symbol
@@ -226,14 +227,15 @@ class Bars:
         bars['axis_label'] = bars['datetime'].dt.strftime(CHART_AXIS_TIME_FORMAT[timeframe]) + empty_spaces
 
     def get_dummy_bars(self):
-        if not self.shows_current_bar:
+        fraction = self.graph_range.empty_graph_fraction
+        if fraction == 0 or not self.shows_current_bar:
             return(pd.DataFrame({'time': [], 'axis_label': []}))
         
         first_bar_time = self.bars['time'].iloc[0]
         last_bar_time = self.bars['time'].iloc[-1]
         original_time = last_bar_time - first_bar_time
 
-        extra_time = original_time * GRAPH_EMPTY_SPACE_FRACTION/(1 - GRAPH_EMPTY_SPACE_FRACTION)
+        extra_time = original_time * fraction/(1 - fraction)
         extra_bars = int(extra_time // SECONDS[self.timeframe])
         extra_bars_times = [last_bar_time + i * SECONDS[self.timeframe] for i in range(extra_bars)]
 

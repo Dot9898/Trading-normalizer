@@ -10,6 +10,11 @@ from trades_data import load_trades_data
 from alerts import load_alerts
 from graph import load_lines_data
 
+#--
+from settings import load_settings
+load_settings()
+#--
+
 SESSION_STATE_DEFAULT_FUNCTIONS = {'mt5_initialized': {'function': initialize_MetaTrader, 
                                                        'args': [], 
                                                        'assign': True, 
@@ -93,27 +98,31 @@ with trade_column:
     with risk_column:
         
         if st.session_state['selected_scale'] == 'absolute':
-            risk_subcolumns = st.columns(3)
+            risk_subcolumns = st.columns(4, vertical_alignment = 'bottom')
             with risk_subcolumns[0]:
                 widgets.pppt_display()
             with risk_subcolumns[1]:
                 widgets.lotsize_display()
             with risk_subcolumns[2]:
                 widgets.max_lotsize_display()
+            with risk_subcolumns[3]:
+                widgets.settings_button()
 
         if st.session_state['selected_scale'] == 'normalized':
-            risk_subcolumns = st.columns(2)
+            risk_subcolumns = st.columns([2, 1, 1], vertical_alignment = 'bottom')
             with risk_subcolumns[0]:
                 widgets.ppb_display()
             with risk_subcolumns[1]:
                 widgets.max_ppb_display()
+            with risk_subcolumns[2]:
+                widgets.settings_button()
         
         if st.session_state['selected_scale'] == 'logarithmic':
-            risk_subcolumns = st.columns(2)
+            risk_subcolumns = st.columns(2, vertical_alignment = 'bottom')
             with risk_subcolumns[0]:
                 widgets.lotsize_display()
             with risk_subcolumns[1]:
-                widgets.max_lotsize_display()
+                widgets.settings_button()
 
         widgets.RR_and_maxloss_widgets()
         widgets.settings_checkboxes()

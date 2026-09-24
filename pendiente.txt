@@ -2,18 +2,20 @@
 upd tr c cl
 
 
-settings con ruedita
-settings en un solo dict en session state, que cambia en el settings dialog
-add graph extra space as a setting
-add settings box: checkbox for confirmation dialog of market b/s, normalization default y range, default +- tpsl
-show sltp en el gráfico checkbox
-callbacks: SLTPENTRY, alert checkbox, alert level: soft graph (just a s state); graph navigation: soft graph? maybe it works auto
-deslizador de ancho de gráfico en los settings
-show order types or not in settings (graph lines and data table)
-add extra button to TP PL to auto set +-20 (changeable in a number input)
+settings:
+graph extra space percentage
+default +- tpsl (upon reset true in callback)
+normalization default y range
+show current sltpentry en el gráfico
+deslizador? de ancho de gráfico
+show order types or not (graph lines and data table)
+show hidden trades
+disable account balance show
+
+load and save settings
+
 line priority?? a set of values maybe? do not update the dfs, just avoid rendering the labels. passing over the set can work
 change alerts checkbox to bottom like custom y
-move hide trades checkbox? design wise
 
 graph speedup via saving layers in session state
 order history in graph
@@ -24,22 +26,22 @@ symbol data defaults cleanup
 file cleanup + imports
 cambiar path mt5
 
-colores open n closed market
-trade limit if losses (in data etc)
-add setting or constant to disable account balance show
 tinker with chart graphic and spacing constants
+hourly lines
+colores open n closed market. maybe add an is market open row to live data
+setting to show hourly lines and open/closed market colors
+trade limit if losses (in data etc)
 alert sounds
 colores (markdown RR string y table data) test cond trades lines
 weekly and infinite display of data table
 
-remove extra shift in the process and ''cambiar x shift según timeframe (flechitas), fix navigation callbacks''
+remove extra shift in the process of refactoring and ''cambiar x shift según timeframe (flechitas), fix navigation callbacks''
 REFACTOR GRAPH WITHOUT CHANGING THE INNER LOGIC: USE THE GRAPH RANGE CLASS
 if too slow, refactor graph (load all from backmost timestamp to now, reload on.. change of scale? change of timeframe?
 set polling interval to 0.5 or less?
 
 local h/l
 implementación trading range según la nota
-
 trailing stops
 
 weekend bugs?

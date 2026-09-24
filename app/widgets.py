@@ -12,6 +12,7 @@ from data_table import update_data_table
 import dialog_boxes
 from get_live_data import Graph_range
 from graph import generate_graph_in_fragment, update_lines_data
+from settings import open_settings
 
 
 def graph_width_slider(): ##
@@ -56,7 +57,8 @@ def normalization_base_name_dropdown():
 
 def generate_graph():
 
-    graph_range = Graph_range(first_bar = st.session_state['first_bar'], 
+    graph_range = Graph_range(empty_graph_fraction = st.session_state['settings']['empty_graph_percent'] * 0.01, 
+                              first_bar = st.session_state['first_bar'], 
                               left_shift = st.session_state['left_shift'], 
                               left_shift_unit = st.session_state['left_shift_unit'], 
                               last_bar = st.session_state['last_bar'], 
@@ -373,6 +375,12 @@ def entry_display():
                     format = format, 
                     disabled = True)
 
+
+def settings_button():
+    st.button('⚙️', 
+              key = 'settings_button', 
+              on_click = open_settings, 
+              width = 'stretch')
 
 def ppb_display():
     symbol = st.session_state['selected_symbol']

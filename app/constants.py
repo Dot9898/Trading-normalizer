@@ -14,7 +14,6 @@ WINDOW_WHEN_DATA_IS_CONSIDERED_LOCAL = 30
 
 #To remove
 
-GRAPH_EMPTY_SPACE_FRACTION = 0.15 #also setting to add space when going back
 TOTAL_WIDTH = 16
 MIN_GRAPH_WIDTH = 4  #poner min y max normales desde 4 hasta 12 o similar en el slider y eliminar estas constantes y las de abajo
 #Add green and red theme (or just different themes)
