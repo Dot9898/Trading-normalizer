@@ -14,8 +14,6 @@ GRAPH_EMPTY_SPACE_FRACTION = 0.15 #also setting to add space when going back
 MAX_BARS_IN_GRAPH = 1000
 TOTAL_WIDTH = 16
 MIN_GRAPH_WIDTH = 4  #poner min y max normales desde 4 hasta 12 o similar en el slider y eliminar estas constantes y las de abajo
-GRAPH_HEIGHT = 550
-GRAPH_TITLE_SEPARATION = 5
 DATA_TABLE_HEIGHT = 452
 SHOW_ORDER_TYPES = True
 WINDOW_WHEN_DATA_IS_CONSIDERED_LOCAL = 30
@@ -180,38 +178,60 @@ RED = '#FF4D4D'
 BLUE = '#3B82F6'
 GREEN = '#4CAF50'
 
-CHART_CANDLESTICK_COLORS = {'fill': {'green_and_red': {'positive': GREEN, 'negative': RED}, 
-                                     'black_and_white': {'positive': WHITE, 'negative': BLACK}}, 
-                            'stroke': {'green_and_red': {'positive': GREEN, 'negative': RED}, 
-                                       'black_and_white': {'positive': WHITE, 'negative': WHITE}}}
 
-CHART_LINES_COLORS = {'bid': BLUE, 
-                      'ask': RED, 
-                      'SL': RED, 
-                      'TP': GREEN, 
-                      'entry': GREEN, 
-                      'alert_price': GREEN, 
-                      'open_SL': RED, 
-                      'open_TP': GREEN, 
-                      'pending_entry': GREEN, 
-                      'pending_SL': GREEN, 
-                      'pending_TP': GREEN, 
-                      'placed_alert': GREEN, 
-                      'conditonal_trade_trigger': GREEN}
+#Chart
 
-CHART_LINES_OPACITY = {'bid': 1.0, 
-                       'ask': 1.0, 
-                       'SL': 1.0, 
-                       'TP': 1.0, 
-                       'entry': 0.8, 
-                       'alert_price': 1.0, #?
-                       'open_SL': 0.8, 
-                       'open_TP': 0.8, 
-                       'pending_entry': 0.6, 
-                       'pending_SL': 0.6,  
-                       'pending_TP': 0.6, 
-                       'placed_alert': 1.0, 
-                       'conditonal_trade_trigger': 0.4}
+#Add green and red theme (or just different themes)
+CHART_COLORS = {'candlesticks': {'fill_positive': WHITE, 
+                                 'fill_negative': BLACK, 
+                                 'stroke_positive': WHITE, 
+                                 'stroke_negative': WHITE}, 
+
+                'lines': {'bid': BLUE, 
+                          'ask': RED, 
+                          'SL': RED, 
+                          'TP': GREEN, 
+                          'entry': GREEN, 
+                          'alert_price': GREEN, 
+                          'open_SL': RED, 
+                          'open_TP': GREEN, 
+                          'pending_entry': GREEN, 
+                          'pending_SL': GREEN, 
+                          'pending_TP': GREEN, 
+                          'placed_alert': GREEN, 
+                          'conditonal_trade_trigger': GREEN}}
+
+CHART_OPACITY = {'lines': {'bid': 1.0, 
+                           'ask': 1.0, 
+                           'SL': 1.0, 
+                           'TP': 1.0, 
+                           'entry': 0.8, 
+                           'alert_price': 1.0, #?
+                           'open_SL': 0.8, 
+                           'open_TP': 0.8, 
+                           'pending_entry': 0.6, 
+                           'pending_SL': 0.6,  
+                           'pending_TP': 0.6, 
+                           'placed_alert': 1.0, 
+                           'conditonal_trade_trigger': 0.4}}
+
+CHART_PIXELS = {'height': 550, #############################all of this
+                'line_labels_font_size_big': 15, 
+                'line_labels_font_size': 13, 
+                'line_labels_dx': -4, 
+                'line_labels_dy': -3, 
+                'title_offset': 5}
+
+CHART_OTHER_VALUES = {'candlesticks_inner_padding': 0.35, 
+                      'candlesticks_outer_padding': 0.5, 
+                      'x_labels_angle': 0}
+
+CHART_STYLE = {'colors': CHART_COLORS, 
+               'opacity': CHART_OPACITY, 
+               'pixels': CHART_PIXELS, 
+               'others': CHART_OTHER_VALUES}
+
+
 
 
 #MT5 Codes

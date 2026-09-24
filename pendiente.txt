@@ -1,9 +1,12 @@
 
 
+
 upd tr c cl
-clean constants and graph files
+
+
+clean constants file
 cambiar x shift según timeframe (flechitas), fix navigation callbacks
-a warning of conversion when pending open?
+a warning of conversion when pending open? check for open too
 
 settings con ruedita
 settings en un solo dict en session state, que cambia en el settings dialog
@@ -17,24 +20,26 @@ add extra button to TP PL to auto set +-20 (changeable in a number input)
 line priority?? a set of values maybe? do not update the dfs, just avoid rendering the labels. passing over the set can work
 change alerts checkbox to bottom like custom y
 move hide trades checkbox? design wise
-fix prices widget design
-data table and graph height + fix entry spot? or whole design, to have more of the data table visible
-git ignore
-file cleanup + imports
 
+graph speedup via saving layers in session state
 order history in graph
 add 'zoom' square in the graph?
 
-update altair?
-
+git ignore
+file cleanup + imports
 cambiar path mt5
 
 colores open n closed market
 trade limit if losses (in data etc)
 add setting or constant to disable account balance show
+constants twitch (graph in particular)
 alert sounds
 colores (markdown RR string y table data) test cond trades lines
 weekly and infinite display of data table
+
+REFACTOR GRAPH WITHOUT CHANGING THE INNER LOGIC: USE THE GRAPH RANGE CLASS
+if too slow, refactor graph (load all from backmost timestamp to now, reload on.. change of scale? change of timeframe?
+
 
 local h/l
 implementación trading range según la nota
@@ -42,8 +47,6 @@ implementación trading range según la nota
 trailing stops
 
 weekend bugs?
-if too slow, refactor graph (load all from backmost timestamp to now, reload on.. change of scale? change of timeframe?
-
 
 
 

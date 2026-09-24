@@ -14,13 +14,14 @@ from get_live_data import Graph_range
 from graph import generate_graph_in_fragment, update_lines_data
 
 
-def graph_width_slider():
+def graph_width_slider(): ##
     st.slider('Graph width', 
               key = 'graph_width_slider', 
               min_value = 1, 
               max_value = 9, 
               step = 1, 
               value = 5) #delete and add to defaults
+
 
 def timezone_dropdown():
     st.selectbox('Time zone', 
@@ -76,8 +77,7 @@ def generate_graph():
                                data_scale = st.session_state['selected_scale'], 
                                normalization_base_name = st.session_state['selected_normalization_base_name'], 
                                price_range = price_range, 
-                               lines_data = st.session_state['lines_data'], 
-                               graph_colors = constants.GRAPH_COLORS)
+                               lines_data = st.session_state['lines_data'])
 
 
 def X_range_widgets(what_widgets):
@@ -627,14 +627,6 @@ def print_prices_test():
         st.header(0 if bid is None else bid, text_alignment = 'center')
     with acol:
         st.header(0 if ask is None else ask, text_alignment = 'center')
-
-
-
-
-
-
-
-
 
 
 
