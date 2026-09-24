@@ -36,12 +36,17 @@ def set_normalization_base():
 
 
 def goto(when):
+    if 'first_run' in st.session_state:            # Specific edge case of initialization: 
+        save_old_SLTP_then_update(reset = False)   # goto function is called during the 
+                                                   # initialization of first_run to True)
+
     for key, setting in constants.ZOOM_FIXED_SETTINGS.items():
         st.session_state[key] = setting
     for key, settings_dict in constants.ZOOM_VARIABLE_SETTINGS.items():
         st.session_state[key] = settings_dict[when]
     if when in ['now', 'hour']:
         st.session_state['selected_normalization_base_name'] = 'market_open' if is_0930_to_1800() else 'server_1:00'
+
     reload_graph()
 
 def reset_X_shifts():

@@ -2,9 +2,6 @@
 upd tr c cl
 
 
-cambiar x shift según timeframe (flechitas), fix navigation callbacks
-a warning of conversion when pending open? check for open too
-
 settings con ruedita
 settings en un solo dict en session state, que cambia en el settings dialog
 add graph extra space as a setting
@@ -35,6 +32,7 @@ alert sounds
 colores (markdown RR string y table data) test cond trades lines
 weekly and infinite display of data table
 
+remove extra shift in the process and ''cambiar x shift según timeframe (flechitas), fix navigation callbacks''
 REFACTOR GRAPH WITHOUT CHANGING THE INNER LOGIC: USE THE GRAPH RANGE CLASS
 if too slow, refactor graph (load all from backmost timestamp to now, reload on.. change of scale? change of timeframe?
 set polling interval to 0.5 or less?

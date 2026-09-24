@@ -174,11 +174,12 @@ def load_lines_data():
     ask = pd.DataFrame(index = ['ask'], columns = ['line_type', 'price', 'label'])
     current_levels = pd.DataFrame(index = ['SL', 'TP', 'entry', 'alert_price'], columns = ['line_type', 'price', 'label'])
     trades_and_alerts_levels = pd.DataFrame(columns = ['line_type', 'price', 'label'])
-    
+
     lines_data = {'bid': bid, 
                   'ask': ask, 
                   'current_levels': current_levels, 
                   'trades_and_alerts_levels': trades_and_alerts_levels}
+
     st.session_state['lines_data'] = lines_data
 
 def update_lines_data(category):
@@ -217,9 +218,8 @@ def update_lines_data(category):
             levels_data.loc['alert_price'] = ['alert_price', None, '']
 
     if category == 'trades_and_alerts_levels':
-        lines_data['trades_and_alerts_levels'] = pd.DataFrame(columns = ['line_type', 'price', 'label'])
-        table_levels_data = lines_data['trades_and_alerts_levels']
         data_table = st.session_state['data_table']
+        table_levels_data = {}
 
         for row in data_table.itertuples():
             status = row.Status
@@ -236,15 +236,15 @@ def update_lines_data(category):
 
                 SL = scale_point_wrt_current_values(trade.SL_abs, rounded = True)
                 TP = scale_point_wrt_current_values(trade.TP_abs, rounded = True)
-                table_levels_data.loc[f'{ticket}_SL'] = ['open_SL', SL, f'{direction} SL {SL}']
-                table_levels_data.loc[f'{ticket}_TP'] = ['open_TP', TP, f'{direction} TP {TP}']
+                table_levels_data[f'{ticket}_SL'] = ['open_SL', SL, f'{direction} SL {SL}']
+                table_levels_data[f'{ticket}_TP'] = ['open_TP', TP, f'{direction} TP {TP}']
 
             if status == 'Alert':
                 alert = source
                 ticket = alert.ticket
 
                 alert_price = scale_point_wrt_current_values(source.absolute_price, rounded = True)
-                table_levels_data.loc[ticket] = ['placed_alert', alert_price, f'Alert {alert_price}']
+                table_levels_data[ticket] = ['placed_alert', alert_price, f'Alert {alert_price}']
 
             if status == 'Pending':
                 trade = source
@@ -255,9 +255,9 @@ def update_lines_data(category):
                 SL = scale_point_wrt_current_values(trade.SL_abs, rounded = True)
                 TP = scale_point_wrt_current_values(trade.TP_abs, rounded = True)
                 entry = scale_point_wrt_current_values(trade.set_price, rounded = True)
-                table_levels_data.loc[f'{ticket}_SL'] = ['pending_SL', SL, f'{direction} {order_type} SL {SL}']
-                table_levels_data.loc[f'{ticket}_TP'] = ['pending_TP', TP, f'{direction} {order_type} TP {TP}']
-                table_levels_data.loc[f'{ticket}_entry'] = ['pending_entry', entry, f'{direction} {order_type} {entry}']
+                table_levels_data[f'{ticket}_SL'] = ['pending_SL', SL, f'{direction} {order_type} SL {SL}']
+                table_levels_data[f'{ticket}_TP'] = ['pending_TP', TP, f'{direction} {order_type} TP {TP}']
+                table_levels_data[f'{ticket}_entry'] = ['pending_entry', entry, f'{direction} {order_type} {entry}']
 
             if status == 'Conditional trade':
                 alert = source
@@ -266,8 +266,11 @@ def update_lines_data(category):
                 order_type = alert.order_type
 
                 trigger_price = scale_point_wrt_current_values(source.absolute_price, rounded = True)
-                table_levels_data.loc[ticket] = ['placed_alert', trigger_price, f'Set {direction} {order_type} {trigger_price}']
+                table_levels_data[ticket] = ['placed_alert', trigger_price, f'Set {direction} {order_type} {trigger_price}']
 
+        lines_data['trades_and_alerts_levels'] = pd.DataFrame.from_dict(table_levels_data,
+                                                                        columns = ['line_type', 'price', 'label'], 
+                                                                        orient = 'index')
 
 
 
