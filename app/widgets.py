@@ -388,7 +388,7 @@ def ppb_display():
                     format = '%0.2f', 
                     disabled = True)
 
-@st.fragment(run_every = constants.DATA_TABLE_AND_MAXES_UPDATE_INTERVAL)
+@st.fragment(run_every = constants.TRADES_UPDATE_INTERVAL)
 def max_ppb_display():
     if st.session_state['update_maxes']:
         callbacks.update_max_ppb_and_lotsize()
@@ -417,7 +417,7 @@ def lotsize_display():
                     format = '%0.2f', 
                     disabled = True)
 
-@st.fragment(run_every = constants.DATA_TABLE_AND_MAXES_UPDATE_INTERVAL)
+@st.fragment(run_every = constants.TRADES_UPDATE_INTERVAL)
 def max_lotsize_display():
     if st.session_state['update_maxes']:
         callbacks.update_max_ppb_and_lotsize()
@@ -556,7 +556,7 @@ def alerts_and_conditional_trades_widgets():
         set_conditional_trade_button('buy')
 
 
-@st.fragment(run_every = constants.DATA_TABLE_AND_MAXES_UPDATE_INTERVAL)
+@st.fragment(run_every = constants.TRADES_UPDATE_INTERVAL)
 def reload_table_and_lines_and_maxes():
     st.session_state['update_maxes'] = True
     st.session_state['update_data_table'] = True
