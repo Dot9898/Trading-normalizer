@@ -2,7 +2,7 @@
 
 import streamlit as st
 from backend import init_session_state, init_session_state_functions, initialize_MetaTrader
-from constants import SESSION_STATE_DEFAULTS, LABEL_SPACING, MIN_LEFT_WIDTH, MIN_RIGHT_WIDTH
+from constants import SESSION_STATE_DEFAULTS, LABEL_SPACING
 import widgets
 from callbacks import reload_table, set_normalization_base, goto, save_old_SLTP_then_update
 from format_functions import add_vertical_spacing
@@ -14,6 +14,7 @@ from graph import load_lines_data
 from settings import load_settings
 load_settings()
 #--
+
 
 SESSION_STATE_DEFAULT_FUNCTIONS = {'mt5_initialized': {'function': initialize_MetaTrader, 
                                                        'args': [], 
@@ -37,18 +38,13 @@ SESSION_STATE_DEFAULT_FUNCTIONS = {'mt5_initialized': {'function': initialize_Me
                                                                         'assign': False}}
 
 
-#---------------------------------------------------------------------------------------------------------
-graph_width = 5
-#---------------------------------------------------------------------------------------------------------
-
-
 st.set_page_config(layout = 'wide')
 
 init_session_state_functions(SESSION_STATE_DEFAULT_FUNCTIONS)
 init_session_state(SESSION_STATE_DEFAULTS)
 
-
-graph_column, trade_column = st.columns([MIN_LEFT_WIDTH + graph_width, MIN_RIGHT_WIDTH - graph_width])
+graph_width = st.session_state['settings']['graph_width']
+graph_column, trade_column = st.columns([graph_width, 100 - graph_width])
 
 with graph_column:
 
@@ -90,7 +86,7 @@ with trade_column:
 
     with orders_column:
         widgets.symbol_dropdown()
-        widgets.SL_and_TP_input()
+        widgets.SL_TP_inputs_and_button()
         widgets.entry_display()
         widgets.market_order_buttons()
         widgets.limit_order_buttons()

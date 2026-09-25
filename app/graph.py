@@ -172,7 +172,8 @@ def generate_graph_in_fragment(symbol,
 def load_lines_data():
     bid = pd.DataFrame(index = ['bid'], columns = ['line_type', 'price', 'label'])
     ask = pd.DataFrame(index = ['ask'], columns = ['line_type', 'price', 'label'])
-    current_levels = pd.DataFrame(index = ['SL', 'TP', 'entry', 'alert_price'], columns = ['line_type', 'price', 'label'])
+    current_levels = pd.DataFrame(index = ['SL', 'TP', 'entry', 'alert_price'], 
+                                  columns = ['line_type', 'price', 'label'])
     trades_and_alerts_levels = pd.DataFrame(columns = ['line_type', 'price', 'label'])
 
     lines_data = {'bid': bid, 
@@ -198,6 +199,11 @@ def update_lines_data(category):
         bid_data.loc['bid'] = ['bid', bid, f'{bid}\n{get_remaining_candle_time(bars.timeframe)}']
 
     if category == 'current_levels':
+        if not st.session_state['show_SLTP_lines']:
+            lines_data['current_levels'] = pd.DataFrame(index = ['SL', 'TP', 'entry', 'alert_price'], 
+                                                        columns = ['line_type', 'price', 'label'])
+            return
+        
         levels_data = lines_data['current_levels']
 
         SL = round(st.session_state['SL'], bars.shown_digits)

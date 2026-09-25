@@ -14,13 +14,7 @@ WINDOW_WHEN_DATA_IS_CONSIDERED_LOCAL = 30
 
 #To remove
 
-TOTAL_WIDTH = 16
-MIN_GRAPH_WIDTH = 4  #poner min y max normales desde 4 hasta 12 o similar en el slider y eliminar estas constantes y las de abajo
-#Add green and red theme (or just different themes)
-MIN_LEFT_WIDTH = MIN_GRAPH_WIDTH - 1
-MIN_RIGHT_WIDTH = TOTAL_WIDTH - (MIN_GRAPH_WIDTH - 1)
-
-SHOW_ORDER_TYPES = True #make it a setting
+SHOW_ORDER_TYPES = True #make it a setting??
 
 DEFAULTS = {'ideal_ppb': None, #move this to symbol data
             'display': 'basis', 
@@ -70,7 +64,8 @@ SESSION_STATE_DEFAULTS = {'data_table': None,
                           'reward': 0, 
                           'dialog_data': None, 
                           'update_SLTP': False, 
-                          'update_graph_lines': True}
+                          'update_graph_lines': True, 
+                          'show_SLTP_lines': True}
 
 #Fixed defaults
 TIMEZONES = {'server': None, 
@@ -93,7 +88,7 @@ ZOOM_FIXED_SETTINGS = {'first_bar': 'now',
                        'last_bar': 'now', 
                        'right_shift': 0, 
                        'extra_shift': 0, 
-                       'custom_y_range': False}
+                       'custom_y_range': False} #Overwritten in callback
 ZOOM_VARIABLE_SETTINGS = {'selected_timeframe': {'hour': mt5.TIMEFRAME_M1, 
                                                 'now': mt5.TIMEFRAME_M5, 
                                                 'day': mt5.TIMEFRAME_M5, 
@@ -194,14 +189,14 @@ SHOWN_ACTIONS_DATA_COLUMNS = {'modify': ['Status', 'Operation', 'Current entry',
                               'erase': ['Time', 'Status', 'Operation', 'Progress', 'P/L', 'Close reason']}
 DATA_TABLE_HEIGHT = 452
 
-#Colors #make this a single constant
+#Colors #make this a single constant (?)
 BLACK = '#1f1f1f'
 WHITE = '#E6E6E6'
 RED = '#FF4D4D'
 BLUE = '#3B82F6'
 GREEN = '#4CAF50'
 
-#Chart ##
+#Chart ###add green and red theme (or just different themes), tinker pixels and values
 CHART_PARAMETERS = {'?'} #
 MAX_BARS_IN_GRAPH = 1000
 

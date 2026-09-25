@@ -13,15 +13,7 @@ import dialog_boxes
 from get_live_data import Graph_range
 from graph import generate_graph_in_fragment, update_lines_data
 from settings import open_settings
-
-
-def graph_width_slider(): ##
-    st.slider('Graph width', 
-              key = 'graph_width_slider', 
-              min_value = 1, 
-              max_value = 9, 
-              step = 1, 
-              value = 5) #delete and add to defaults
+from backend import init_session_state
 
 
 def timezone_dropdown():
@@ -169,26 +161,33 @@ def get_y_step():
 def Y_range_widgets():
     
     if st.session_state['custom_y_range']:
-        bottom = (0 if st.session_state['bars_data'].min_price is None 
-                  else st.session_state['bars_data'].min_price)
-        top = (100 if st.session_state['bars_data'].max_price is None 
-               else st.session_state['bars_data'].max_price)
+
+        if st.session_state['settings']['force_default_y_range']:
+            callbacks.force_set_y_range()
+            disabled = True
+
+        else:
+            bars_data = st.session_state['bars_data']
+            init_session_state({'y_min': 0 if bars_data.min_price is None else bars_data.min_price, 
+                                'y_max': 100 if bars_data.max_price is None else bars_data.max_price})
+            disabled = False
+
         step = get_y_step()
         bottom_column, top_column = st.columns(2)
         
         with bottom_column:
             st.number_input('Bottom', 
                             key = 'y_min', 
-                            value = bottom, 
                             step = step, 
+                            disabled = disabled, 
                             label_visibility = 'collapsed', 
                             on_change = callbacks.reload_graph)
         
         with top_column:
             st.number_input('Top', 
                             key = 'y_max', 
-                            value = top, 
                             step = step, 
+                            disabled = disabled, 
                             label_visibility = 'collapsed', 
                             on_change = callbacks.reload_graph)
     
@@ -204,13 +203,15 @@ def X_navigation_buttons():
                   key = 'go_left', 
                   on_click = callbacks.X_shift, 
                   args = [-1], 
-                  width = 'stretch')
+                  width = 'stretch', 
+                  wrap = True)
     with right_button_column:
         st.button('→', 
                   key = 'go_right', 
                   on_click = callbacks.X_shift, 
                   args = [1], 
-                  width = 'stretch')
+                  width = 'stretch', 
+                  wrap = True)
 
 def Y_navigation_buttons():
     down_button_column, up_button_column = st.columns(2)
@@ -219,13 +220,15 @@ def Y_navigation_buttons():
                 key = 'go_down', 
                 on_click = callbacks.Y_shift, 
                 args = [-get_y_step()], 
-                width = 'stretch')
+                width = 'stretch', 
+                wrap = True)
     with up_button_column:
         st.button('↑', 
                 key = 'go_up', 
                 on_click = callbacks.Y_shift, 
                 args = [get_y_step()], 
-                width = 'stretch')
+                width = 'stretch', 
+                wrap = True)
 
 def zoom_buttons():
 
@@ -235,13 +238,15 @@ def zoom_buttons():
                   key = 'go_now', 
                   on_click = callbacks.goto, 
                   args = ['now'], 
-                  width = 'stretch')
+                  width = 'stretch', 
+                  wrap = True)
     with zoom_column:
         st.button('Zoom', 
                   key = 'go_zoom', 
                   on_click = callbacks.goto, 
                   args = ['hour'], 
-                  width = 'stretch')
+                  width = 'stretch', 
+                  wrap = True)
         
     year_column, month_column, week_column, day_column = st.columns(4)
     with year_column:
@@ -277,6 +282,67 @@ def symbol_dropdown():
                 on_change = callbacks.full_update, 
                 args = [True, True, False])
 
+def show_SL_TP_lines_button():
+    label = 'Hide' if st.session_state['show_SLTP_lines'] else 'Show'
+    st.button(label, 
+              key = 'SL_TP_visibility_button', 
+              on_click = callbacks.switch_SL_TP_visibility, 
+              width = 'stretch', 
+              wrap = True)
+
+def get_SL_TP_step():
+    if st.session_state['selected_scale'] == 'logarithmic':
+        step = 0.00001
+    
+    elif st.session_state['selected_scale'] == 'normalized':
+        display = (constants.SYMBOL_DATA[st.session_state['selected_symbol']]['display'] 
+                   if st.session_state['selected_symbol'] in constants.SYMBOL_DATA 
+                   else constants.DEFAULTS['display'])
+        step = 0.1 if display == 'basis' else 0.01
+
+    elif st.session_state['selected_scale'] == 'absolute':
+        step = st.session_state['bars_data'].digits
+
+    return(float(step))
+
+def SL_TP_inputs_and_button():
+    disabled = st.session_state['selected_scale'] == 'logarithmic'
+    step = get_SL_TP_step()
+    digits = st.session_state['bars_data'].shown_digits
+    format = f'%0.{digits}f'
+    if st.session_state['update_SLTP']:
+        callbacks.update_SLTP()
+    SL_column, hide_column, TP_column = st.columns([3, 2, 3], vertical_alignment = 'bottom')
+
+    with SL_column:
+        st.number_input('SL', 
+                        key = 'SL', 
+                        disabled = disabled, 
+                        step = step, 
+                        format = format, 
+                        on_change = callbacks.update_risk)
+
+    with hide_column:
+        show_SL_TP_lines_button()
+    
+    with TP_column:
+        st.number_input('TP', 
+                        key = 'TP', 
+                        disabled = disabled, 
+                        step = step, 
+                        format = format, 
+                        on_change = callbacks.update_risk)
+
+def entry_display():
+    digits = st.session_state['bars_data'].shown_digits
+    format = f'%0.{digits}f'
+    step = get_SL_TP_step()
+    st.number_input('Entry', 
+                    key = 'entry', 
+                    step = step, 
+                    format = format, 
+                    disabled = True)
+
 def is_order_button_disabled(direction):
     if st.session_state['first_run']:
         return(True)
@@ -297,14 +363,16 @@ def market_order_buttons():
                   disabled = is_order_button_disabled('sell'), 
                   on_click = callbacks.place_order, 
                   args = ['market', 'sell'], 
-                  width = 'stretch')
+                  width = 'stretch', 
+                  wrap = True)
     with buy_column:
         st.button('Buy', 
                   key = 'buy_button', 
                   disabled = is_order_button_disabled('buy'), 
                   on_click = callbacks.place_order, 
                   args = ['market', 'buy'], 
-                  width = 'stretch')
+                  width = 'stretch', 
+                  wrap = True)
 
 def limit_order_buttons():
     sell_limit_column, buy_limit_column = st.columns(2)
@@ -325,71 +393,29 @@ def limit_order_buttons():
                   width = 'stretch', 
                   wrap = True)
 
-def get_SLTP_step():
-    if st.session_state['selected_scale'] == 'logarithmic':
-        step = 0.00001
-    
-    elif st.session_state['selected_scale'] == 'normalized':
-        display = (constants.SYMBOL_DATA[st.session_state['selected_symbol']]['display'] 
-                   if st.session_state['selected_symbol'] in constants.SYMBOL_DATA 
-                   else constants.DEFAULTS['display'])
-        step = 0.1 if display == 'basis' else 0.01
-
-    elif st.session_state['selected_scale'] == 'absolute':
-        step = st.session_state['bars_data'].digits
-
-    return(float(step))
-
-def SL_and_TP_input():
-    disabled = st.session_state['selected_scale'] == 'logarithmic'
-    step = get_SLTP_step()
-    digits = st.session_state['bars_data'].shown_digits
-    format = f'%0.{digits}f'
-    if st.session_state['update_SLTP']:
-        callbacks.update_SLTP()
-    SL_column, TP_column = st.columns(2)
-
-    with SL_column:
-        st.number_input('SL', 
-                        key = 'SL', 
-                        disabled = disabled, 
-                        step = step, 
-                        format = format, 
-                        on_change = callbacks.update_risk)
-    
-    with TP_column:
-        st.number_input('TP', 
-                        key = 'TP', 
-                        disabled = disabled, 
-                        step = step, 
-                        format = format, 
-                        on_change = callbacks.update_risk)
-
-def entry_display():
-    digits = st.session_state['bars_data'].shown_digits
-    format = f'%0.{digits}f'
-    step = get_SLTP_step()
-    st.number_input('Entry', 
-                    key = 'entry', 
-                    step = step, 
-                    format = format, 
-                    disabled = True)
-
 
 def settings_button():
     st.button('⚙️', 
               key = 'settings_button', 
               on_click = open_settings, 
-              width = 'stretch')
+              width = 'stretch', 
+              wrap = True)
 
 def ppb_display():
     symbol = st.session_state['selected_symbol']
     warning_number = constants.SYMBOL_DATA[symbol]['ideal_ppb'] if symbol in constants.SYMBOL_DATA else None
-    if warning_number is None:
-        label = '(ideal is unknown)'
+
+    if st.session_state['settings']['graph_width'] > 50:
+        if warning_number is None:
+            label = ''
+        else:
+            label = f'({warning_number})'
     else:
-        label = f'({warning_number} is reasonable)'
-    
+        if warning_number is None:
+            label = '(ideal is unknown)'
+        else:
+            label = f'({warning_number} is reasonable)'
+        
     st.number_input(f'PPB {label}', 
                     key = 'ppb', 
                     step = 0.00001, 
@@ -478,7 +504,7 @@ def RR_and_maxloss_widgets():
                             on_change = callbacks.update_risk)
 
 
-def settings_checkboxes():
+def settings_checkboxes(): #change name
     conditionals_column, account_data_column = st.columns(2)
     with conditionals_column:
         st.checkbox('Set alert', 
@@ -489,8 +515,6 @@ def settings_checkboxes():
                     key = 'account_data_checkbox', 
                     on_change = callbacks.uncheck_checkbox, 
                     args = ['alerts_checkbox'])
-        st.checkbox('Show hidden trades', 
-                    key = 'show_hidden_checkbox')
 
 def account_data_info():
     available_percent = as_percent(st.session_state['available_fraction_of_account'])
@@ -499,12 +523,16 @@ def account_data_info():
 
     margin_text = f'Margin available: {available_percent}'
     balance_text = f'Balance: ${rounded_balance}'
-    small_linebreak_caption(margin_text, balance_text, alignment = 'right')
+
+    if st.session_state['settings']['show_account_balance']:
+        small_linebreak_caption(margin_text, balance_text, alignment = 'right')
+    else:
+        st.caption(margin_text, text_alignment = 'right')
 
 def alert_price_input():
     disabled = st.session_state['selected_scale'] == 'logarithmic'
     bid = st.session_state['bars_data'].current_bid
-    step = get_SLTP_step()
+    step = get_SL_TP_step()
     digits = st.session_state['bars_data'].shown_digits
     format = f'%0.{digits}f'
 
@@ -524,7 +552,8 @@ def set_alert_button():
                 key = 'alert_button', 
                 disabled = disabled, 
                 on_click = callbacks.set_alert, 
-                width = 'stretch')
+                width = 'stretch', 
+                wrap = True)
 
 def set_conditional_trade_button(direction):
     if direction == 'sell':
@@ -533,14 +562,16 @@ def set_conditional_trade_button(direction):
                     disabled = is_order_button_disabled('sell'), 
                     on_click = callbacks.set_conditional_trade, 
                     args = ['sell'], 
-                    width = 'stretch')
+                    width = 'stretch', 
+                    wrap = True)
     if direction == 'buy':
         st.button('Set BL/BS', 
                     key = 'conditional_buy_button', 
                     disabled = is_order_button_disabled('buy'), 
                     on_click = callbacks.set_conditional_trade, 
                     args = ['buy'], 
-                    width = 'stretch')
+                    width = 'stretch', 
+                    wrap = True)
 
 def alerts_and_conditional_trades_widgets():
     text_column, price_column = st.columns(2)
@@ -580,7 +611,7 @@ def data_table():
         notify_executions_in_serie()
 
     display_table = st.session_state['data_table'].drop(columns = ['source_object']) #Object can't be converted by st.dataframe
-    if not st.session_state['show_hidden_checkbox']:
+    if not st.session_state['settings']['show_hidden_trades']:
         display_table = display_table[display_table['is_shown'] == True]
     st.session_state['displayed_table'] = display_table
 

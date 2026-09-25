@@ -46,8 +46,34 @@ def goto(when):
         st.session_state[key] = settings_dict[when]
     if when in ['now', 'hour']:
         st.session_state['selected_normalization_base_name'] = 'market_open' if is_0930_to_1800() else 'server_1:00'
+    if (st.session_state['settings']['force_default_y_range'] 
+        and when in ['day', 'now', 'hour'] 
+        and 'first_run' in st.session_state): ########
+        st.session_state['custom_y_range'] = True
 
     reload_graph()
+
+def force_set_y_range():
+    default_y_range = st.session_state['settings']['default_y_range']
+    symbol = st.session_state['selected_symbol']
+    scale = st.session_state['selected_scale']
+
+    if scale == 'absolute':
+        bid = mt5.symbol_info_tick(symbol).bid
+        bottom = bid * (1 - default_y_range / 100)
+        top = bid * (1 + default_y_range / 100)
+
+    if scale == 'normalized':
+        factor = 100 if constants.SYMBOL_DATA[symbol]['display'] == 'basis' else 1
+        bottom = -default_y_range * factor
+        top = default_y_range * factor
+
+    if scale == 'logarithmic':
+        bottom = 0
+        top = 6
+
+    st.session_state['y_min'] = bottom
+    st.session_state['y_max'] = top
 
 def reset_X_shifts():
     st.session_state['right_shift'] = 0
@@ -74,6 +100,10 @@ def Y_shift(quantity):
     st.session_state['y_min'] += quantity
     st.session_state['y_max'] += quantity
 
+def switch_SL_TP_visibility():
+    st.session_state['show_SLTP_lines'] = not st.session_state['show_SLTP_lines']
+    update_lines_data('current_levels')
+
 
 def update_entry():
     tp = st.session_state['TP']
@@ -91,9 +121,12 @@ def update_SLTP():
 
 def save_old_SLTP_then_update(reset):
     if reset:
-        bid = mt5.symbol_info_tick(st.session_state['selected_symbol']).bid
-        SL_abs = bid
-        TP_abs = bid
+        default_SL_deviation = st.session_state['settings']['SL_deviation']
+        default_TP_deviation = st.session_state['settings']['TP_deviation']
+        symbol = st.session_state['selected_symbol']
+        bid = mt5.symbol_info_tick(symbol).bid
+        SL_abs = bid * (1 + default_SL_deviation / 100)
+        TP_abs = bid * (1 + default_TP_deviation / 100)
     else:
         SL_abs = unscale_point_wrt_current_values(st.session_state['SL'])
         TP_abs = unscale_point_wrt_current_values(st.session_state['TP'])
