@@ -195,8 +195,9 @@ def update_lines_data(category):
 
         ask = bars.current_ask
         bid = bars.current_bid
+        extra_label = get_remaining_candle_time(bars.timeframe) if bars.is_market_open() else 'Market closed'
         ask_data.loc['ask'] = ['ask', ask, f'{ask}']
-        bid_data.loc['bid'] = ['bid', bid, f'{bid}\n{get_remaining_candle_time(bars.timeframe)}']
+        bid_data.loc['bid'] = ['bid', bid, f'{bid}\n{extra_label}']
 
     if category == 'current_levels':
         if not st.session_state['show_SLTP_lines']:

@@ -6,7 +6,7 @@ from numpy import log10
 from time import time
 import MetaTrader5 as mt5
 from backend import include_symbol
-from constants import SECONDS, TIMEZONES, CHART_AXIS_TIME_FORMAT, HOUR, DAY, WEEK, OFFSET_SECONDS, EMPTY_SPACE, EMPTY_SPACE_2, MAX_BARS_IN_GRAPH, SYMBOL_DATA, DEFAULTS, REMAINING_CANDLE_TIME_FORMAT, DATA_PATH, EMPTY_SPACE_3
+from constants import SECONDS, TIMEZONES, CHART_AXIS_TIME_FORMAT, HOUR, DAY, WEEK, OFFSET_SECONDS, EMPTY_SPACE, EMPTY_SPACE_2, MAX_BARS_IN_GRAPH, SYMBOL_DATA, DEFAULTS, REMAINING_CANDLE_TIME_FORMAT, DATA_PATH, EMPTY_SPACE_3, WINDOW_WHEN_MARKET_IS_CONSIDERED_OPEN
 
 
 class Graph_range:
@@ -88,10 +88,10 @@ class Bars:
         
         #Data updated on soft update, every tick
         self.current_account_info = None
-        self.current_server_time = None
+        self.last_tick_server_time = None
         self.current_bar = None
         self.current_bar_open_time = None
-        self.current_candle_time = None
+        self.last_tick_candle_time = None
         self.remaining_candle_time = None
         self.current_bid = None
         self.current_ask = None
@@ -101,7 +101,7 @@ class Bars:
 
     def update_server_times_of_interest(self):
         server_time_of = {}
-        current_server_time = self.current_server_time
+        current_server_time = self.last_tick_server_time
 
         server_day_start = current_server_time - current_server_time % DAY
         NY_day_start = server_day_start + 7 * HOUR
@@ -295,7 +295,7 @@ class Bars:
     def get_current_bar(self):
         current_bar = pd.DataFrame(mt5.copy_rates_from(self.symbol, 
                                                        self.timeframe, 
-                                                       self.current_server_time,
+                                                       self.last_tick_server_time,
                                                        1))
         current_bar['timestamp'] = current_bar['time'].apply(self.get_actual_timestamp)
         self.create_datetime_column(current_bar, self.timezone)
@@ -303,12 +303,15 @@ class Bars:
         self.scale_data(current_bar)
         return(current_bar)
 
+    def is_market_open(self):
+        return(get_current_server_time() - self.last_tick_server_time < WINDOW_WHEN_MARKET_IS_CONSIDERED_OPEN)
+
     def update_current_data(self):
         current_symbol_info = mt5.symbol_info_tick(self.symbol)
         self.current_account_info = mt5.account_info()
-        self.current_server_time = current_symbol_info.time
-        self.current_candle_time = self.current_server_time % SECONDS[self.timeframe]
-        self.remaining_candle_time = SECONDS[self.timeframe] - self.current_candle_time
+        self.last_tick_server_time = current_symbol_info.time
+        self.last_tick_candle_time = self.last_tick_server_time % SECONDS[self.timeframe]
+        self.remaining_candle_time = SECONDS[self.timeframe] - self.last_tick_candle_time
         self.current_bid = self.scale_point(current_symbol_info.bid)
         self.current_ask = self.scale_point(current_symbol_info.ask)
         self.current_bar = self.get_current_bar()

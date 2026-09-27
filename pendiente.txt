@@ -6,13 +6,8 @@ upd tr c cl
 add wrap to every button (widgets file already done)
 remove checkboxes tooltips
 
-line priority?? a set of values maybe? do not update the dfs, just avoid rendering the labels. passing over the set can work
-change alerts checkbox to bottom like custom y, and remove callback to disable the other checkbox?
-add is market open check, disable timer if it isn't
-
 graph speedup via saving layers in session state
 order history in graph
-add 'zoom' square in the graph?
 
 git ignore
 symbol data defaults cleanup
@@ -28,6 +23,7 @@ alert sounds
 colores (markdown RR string y table data) test cond trades lines
 weekly and infinite display of data table
 
+line priority?? a set of values maybe? do not update the dfs, just avoid rendering the labels. passing over the set can work
 after goto, make custom y range start as true if force default setting is set
 also remove goto as default, just assign them as defaults in a constant. clean up goto and first run call in frontend
 remove extra shift in the process of refactoring and ''cambiar x shift según timeframe (flechitas), fix navigation callbacks''
