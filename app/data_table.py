@@ -55,7 +55,7 @@ def get_progress_string(row):   #Format leading zeroes here
         trigger_price_bp = scale_point(conditional_trade.absolute_price, 'normalized', bars.normalization_base, conditional_trade.symbol, rounded = True)
         return(f'{current_price} / {trigger_price_bp}')
 
-def generate_trades_data_table(timezone, max_closed_trades_shown):
+def generate_trades_data_table(timezone, max_closed_trades_shown, show_order_types):
     trades_data = st.session_state['trades_data']
     current_symbol = st.session_state['selected_symbol']
     PL_equity_column_number = trades_data.columns.get_loc('P/L_acc_percent_(equity)') + 1
@@ -67,7 +67,10 @@ def generate_trades_data_table(timezone, max_closed_trades_shown):
 
     for trade in trades_data.itertuples():
         
-        status = trade.status
+        if trade.status == 'closed':
+            closed_trades_counter = closed_trades_counter + 1
+            if closed_trades_counter > max_closed_trades_shown:
+                continue
         
         server_timestamp = (trade.open_server_time if trade.status == 'open' 
                             else trade.close_server_time if trade.status == 'closed' 
@@ -76,7 +79,10 @@ def generate_trades_data_table(timezone, max_closed_trades_shown):
                      else trade.open_timestamp if trade.status == 'open' 
                      else trade.close_timestamp if trade.status == 'closed' 
                      else pd.NA)
-        order_type = '' if (not SHOW_ORDER_TYPES or trade.order_type == 'market') else f'{trade.order_type} '
+        order_type = ('' if (trade.status == 'closed' and not show_order_types) 
+                      or trade.order_type == 'market' 
+                      else f'{trade.order_type} ')
+
         price = trade.set_price if trade.status == 'pending' else trade.open_price
         RR = get_RR_string(price, trade.SL_abs, trade.TP_abs)
 
@@ -109,8 +115,9 @@ def generate_trades_data_table(timezone, max_closed_trades_shown):
             action_button_1_text = 'Modify' if trade.symbol == current_symbol else pd.NA
             action_button_2_text = 'Delete'
         
-        table.loc[trade.Index] = [status.capitalize(), time, operation, close_reason, progress, PL_percent, 
-                                  action_button_1_text, action_button_2_text, server_timestamp, trade.is_shown, trade]
+        table.loc[trade.Index] = [trade.status.capitalize(), time, operation, close_reason, 
+                                  progress, PL_percent, action_button_1_text, action_button_2_text, 
+                                  server_timestamp, trade.is_shown, trade]
     
     table['Status'] = pd.Categorical(table['Status'], 
                                      categories = ['Alert', 'Open', 'Pending', 'Conditional trade', 'Closed'], 
@@ -144,7 +151,7 @@ def generate_alerts_data_table():
             order_type = alert.conditional_trade_data['order_type']
             operation = f'Set {direction} {order_type} {alert.symbol}'
             table.loc[index] = ['Conditional trade', pd.NA, operation, pd.NA, pd.NA, pd.NA, 
-                                action_button_1_text, action_button_2_text, True, alert]
+                                action_button_1_text, action_button_2_text, pd.NA, True, alert]
             alert.ticket = index
             index = index + 1
     
@@ -210,7 +217,10 @@ def update_data_table():
         update_open_and_close_alerts()
         timezone = st.session_state['selected_timezone']
         max_closed_trades = st.session_state['settings']['max_closed_trades_shown']
-        st.session_state['trades_data_table'] = generate_trades_data_table(timezone, max_closed_trades)
+        show_order_types = st.session_state['settings']['show_order_types']
+        st.session_state['trades_data_table'] = generate_trades_data_table(timezone, 
+                                                                           max_closed_trades, 
+                                                                           show_order_types)
         st.session_state['alerts_data_table'] = generate_alerts_data_table()
 
         st.session_state['update_graph_lines'] = True

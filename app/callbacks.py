@@ -212,13 +212,6 @@ def full_update(reset_SLTP, update_maxes, force_set_normalization_base):
     update_trades_and_alerts_lines()
 
 
-def uncheck_checkbox(key):
-    st.session_state[key] = False
-
-def alerts_checkbox_callback():
-    uncheck_checkbox('account_data_checkbox')
-    update_lines_data('current_levels')
-
 def set_alert():
     update_risk()
     symbol = st.session_state['selected_symbol']

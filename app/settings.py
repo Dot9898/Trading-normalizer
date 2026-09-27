@@ -38,30 +38,27 @@ def graph_empty_space_input():
                     on_change = update_setting, 
                     args = [key, reload_graph])
 
-def default_SL_TP_deviation():
-    SL_col, TP_col = st.columns(2)
+def default_SL_deviation():
+    key = 'SL_deviation'
+    st.number_input('Default SL deviation (%)', 
+                    key = key, 
+                    value = st.session_state['settings'][key], 
+                    step = 0.05, 
+                    min_value = -100.0, 
+                    max_value = 100.0, 
+                    on_change = update_setting, 
+                    args = [key, save_old_SLTP_then_update, [True]])
 
-    with SL_col:
-        key = 'SL_deviation'
-        st.number_input('Default SL deviation (%)', 
-                        key = key, 
-                        value = st.session_state['settings'][key], 
-                        step = 0.05, 
-                        min_value = -100.0, 
-                        max_value = 100.0, 
-                        on_change = update_setting, 
-                        args = [key, save_old_SLTP_then_update, [True]])
-
-    with TP_col:
-        key = 'TP_deviation'
-        st.number_input('Default TP deviation (%)', 
-                        key = key, 
-                        value = st.session_state['settings'][key], 
-                        step = 0.05, 
-                        min_value = -100.0, 
-                        max_value = 100.0, 
-                        on_change = update_setting, 
-                        args = [key, save_old_SLTP_then_update, [True]])
+def default_TP_deviation():
+    key = 'TP_deviation'
+    st.number_input('Default TP deviation (%)', 
+                    key = key, 
+                    value = st.session_state['settings'][key], 
+                    step = 0.05, 
+                    min_value = -100.0, 
+                    max_value = 100.0, 
+                    on_change = update_setting, 
+                    args = [key, save_old_SLTP_then_update, [True]])
 
 def force_default_y_range_checkbox():
     key = 'force_default_y_range'
@@ -73,12 +70,14 @@ def force_default_y_range_checkbox():
 
 def default_y_range_input():
     key = 'default_y_range'
+    disabled = not st.session_state['settings']['force_default_y_range']
     st.number_input('Default Y range (%)', 
                     key = key, 
                     value = st.session_state['settings'][key], 
                     step = 0.05, 
                     min_value = float(0), 
                     max_value = 100.0, 
+                    disabled = disabled, 
                     on_change = update_setting, 
                     args = [key])
 
@@ -120,19 +119,34 @@ def max_closed_trades_input():
                     on_change = update_setting, 
                     args = [key, reload_table])
 
+def show_order_types_checkbox():
+    key = 'show_order_types'
+    st.checkbox('Show order type of closed trades', 
+                key = key, 
+                value = st.session_state['settings'][key], 
+                on_change = update_setting, 
+                args = [key, reload_table])
+
 
 @st.dialog(' ', width = 'medium', dismissible = True, on_dismiss = save_settings_to_file)
 def open_settings():
     st.header('Settings', text_alignment = 'center')
-    with st.columns(2)[0]:
-        graph_empty_space_input()
-        default_SL_TP_deviation()
-        force_default_y_range_checkbox()
-        if st.session_state['force_default_y_range']:
-            default_y_range_input()
+    st.subheader('')
+    settings_columns = st.columns(3)
+    with settings_columns[0]:
+        graph_width_input()
+        default_SL_deviation()
         show_hidden_trades_checkbox()
         show_account_balance_checkbox()
-        graph_width_input()
+    with settings_columns[1]:
+        graph_empty_space_input()
+        default_TP_deviation()
+        show_order_types_checkbox()
+    with settings_columns[2]:
         max_closed_trades_input()
+        default_y_range_input()
+        force_default_y_range_checkbox()
+    st.subheader('')
 
-    
+
+

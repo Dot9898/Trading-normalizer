@@ -3,9 +3,6 @@ bots + manage el otro
 upd tr c cl
 
 
-
-clean settings file and display/design of dialog
-
 add wrap to every button (widgets file already done)
 remove checkboxes tooltips
 
@@ -46,7 +43,7 @@ trailing stops
 weekend bugs?
 
 setting to show hidden trades only if it matters after testing
-
+handle close by?
 
 
 

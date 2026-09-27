@@ -6,7 +6,7 @@ import constants
 import format_functions
 import callbacks
 from numpy import log10
-from format_functions import no_tag_text, as_percent, round_balance, small_linebreak_caption
+from format_functions import as_percent, round_balance, small_linebreak_caption
 from trades_data import update_all_trades_data
 from alerts import alert_check, notify_executions_in_serie
 from data_table import update_data_table
@@ -505,17 +505,16 @@ def RR_and_maxloss_widgets():
                             on_change = callbacks.update_risk)
 
 
-def settings_checkboxes(): #change name
+def alert_and_account_checkboxes():
     conditionals_column, account_data_column = st.columns(2)
     with conditionals_column:
         st.checkbox('Set alert', 
                     key = 'alerts_checkbox', 
-                    on_change = callbacks.alerts_checkbox_callback)
+                    on_change = update_lines_data, 
+                    args = ['current_levels'])
     with account_data_column:
         st.checkbox('Show account data', 
-                    key = 'account_data_checkbox', 
-                    on_change = callbacks.uncheck_checkbox, 
-                    args = ['alerts_checkbox'])
+                    key = 'account_data_checkbox')
 
 def account_data_info():
     available_percent = as_percent(st.session_state['available_fraction_of_account'])
@@ -543,7 +542,6 @@ def alert_price_input():
                     value = bid, 
                     step = step, 
                     format = format, 
-                    label_visibility = 'collapsed', 
                     on_change = update_lines_data, 
                     args = ['current_levels'])
 
@@ -575,18 +573,7 @@ def set_conditional_trade_button(direction):
                     wrap = True)
 
 def alerts_and_conditional_trades_widgets():
-    text_column, price_column = st.columns(2)
-
-    with price_column:
-        alert_price_input()
-
-    price = st.session_state['alert_price']
-    bid = st.session_state['bars_data'].current_bid
-    sign = '≥' if bid <= price else '≤'
-
-    with text_column:
-        no_tag_text(f'If price {sign}', font_size = '1.5rem', font_weight = '600', alignment = 'center')
-
+    alert_price_input()
     buy_column, alert_column, sell_column = st.columns(3)
     with buy_column:
         set_conditional_trade_button('sell')
@@ -594,7 +581,6 @@ def alerts_and_conditional_trades_widgets():
         set_alert_button()
     with sell_column:
         set_conditional_trade_button('buy')
-
 
 
 @st.fragment(run_every = constants.TRADES_UPDATE_INTERVAL)

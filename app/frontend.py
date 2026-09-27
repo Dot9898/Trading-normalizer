@@ -113,9 +113,9 @@ with trade_column:
                 widgets.settings_button()
 
         widgets.RR_and_maxloss_widgets()
-        widgets.settings_checkboxes()
         if st.session_state['alerts_checkbox']:
             widgets.alerts_and_conditional_trades_widgets()
+        widgets.alert_and_account_checkboxes()
         if st.session_state['account_data_checkbox']:
             widgets.account_data_info()
 

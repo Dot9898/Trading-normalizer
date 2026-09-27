@@ -65,11 +65,13 @@ SESSION_STATE_DEFAULTS = {'data_table': None,
                           'dialog_data': None, 
                           'update_SLTP': False, 
                           'update_graph_lines': True, 
-                          'show_SLTP_lines': True}
+                          'show_SLTP_lines': True, 
+                          'alerts_checkbox': False}
 
 #Fixed defaults
 DEFAULT_SETTINGS = {'show_hidden_trades': False, 
                     'show_account_balance': False, 
+                    'show_order_types': True, 
                     'max_closed_trades_shown': 30, 
                     'graph_width': 50, 
                     'empty_graph_percent': 15, 

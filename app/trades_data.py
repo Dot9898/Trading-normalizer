@@ -256,7 +256,7 @@ def get_trade_data_to_edit(ticket, data_source, operation_type): #Need to fix th
                 'symbol': symbol, 
                 'volume': lots, 
                 'set_price': open_price, 
-                'direction': 'buy' if position.type == mt5.ORDER_TYPE_BUY else 'sell', 
+                'direction': 'buy' if position.type == mt5.POSITION_TYPE_BUY else 'sell', 
                 'order_type': 'market', 
 
                 'open_server_time': position.time, 
@@ -325,6 +325,9 @@ def get_trade_data_to_edit(ticket, data_source, operation_type): #Need to fix th
     if operation_type == 'set':
 
         order = mt5.orders_get(ticket = ticket)[0]
+        if order.type not in [mt5.ORDER_TYPE_BUY_LIMIT, mt5.ORDER_TYPE_BUY_STOP, 
+                              mt5.ORDER_TYPE_SELL_LIMIT, mt5.ORDER_TYPE_SELL_STOP]:
+            return(None)   #Market order not yet executed, and other order types
 
         SL = None if order.sl == 0 else order.sl
         TP = None if order.tp == 0 else order.tp
