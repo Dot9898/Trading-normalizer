@@ -9,32 +9,24 @@ from format_functions import add_vertical_spacing
 from trades_data import load_trades_data
 from alerts import load_alerts
 from graph import load_lines_data
-
-#--
 from settings import load_settings
-load_settings()
-#--
-
 
 SESSION_STATE_DEFAULT_FUNCTIONS = {'mt5_initialized': {'function': initialize_MetaTrader, 
-                                                       'args': [], 
                                                        'assign': True, 
                                                        'value': 'return_value'}, 
+                                   'settings': {'function': load_settings, 
+                                                'assign': False}, 
                                    'first_run': {'function': goto, 
                                                  'args': ['now'], 
                                                  'assign': True, 
                                                  'value': True}, 
                                    'trades_data': {'function': load_trades_data, 
-                                                   'args': [], 
                                                    'assign': False}, 
                                    'alerts': {'function': load_alerts, 
-                                              'args': [], 
                                               'assign': False}, 
                                    'lines_data': {'function': load_lines_data, 
-                                                  'args': [], 
                                                   'assign': False}, 
                                    'selected_normalization_base_name': {'function': set_normalization_base, 
-                                                                        'args': [], 
                                                                         'assign': False}}
 
 
@@ -129,7 +121,7 @@ with trade_column:
 
     widgets.data_table()
 
-widgets.reload_table_and_lines_and_maxes()
+widgets.update_trades_data()
 if st.session_state['dialog_data'] is not None:
     widgets.open_dialog()
 

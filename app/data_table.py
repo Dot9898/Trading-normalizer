@@ -55,7 +55,7 @@ def get_progress_string(row):   #Format leading zeroes here
         trigger_price_bp = scale_point(conditional_trade.absolute_price, 'normalized', bars.normalization_base, conditional_trade.symbol, rounded = True)
         return(f'{current_price} / {trigger_price_bp}')
 
-def generate_trades_data_table(timezone):
+def generate_trades_data_table(timezone, max_closed_trades_shown):
     trades_data = st.session_state['trades_data']
     current_symbol = st.session_state['selected_symbol']
     PL_equity_column_number = trades_data.columns.get_loc('P/L_acc_percent_(equity)') + 1
@@ -63,6 +63,7 @@ def generate_trades_data_table(timezone):
     table = pd.DataFrame(columns = ['Status', 'Time', 'Operation', 'Close reason', 'Progress', 'P/L', 
                                     'action_button_1', 'action_button_2', 'server_timestamp', 'is_shown', 'source_object'])
     table.index.name = 'ticket'
+    closed_trades_counter = 0
 
     for trade in trades_data.itertuples():
         
@@ -86,6 +87,9 @@ def generate_trades_data_table(timezone):
         action_button_2_text = pd.NA
 
         if trade.status == 'closed':
+            closed_trades_counter = closed_trades_counter + 1
+            if closed_trades_counter > max_closed_trades_shown:
+                continue
             points = trade.points_bp if trade.direction == 'buy' else -trade.points_bp
             progress = add_sign(points)
             PL_percent = (trade[PL_equity_column_number] if not pd.isna(trade[PL_equity_column_number]) 
@@ -164,7 +168,11 @@ def update_trades_data_table(table): #change equity call to bars
             table.at[row.Index, 'Progress'] = pd.NA
 
         if row.Status == 'Open':
-            position = mt5.positions_get(ticket = row.Index)[0]
+            positions = mt5.positions_get(ticket = row.Index)
+            if not positions:
+                continue
+            else:
+                position = positions[0]
             PL = position.profit
             PL_percent = round(PL/(equity - PL) * 100, 1)
             table.at[row.Index, 'P/L'] = add_sign(PL_percent, percent = True)
@@ -198,12 +206,15 @@ def update_alerts_data_table(table):
 def update_data_table():
 
     if st.session_state['update_data_table']:   #Full update
-        st.session_state['update_data_table'] = False
         update_all_trades_data(data_source = 'local')
         update_open_and_close_alerts()
         timezone = st.session_state['selected_timezone']
-        st.session_state['trades_data_table'] = generate_trades_data_table(timezone)
+        max_closed_trades = st.session_state['settings']['max_closed_trades_shown']
+        st.session_state['trades_data_table'] = generate_trades_data_table(timezone, max_closed_trades)
         st.session_state['alerts_data_table'] = generate_alerts_data_table()
+
+        st.session_state['update_graph_lines'] = True
+        st.session_state['update_maxes'] = True
 
     update_trades_data_table(st.session_state['trades_data_table'])
     update_alerts_data_table(st.session_state['alerts_data_table'])

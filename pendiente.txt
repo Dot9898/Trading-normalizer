@@ -3,9 +3,7 @@ bots + manage el otro
 upd tr c cl
 
 
-check graph and table calls, something is slow
 
-load and save settings to a file
 clean settings file and display/design of dialog
 
 add wrap to every button (widgets file already done)
@@ -13,6 +11,7 @@ remove checkboxes tooltips
 
 line priority?? a set of values maybe? do not update the dfs, just avoid rendering the labels. passing over the set can work
 change alerts checkbox to bottom like custom y, and remove callback to disable the other checkbox?
+add is market open check, disable timer if it isn't
 
 graph speedup via saving layers in session state
 order history in graph

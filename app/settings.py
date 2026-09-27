@@ -1,29 +1,30 @@
 
 
+import pandas as pd
 import streamlit as st
+from constants import DATA_PATH, DEFAULT_SETTINGS
 from callbacks import reload_graph, save_old_SLTP_then_update, reload_table
 
 
-
-
-#Save them in a file and load them from there
 def load_settings():
-    if 'settings' not in st.session_state:
-        st.session_state['settings'] = {'empty_graph_percent': 15, 
-                                        'SL_deviation': -0.15, 
-                                        'TP_deviation': 0.3, 
-                                        'default_y_range': 0.5, 
-                                        'force_default_y_range': False, 
-                                        'show_hidden_trades': False, 
-                                        'show_account_balance': False, 
-                                        'graph_width': 50}
+    settings_path = DATA_PATH / 'settings.csv'
+    if not settings_path.exists():
+        settings = DEFAULT_SETTINGS.copy()
+    else:
+        settings = pd.read_csv(settings_path).iloc[0].to_dict()
+    st.session_state['settings'] = settings
+
+def save_settings_to_file():
+    settings_path = DATA_PATH / 'settings.csv'
+    settings = st.session_state['settings']
+    pd.DataFrame([settings]).to_csv(settings_path, index = False)
+    st.rerun()
 
 def update_setting(key, callback = None, args = []):
     new_value = st.session_state[key]
     st.session_state['settings'][key] = new_value
     if callback is not None:
         callback(*args)
-
 
 
 def graph_empty_space_input():
@@ -108,10 +109,19 @@ def graph_width_input():
                     on_change = update_setting, 
                     args = [key])
 
+def max_closed_trades_input():
+    key = 'max_closed_trades_shown'
+    st.number_input('Max number of closed trades shown', 
+                    key = key, 
+                    value = st.session_state['settings'][key], 
+                    step = 1, 
+                    min_value = 0, 
+                    max_value = 300, 
+                    on_change = update_setting, 
+                    args = [key, reload_table])
 
 
-
-@st.dialog(' ', width = 'medium', dismissible = True, on_dismiss = 'rerun')
+@st.dialog(' ', width = 'medium', dismissible = True, on_dismiss = save_settings_to_file)
 def open_settings():
     st.header('Settings', text_alignment = 'center')
     with st.columns(2)[0]:
@@ -123,5 +133,6 @@ def open_settings():
         show_hidden_trades_checkbox()
         show_account_balance_checkbox()
         graph_width_input()
+        max_closed_trades_input()
 
     

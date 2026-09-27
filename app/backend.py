@@ -18,7 +18,7 @@ def init_session_state_functions(default_funcs: dict):
     for key, defaults in default_funcs.items():
         if key not in st.session_state:
             function = defaults['function']
-            args = defaults['args']
+            args = defaults.get('args', [])
             assign = defaults['assign']
 
             return_value = function(*args)

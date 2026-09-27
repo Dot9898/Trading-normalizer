@@ -68,6 +68,15 @@ SESSION_STATE_DEFAULTS = {'data_table': None,
                           'show_SLTP_lines': True}
 
 #Fixed defaults
+DEFAULT_SETTINGS = {'show_hidden_trades': False, 
+                    'show_account_balance': False, 
+                    'max_closed_trades_shown': 30, 
+                    'graph_width': 50, 
+                    'empty_graph_percent': 15, 
+                    'SL_deviation': -0.15, 
+                    'TP_deviation': 0.3, 
+                    'force_default_y_range': False, 
+                    'default_y_range': 0.5}
 TIMEZONES = {'server': None, 
              'local': datetime.now().astimezone().tzinfo, 
              'UTC': timezone.utc, 

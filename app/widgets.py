@@ -7,6 +7,7 @@ import format_functions
 import callbacks
 from numpy import log10
 from format_functions import no_tag_text, as_percent, round_balance, small_linebreak_caption
+from trades_data import update_all_trades_data
 from alerts import alert_check, notify_executions_in_serie
 from data_table import update_data_table
 import dialog_boxes
@@ -595,11 +596,10 @@ def alerts_and_conditional_trades_widgets():
         set_conditional_trade_button('buy')
 
 
+
 @st.fragment(run_every = constants.TRADES_UPDATE_INTERVAL)
-def reload_table_and_lines_and_maxes():
-    st.session_state['update_maxes'] = True
-    st.session_state['update_data_table'] = True
-    st.session_state['update_graph_lines'] = True
+def update_trades_data():
+    update_all_trades_data(data_source = 'local')
 
 @st.fragment(run_every = constants.POLLING_INTERVAL)
 def data_table():
