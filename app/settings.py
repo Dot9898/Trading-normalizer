@@ -66,7 +66,8 @@ def force_default_y_range_checkbox():
                 key = key, 
                 value = st.session_state['settings'][key], 
                 on_change = update_setting, 
-                args = [key])
+                args = [key], 
+                wrap = True)
 
 def default_y_range_input():
     key = 'default_y_range'
@@ -87,7 +88,8 @@ def show_hidden_trades_checkbox():
                 key = key, 
                 value = st.session_state['settings'][key], 
                 on_change = update_setting, 
-                args = [key, reload_table])
+                args = [key, reload_table], 
+                wrap = True)
 
 def show_account_balance_checkbox():
     key = 'show_account_balance'
@@ -95,7 +97,8 @@ def show_account_balance_checkbox():
                 key = key, 
                 value = st.session_state['settings'][key], 
                 on_change = update_setting, 
-                args = [key])
+                args = [key], 
+                wrap = True)
 
 def graph_width_input():
     key = 'graph_width'
@@ -125,7 +128,8 @@ def show_order_types_checkbox():
                 key = key, 
                 value = st.session_state['settings'][key], 
                 on_change = update_setting, 
-                args = [key, reload_table])
+                args = [key, reload_table], 
+                wrap = True)
 
 
 @st.dialog(' ', width = 'medium', dismissible = True, on_dismiss = save_settings_to_file)

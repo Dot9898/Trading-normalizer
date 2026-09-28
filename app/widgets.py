@@ -72,7 +72,7 @@ def generate_graph():
                                data_scale = st.session_state['selected_scale'], 
                                normalization_base_name = st.session_state['selected_normalization_base_name'], 
                                price_range = price_range, 
-                               lines_data = st.session_state['lines_data'])
+                               layers = st.session_state['graph_layers'])
 
 
 def X_range_widgets(what_widgets):
@@ -194,7 +194,8 @@ def Y_range_widgets():
     
     st.checkbox('Custom Y range', 
                 key = 'custom_y_range', 
-                on_change = callbacks.reload_graph)
+                on_change = callbacks.reload_graph, 
+                wrap = True)
 
 
 def X_navigation_buttons():
@@ -511,10 +512,12 @@ def alert_and_account_checkboxes():
         st.checkbox('Set alert', 
                     key = 'alerts_checkbox', 
                     on_change = update_lines_data, 
-                    args = ['current_levels'])
+                    args = ['SL_TP_entry_alert'], 
+                    wrap = True)
     with account_data_column:
         st.checkbox('Show account data', 
-                    key = 'account_data_checkbox')
+                    key = 'account_data_checkbox', 
+                    wrap = True)
 
 def account_data_info():
     available_percent = as_percent(st.session_state['available_fraction_of_account'])
@@ -543,7 +546,7 @@ def alert_price_input():
                     step = step, 
                     format = format, 
                     on_change = update_lines_data, 
-                    args = ['current_levels'])
+                    args = ['SL_TP_entry_alert'])
 
 def set_alert_button():
     disabled = st.session_state['selected_scale'] == 'logarithmic'

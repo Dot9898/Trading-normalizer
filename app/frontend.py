@@ -8,8 +8,9 @@ from callbacks import reload_table, set_normalization_base, goto, save_old_SLTP_
 from format_functions import add_vertical_spacing
 from trades_data import load_trades_data
 from alerts import load_alerts
-from graph import load_lines_data
 from settings import load_settings
+from graph import Layers
+
 
 SESSION_STATE_DEFAULT_FUNCTIONS = {'mt5_initialized': {'function': initialize_MetaTrader, 
                                                        'assign': True, 
@@ -24,8 +25,9 @@ SESSION_STATE_DEFAULT_FUNCTIONS = {'mt5_initialized': {'function': initialize_Me
                                                    'assign': False}, 
                                    'alerts': {'function': load_alerts, 
                                               'assign': False}, 
-                                   'lines_data': {'function': load_lines_data, 
-                                                  'assign': False}, 
+                                   'graph_layers': {'function': Layers, 
+                                                    'assign': True, 
+                                                    'value': 'return_value'}, 
                                    'selected_normalization_base_name': {'function': set_normalization_base, 
                                                                         'assign': False}}
 

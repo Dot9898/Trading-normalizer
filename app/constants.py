@@ -65,7 +65,7 @@ SESSION_STATE_DEFAULTS = {'data_table': None,
                           'reward': 0, 
                           'dialog_data': None, 
                           'update_SLTP': False, 
-                          'update_graph_lines': True, 
+                          'update_trades_lines': False, 
                           'show_SLTP_lines': True, 
                           'alerts_checkbox': False}
 

@@ -102,7 +102,7 @@ def Y_shift(quantity):
 
 def switch_SL_TP_visibility():
     st.session_state['show_SLTP_lines'] = not st.session_state['show_SLTP_lines']
-    update_lines_data('current_levels')
+    update_lines_data('SL_TP_entry_alert')
 
 
 def update_entry():
@@ -194,7 +194,7 @@ def update_risk():
     update_ppb()
     update_pppt()
     update_lotsize()
-    update_lines_data('current_levels')
+    update_lines_data('SL_TP_entry_alert')
 
 def update_max_ppb_and_lotsize():
     update_max_ppb()

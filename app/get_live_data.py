@@ -79,14 +79,18 @@ class Bars:
         self.shows_current_bar = None
         self.normalization_base = None
         self.server_times_of_interest = None
+        self.is_market_open = None
         self.last_current_bar_open_time = None
         self.bars = None
         self.dummy_bars = None
         self.max_price = None
         self.min_price = None
         self.date_label = None
+        self.too_many_bars = False
+        self.just_full_updated = False
         
         #Data updated on soft update, every tick
+        self.current_symbol_info = None
         self.current_account_info = None
         self.last_tick_server_time = None
         self.current_bar = None
@@ -95,7 +99,6 @@ class Bars:
         self.remaining_candle_time = None
         self.current_bid = None
         self.current_ask = None
-        self.too_many_bars = False
         
         self.full_update()
 
@@ -178,6 +181,9 @@ class Bars:
             self.shows_current_bar = True
         else:
             self.shows_current_bar = False
+
+    def update_market_status(self):
+        self.is_market_open = get_current_server_time() - self.last_tick_server_time < WINDOW_WHEN_MARKET_IS_CONSIDERED_OPEN
 
     @staticmethod
     def get_actual_timestamp(server_time):
@@ -279,7 +285,7 @@ class Bars:
                                                  self.first_bar_time, 
                                                  self.last_bar_time))
         if bars.empty:
-            return(bars)
+            return(pd.DataFrame({'time': [], 'axis_label': []}))
         if len(bars) > MAX_BARS_IN_GRAPH:
             self.too_many_bars = True
             return(pd.DataFrame())
@@ -293,33 +299,45 @@ class Bars:
         return(bars)
 
     def get_current_bar(self):
+
+        """
+        There can be a mismatch between the current bar close price, returned by copy_rates_from, 
+        and the tick values returned by symbol_info_tick.
+        For this use case, the price obtained by symbol_info_tick takes priority and overwrites the
+        close price of the bar.
+        """
+
         current_bar = pd.DataFrame(mt5.copy_rates_from(self.symbol, 
                                                        self.timeframe, 
                                                        self.last_tick_server_time,
                                                        1))
+
+        current_bid = self.current_symbol_info.bid
+        current_bar.loc[0, 'close'] = current_bid
+        current_bar.loc[0, 'high'] = max(current_bar.loc[0, 'high'], current_bid)
+        current_bar.loc[0, 'low'] = min(current_bar.loc[0, 'low'], current_bid)
+
         current_bar['timestamp'] = current_bar['time'].apply(self.get_actual_timestamp)
         self.create_datetime_column(current_bar, self.timezone)
         self.create_label_columns(current_bar, self.timeframe)
         self.scale_data(current_bar)
         return(current_bar)
 
-    def is_market_open(self):
-        return(get_current_server_time() - self.last_tick_server_time < WINDOW_WHEN_MARKET_IS_CONSIDERED_OPEN)
-
     def update_current_data(self):
-        current_symbol_info = mt5.symbol_info_tick(self.symbol)
+        self.current_symbol_info = mt5.symbol_info_tick(self.symbol)
         self.current_account_info = mt5.account_info()
-        self.last_tick_server_time = current_symbol_info.time
+        self.last_tick_server_time = self.current_symbol_info.time
         self.last_tick_candle_time = self.last_tick_server_time % SECONDS[self.timeframe]
         self.remaining_candle_time = SECONDS[self.timeframe] - self.last_tick_candle_time
-        self.current_bid = self.scale_point(current_symbol_info.bid)
-        self.current_ask = self.scale_point(current_symbol_info.ask)
+        self.current_bid = self.scale_point(self.current_symbol_info.bid)
+        self.current_ask = self.scale_point(self.current_symbol_info.ask)
         self.current_bar = self.get_current_bar()
         self.current_bar_open_time = self.current_bar['time'][0]
 
     def full_update(self):
         self.update_current_data()
         self.update_server_times_of_interest()
+        self.update_market_status()
         self.update_range()
         self.set_normalization_base()
         self.update_current_bar_visibility()
@@ -330,6 +348,7 @@ class Bars:
             self.min_price = self.bars['low'].min()
             self.date_label = f'{self.bars['date_label'].iloc[0]} - {self.bars['date_label'].iloc[-1]}'
         self.last_current_bar_open_time = self.current_bar_open_time
+        self.just_full_updated = True
     
     def update(self): #Soft updates with only the last bar. If the candlestick just closed, updates all bars.
         

@@ -9,6 +9,149 @@ from get_live_data import Bars, get_remaining_candle_time
 from format_functions import timezone_format
 
 
+class Layers:   #Can be made better. It's enough for this use case.
+
+    def __init__(self):
+
+        self.base = alt.layer()
+        self.candlesticks = alt.layer()
+        self.bid_line = alt.layer()
+        self.ask_line = alt.layer()
+        self.SL_TP_entry_alert_lines = alt.layer()
+        self.trades_and_alerts_lines = alt.layer()
+
+        self.lines_data = {}
+        self.update_pending = {}
+
+        self.load_lines_data()
+        self.set_updates_to_false()
+
+    def load_lines_data(self):
+        bid = pd.DataFrame(index = ['bid'], columns = ['line_type', 'price', 'label'])
+        ask = pd.DataFrame(index = ['ask'], columns = ['line_type', 'price', 'label'])
+        SL_TP_entry_alert = pd.DataFrame(index = ['SL', 'TP', 'entry', 'alert_price'], 
+                                    columns = ['line_type', 'price', 'label'])
+        trades_and_alerts_levels = pd.DataFrame(columns = ['line_type', 'price', 'label'])
+
+        lines_data = {'bid': bid, 
+                      'ask': ask, 
+                      'SL_TP_entry_alert': SL_TP_entry_alert, 
+                      'trades_and_alerts_levels': trades_and_alerts_levels}
+
+        self.lines_data = lines_data
+
+    def set_updates_to_false(self):
+        self.update_pending = {'candlesticks': False, 
+                               'bid_and_ask_lines': False, 
+                               'SL_TP_lines': False, 
+                               'trades_and_alerts_lines': False}
+
+
+def update_lines_data(category):
+    """Order matters for layering"""
+
+    layers = st.session_state['graph_layers']
+    bars = st.session_state['bars_data']
+    lines_data = layers.lines_data
+
+    if category == 'bid_and_ask':
+        ask_data = lines_data['ask']
+        bid_data = lines_data['bid']
+
+        ask = bars.current_ask
+        bid = bars.current_bid
+        extra_label = get_remaining_candle_time(bars.timeframe) if bars.is_market_open else 'Market closed'
+        ask_data.loc['ask'] = ['ask', ask, f'{ask}']
+        bid_data.loc['bid'] = ['bid', bid, f'{bid}\n{extra_label}']
+
+        layers.update_pending['bid_and_ask_lines'] = True
+
+    if category == 'SL_TP_entry_alert':
+        if not st.session_state['show_SLTP_lines']:
+            lines_data['SL_TP_entry_alert'] = pd.DataFrame(index = ['SL', 'TP', 'entry', 'alert_price'], 
+                                                        columns = ['line_type', 'price', 'label'])
+            layers.update_pending['SL_TP_lines'] = True
+            return
+        
+        levels_data = lines_data['SL_TP_entry_alert']
+
+        SL = round(st.session_state['SL'], bars.shown_digits)
+        TP = round(st.session_state['TP'], bars.shown_digits)
+        entry = round(st.session_state['entry'], bars.shown_digits)
+
+        levels_data.loc['SL'] = ['SL', SL, f'SL {SL}']
+        levels_data.loc['TP'] = ['TP', TP, f'TP {TP}']
+        levels_data.loc['entry'] = ['entry', entry, f'Entry {entry}']
+        
+        if st.session_state['alerts_checkbox']:
+            if 'alert_price' in st.session_state:
+                alert_price = round(st.session_state['alert_price'], bars.shown_digits)
+            else:
+                alert_price = bars.current_bid
+            levels_data.loc['alert_price'] = ['alert_price', alert_price, f'Set alert at {alert_price}']
+        else:
+            levels_data.loc['alert_price'] = ['alert_price', None, '']
+
+        layers.update_pending['SL_TP_lines'] = True
+
+    if category == 'trades_and_alerts_levels':
+        data_table = st.session_state['data_table']
+        table_levels_data = {}
+
+        for row in data_table.itertuples():
+            status = row.Status
+            if status == 'Closed':
+                continue
+            source = row.source_object
+            if source.symbol != st.session_state['selected_symbol']:
+                continue
+            
+            if status == 'Open':
+                trade = source
+                ticket = trade.Index
+                direction = trade.direction.capitalize()
+
+                SL = scale_point_wrt_current_values(trade.SL_abs, rounded = True)
+                TP = scale_point_wrt_current_values(trade.TP_abs, rounded = True)
+                table_levels_data[f'{ticket}_SL'] = ['open_SL', SL, f'{direction} SL {SL}']
+                table_levels_data[f'{ticket}_TP'] = ['open_TP', TP, f'{direction} TP {TP}']
+
+            if status == 'Alert':
+                alert = source
+                ticket = alert.ticket
+
+                alert_price = scale_point_wrt_current_values(source.absolute_price, rounded = True)
+                table_levels_data[ticket] = ['placed_alert', alert_price, f'Alert {alert_price}']
+
+            if status == 'Pending':
+                trade = source
+                ticket = trade.Index
+                direction = trade.direction.capitalize()
+                order_type = trade.order_type
+
+                SL = scale_point_wrt_current_values(trade.SL_abs, rounded = True)
+                TP = scale_point_wrt_current_values(trade.TP_abs, rounded = True)
+                entry = scale_point_wrt_current_values(trade.set_price, rounded = True)
+                table_levels_data[f'{ticket}_SL'] = ['pending_SL', SL, f'{direction} {order_type} SL {SL}']
+                table_levels_data[f'{ticket}_TP'] = ['pending_TP', TP, f'{direction} {order_type} TP {TP}']
+                table_levels_data[f'{ticket}_entry'] = ['pending_entry', entry, f'{direction} {order_type} {entry}']
+
+            if status == 'Conditional trade':
+                alert = source
+                ticket = alert.ticket
+                direction = alert.conditional_trade_data['direction']
+                order_type = alert.order_type
+
+                trigger_price = scale_point_wrt_current_values(source.absolute_price, rounded = True)
+                table_levels_data[ticket] = ['placed_alert', trigger_price, f'Set {direction} {order_type} {trigger_price}']
+        
+        lines_data['trades_and_alerts_levels'] = pd.DataFrame.from_dict(table_levels_data,
+                                                                        columns = ['line_type', 'price', 'label'], 
+                                                                        orient = 'index')
+
+        layers.update_pending['trades_and_alerts_lines'] = True
+
+
 def get_base_chart(bars_data):
 
     colors = CHART_STYLE['colors']['candlesticks']
@@ -17,7 +160,12 @@ def get_base_chart(bars_data):
     dummy_bars = bars_data.dummy_bars
     date_label = bars_data.date_label
     timezone = bars_data.timezone
-    all_bars = pd.concat([bars[['axis_label', 'time']], dummy_bars[['axis_label', 'time']]])
+    try:
+        all_bars = pd.concat([bars[['axis_label', 'time']], dummy_bars[['axis_label', 'time']]])
+    except:
+        print('bars', bars)
+        print('dbars', dummy_bars)
+        raise KeyError
     sorted_labels = all_bars.sort_values('time')['axis_label']
 
     candlestick_color = (
@@ -120,20 +268,31 @@ def lines_layer(lines_data):
 
     return(lines + labels)
 
-def altair_candlestick_graph(bars_data: Bars, price_range, lines_data):
+def altair_candlestick_graph(bars_data: Bars, layers: Layers, price_range):
 
-    if price_range == 'auto':
-        price_range = [bars_data.min_price, bars_data.max_price]
+    if layers.update_pending['candlesticks']:
+        base = get_base_chart(bars_data)
+        if price_range == 'auto':
+            price_range = [bars_data.min_price, bars_data.max_price]
+        layers.candlesticks = candlesticks_layer(base, price_range, bars_data.data_scale)
 
-    base = get_base_chart(bars_data)
-    candlesticks = candlesticks_layer(base, price_range, bars_data.data_scale)
+    if layers.update_pending['bid_and_ask_lines']:
+        layers.bid_line = lines_layer(layers.lines_data['bid'])
+        layers.ask_line = lines_layer(layers.lines_data['ask'])
 
-    bid_line = lines_layer(lines_data['bid'])
-    ask_line = lines_layer(lines_data['ask'])
-    SLTP_lines = lines_layer(lines_data['current_levels'])
-    trades_and_alert_lines = lines_layer(lines_data['trades_and_alerts_levels'])
+    if layers.update_pending['SL_TP_lines']:
+        layers.SL_TP_entry_alert_lines = lines_layer(layers.lines_data['SL_TP_entry_alert'])
 
-    chart = (candlesticks + SLTP_lines + trades_and_alert_lines + ask_line + bid_line).properties(
+    if layers.update_pending['trades_and_alerts_lines']:
+        layers.trades_and_alerts_lines = lines_layer(layers.lines_data['trades_and_alerts_levels'])
+
+    layers.set_updates_to_false()
+
+    chart = (layers.candlesticks 
+             + layers.SL_TP_entry_alert_lines 
+             + layers.trades_and_alerts_lines 
+             + layers.bid_line 
+             + layers.ask_line).properties(
              title = alt.TitleParams(text = bars_data.name, 
                                      anchor = 'middle', 
                                      offset = CHART_STYLE['pixels']['title_offset']))
@@ -149,7 +308,7 @@ def generate_graph_in_fragment(symbol,
                                data_scale, 
                                normalization_base_name, 
                                price_range, 
-                               lines_data):
+                               layers):
 
     if st.session_state['reload_Bars']:
         st.session_state['bars_data'] = Bars(symbol, timeframe, graph_range, timezone, data_scale, normalization_base_name)
@@ -157,7 +316,10 @@ def generate_graph_in_fragment(symbol,
 
     bars_data = st.session_state['bars_data']
     bars_data.update()
-    update_lines_data('current_prices')
+    if bars_data.just_full_updated:
+        bars_data.just_full_updated = False
+        layers.update_pending['candlesticks'] = True
+    update_lines_data('bid_and_ask')
 
     if bars_data.too_many_bars:
         st.subheader('')
@@ -165,119 +327,8 @@ def generate_graph_in_fragment(symbol,
         st.subheader('Candlestick count is too big to load', text_alignment = 'center')
         st.subheader('Please select a smaller window or a larger timeframe', text_alignment = 'center')
     else:
-        graph = altair_candlestick_graph(bars_data, price_range, lines_data)
+        graph = altair_candlestick_graph(bars_data, layers, price_range)
         st.altair_chart(graph, width = 'stretch', height = CHART_STYLE['pixels']['height'], key = 'graph')
-
-
-def load_lines_data():
-    bid = pd.DataFrame(index = ['bid'], columns = ['line_type', 'price', 'label'])
-    ask = pd.DataFrame(index = ['ask'], columns = ['line_type', 'price', 'label'])
-    current_levels = pd.DataFrame(index = ['SL', 'TP', 'entry', 'alert_price'], 
-                                  columns = ['line_type', 'price', 'label'])
-    trades_and_alerts_levels = pd.DataFrame(columns = ['line_type', 'price', 'label'])
-
-    lines_data = {'bid': bid, 
-                  'ask': ask, 
-                  'current_levels': current_levels, 
-                  'trades_and_alerts_levels': trades_and_alerts_levels}
-
-    st.session_state['lines_data'] = lines_data
-
-def update_lines_data(category):
-    """Order matters for layering"""
-
-    lines_data = st.session_state['lines_data']
-    bars = st.session_state['bars_data']
-
-    if category == 'current_prices':
-        ask_data = lines_data['ask']
-        bid_data = lines_data['bid']
-
-        ask = bars.current_ask
-        bid = bars.current_bid
-        extra_label = get_remaining_candle_time(bars.timeframe) if bars.is_market_open() else 'Market closed'
-        ask_data.loc['ask'] = ['ask', ask, f'{ask}']
-        bid_data.loc['bid'] = ['bid', bid, f'{bid}\n{extra_label}']
-
-    if category == 'current_levels':
-        if not st.session_state['show_SLTP_lines']:
-            lines_data['current_levels'] = pd.DataFrame(index = ['SL', 'TP', 'entry', 'alert_price'], 
-                                                        columns = ['line_type', 'price', 'label'])
-            return
-        
-        levels_data = lines_data['current_levels']
-
-        SL = round(st.session_state['SL'], bars.shown_digits)
-        TP = round(st.session_state['TP'], bars.shown_digits)
-        entry = round(st.session_state['entry'], bars.shown_digits)
-
-        levels_data.loc['SL'] = ['SL', SL, f'SL {SL}']
-        levels_data.loc['TP'] = ['TP', TP, f'TP {TP}']
-        levels_data.loc['entry'] = ['entry', entry, f'Entry {entry}']
-        
-        if st.session_state['alerts_checkbox']:
-            if 'alert_price' in st.session_state:
-                alert_price = round(st.session_state['alert_price'], bars.shown_digits)
-            else:
-                alert_price = bars.current_bid
-            levels_data.loc['alert_price'] = ['alert_price', alert_price, f'Set alert at {alert_price}']
-        else:
-            levels_data.loc['alert_price'] = ['alert_price', None, '']
-
-    if category == 'trades_and_alerts_levels':
-        data_table = st.session_state['data_table']
-        table_levels_data = {}
-
-        for row in data_table.itertuples():
-            status = row.Status
-            if status == 'Closed':
-                continue
-            source = row.source_object
-            if source.symbol != st.session_state['selected_symbol']:
-                continue
-            
-            if status == 'Open':
-                trade = source
-                ticket = trade.Index
-                direction = trade.direction.capitalize()
-
-                SL = scale_point_wrt_current_values(trade.SL_abs, rounded = True)
-                TP = scale_point_wrt_current_values(trade.TP_abs, rounded = True)
-                table_levels_data[f'{ticket}_SL'] = ['open_SL', SL, f'{direction} SL {SL}']
-                table_levels_data[f'{ticket}_TP'] = ['open_TP', TP, f'{direction} TP {TP}']
-
-            if status == 'Alert':
-                alert = source
-                ticket = alert.ticket
-
-                alert_price = scale_point_wrt_current_values(source.absolute_price, rounded = True)
-                table_levels_data[ticket] = ['placed_alert', alert_price, f'Alert {alert_price}']
-
-            if status == 'Pending':
-                trade = source
-                ticket = trade.Index
-                direction = trade.direction.capitalize()
-                order_type = trade.order_type
-
-                SL = scale_point_wrt_current_values(trade.SL_abs, rounded = True)
-                TP = scale_point_wrt_current_values(trade.TP_abs, rounded = True)
-                entry = scale_point_wrt_current_values(trade.set_price, rounded = True)
-                table_levels_data[f'{ticket}_SL'] = ['pending_SL', SL, f'{direction} {order_type} SL {SL}']
-                table_levels_data[f'{ticket}_TP'] = ['pending_TP', TP, f'{direction} {order_type} TP {TP}']
-                table_levels_data[f'{ticket}_entry'] = ['pending_entry', entry, f'{direction} {order_type} {entry}']
-
-            if status == 'Conditional trade':
-                alert = source
-                ticket = alert.ticket
-                direction = alert.conditional_trade_data['direction']
-                order_type = alert.order_type
-
-                trigger_price = scale_point_wrt_current_values(source.absolute_price, rounded = True)
-                table_levels_data[ticket] = ['placed_alert', trigger_price, f'Set {direction} {order_type} {trigger_price}']
-
-        lines_data['trades_and_alerts_levels'] = pd.DataFrame.from_dict(table_levels_data,
-                                                                        columns = ['line_type', 'price', 'label'], 
-                                                                        orient = 'index')
 
 
 

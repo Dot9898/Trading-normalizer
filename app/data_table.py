@@ -223,7 +223,7 @@ def update_data_table():
                                                                            show_order_types)
         st.session_state['alerts_data_table'] = generate_alerts_data_table()
 
-        st.session_state['update_graph_lines'] = True
+        st.session_state['update_trades_lines'] = True
         st.session_state['update_maxes'] = True
 
     update_trades_data_table(st.session_state['trades_data_table'])
@@ -233,8 +233,8 @@ def update_data_table():
     data_table.sort_values(by = ['Status'], kind = 'stable', inplace = True)
     st.session_state['data_table'] = data_table
 
-    if st.session_state['update_graph_lines']:
-        st.session_state['update_graph_lines'] = False
+    if st.session_state['update_trades_lines']:
+        st.session_state['update_trades_lines'] = False
         update_lines_data('trades_and_alerts_levels')
 
 

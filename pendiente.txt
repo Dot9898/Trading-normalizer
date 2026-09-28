@@ -3,10 +3,6 @@ bots + manage el otro
 upd tr c cl
 
 
-add wrap to every button (widgets file already done)
-remove checkboxes tooltips
-
-graph speedup via saving layers in session state
 order history in graph
 
 git ignore

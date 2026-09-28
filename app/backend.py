@@ -30,11 +30,14 @@ def init_session_state_functions(default_funcs: dict):
                 else:
                     st.session_state[key] = value_to_assign
 
-def initialize_MetaTrader():
-    mt5.initialize('D:/Dot/FX/Pepperstone MT5/terminal64.exe')
-
 def include_symbol(symbol):
     mt5.symbol_select(symbol, True)
+
+def initialize_MetaTrader():
+    mt5.initialize('D:/Dot/FX/Pepperstone MT5/terminal64.exe')
+    for symbol in SYMBOL_DATA:
+        #if symbol != 'defaul'
+        include_symbol(symbol)
 
 
 @st.cache_data

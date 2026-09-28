@@ -84,12 +84,14 @@ def confirm_or_dismiss_buttons(confirm_button_label, reason, callback_kwargs):
                 width = 'stretch', 
                 on_click = execute_action_and_dismiss_dialog, 
                 args = [reason],
-                kwargs = callback_kwargs)
+                kwargs = callback_kwargs, 
+                wrap = True)
     with right_col:
         st.button('Cancel', 
                 key = 'cancel_button', 
                 width = 'stretch', 
-                on_click = st.rerun)
+                on_click = st.rerun, 
+                wrap = True)
 
 
 @st.dialog(' ', width = 'medium', dismissible = False)
@@ -128,7 +130,8 @@ def modify_trade_data(reason, ticket):
             st.button('Close', 
                       key = 'close_button', 
                       width = 'stretch', 
-                      on_click = st.rerun)
+                      on_click = st.rerun, 
+                      wrap = True)
 
     else:
         if reason in ['edit', 'modify']:
