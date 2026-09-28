@@ -229,7 +229,9 @@ CHART_COLORS = {'candlesticks': {'fill_positive': WHITE,
                           'pending_SL': GREEN, 
                           'pending_TP': GREEN, 
                           'placed_alert': GREEN, 
-                          'conditonal_trade_trigger': GREEN}}
+                          'conditonal_trade_trigger': GREEN, 
+                          'positive_trade': BLUE}, 
+                          'negative_trade': RED}
 CHART_OPACITY = {'lines': {'bid': 1.0, 
                            'ask': 1.0, 
                            'SL': 1.0, 
@@ -242,7 +244,9 @@ CHART_OPACITY = {'lines': {'bid': 1.0,
                            'pending_SL': 0.6,  
                            'pending_TP': 0.6, 
                            'placed_alert': 1.0, 
-                           'conditonal_trade_trigger': 0.4}}
+                           'conditonal_trade_trigger': 0.4, 
+                           'positive_trade': 1.0, 
+                           'negative_trade': 1.0}}
 CHART_PIXELS = {'height': 550, 
                 'line_labels_font_size_big': 15, 
                 'line_labels_font_size': 13, 

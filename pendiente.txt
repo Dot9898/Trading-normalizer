@@ -3,7 +3,13 @@ bots + manage el otro
 upd tr c cl
 
 
+
+type is currently wrong, add >, add label
+move if show.. in st session state to layers, so the layer is only avoided instead of rewritten
+add setting to show history
+
 order history in graph
+order history style
 
 git ignore
 symbol data defaults cleanup
@@ -22,6 +28,7 @@ weekly and infinite display of data table
 line priority?? a set of values maybe? do not update the dfs, just avoid rendering the labels. passing over the set can work
 after goto, make custom y range start as true if force default setting is set
 also remove goto as default, just assign them as defaults in a constant. clean up goto and first run call in frontend
+fix y navigation buttons (layering candlesticks broke them)
 remove extra shift in the process of refactoring and ''cambiar x shift según timeframe (flechitas), fix navigation callbacks''
 REFACTOR GRAPH WITHOUT CHANGING THE INNER LOGIC: USE THE GRAPH RANGE CLASS
 if too slow, refactor graph (load all from backmost timestamp to now, reload on.. change of scale? change of timeframe?

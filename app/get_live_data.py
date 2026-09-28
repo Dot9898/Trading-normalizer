@@ -87,6 +87,7 @@ class Bars:
         self.min_price = None
         self.date_label = None
         self.too_many_bars = False
+        self.time_to_axis_label = None
         self.just_full_updated = False
         
         #Data updated on soft update, every tick
@@ -185,6 +186,9 @@ class Bars:
     def update_market_status(self):
         self.is_market_open = get_current_server_time() - self.last_tick_server_time < WINDOW_WHEN_MARKET_IS_CONSIDERED_OPEN
 
+    def set_time_to_axis_label(self):
+        self.time_to_axis_label = (self.bars.set_index('time')['axis_label'].to_dict())
+
     @staticmethod
     def get_actual_timestamp(server_time):
 
@@ -234,7 +238,7 @@ class Bars:
 
     def get_dummy_bars(self):
         fraction = self.graph_range.empty_graph_fraction
-        if fraction == 0 or not self.shows_current_bar:
+        if fraction == 0 or self.bars.empty or not self.shows_current_bar:
             return(pd.DataFrame({'time': [], 'axis_label': []}))
         
         first_bar_time = self.bars['time'].iloc[0]
@@ -342,8 +346,9 @@ class Bars:
         self.set_normalization_base()
         self.update_current_bar_visibility()
         self.bars = self.get_bars()
+        self.dummy_bars = self.get_dummy_bars()
+        self.set_time_to_axis_label()
         if not self.bars.empty:
-            self.dummy_bars = self.get_dummy_bars()
             self.max_price = self.bars['high'].max()
             self.min_price = self.bars['low'].min()
             self.date_label = f'{self.bars['date_label'].iloc[0]} - {self.bars['date_label'].iloc[-1]}'

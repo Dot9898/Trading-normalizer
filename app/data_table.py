@@ -3,7 +3,6 @@
 import streamlit as st
 import pandas as pd
 import MetaTrader5 as mt5
-from constants import SHOW_ORDER_TYPES
 from backend import scale_point, unscale_point_wrt_current_values
 from format_functions import add_sign, capitalize_first, format_timestamp
 from alerts import update_open_and_close_alerts
@@ -213,6 +212,7 @@ def update_alerts_data_table(table):
 def update_data_table():
 
     if st.session_state['update_data_table']:   #Full update
+        st.session_state['update_data_table'] = False
         update_all_trades_data(data_source = 'local')
         update_open_and_close_alerts()
         timezone = st.session_state['selected_timezone']
@@ -222,7 +222,6 @@ def update_data_table():
                                                                            max_closed_trades, 
                                                                            show_order_types)
         st.session_state['alerts_data_table'] = generate_alerts_data_table()
-
         st.session_state['update_trades_lines'] = True
         st.session_state['update_maxes'] = True
 
@@ -236,6 +235,7 @@ def update_data_table():
     if st.session_state['update_trades_lines']:
         st.session_state['update_trades_lines'] = False
         update_lines_data('trades_and_alerts_levels')
+        update_lines_data('closed_trades')
 
 
 

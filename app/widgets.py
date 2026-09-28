@@ -197,7 +197,6 @@ def Y_range_widgets():
                 on_change = callbacks.reload_graph, 
                 wrap = True)
 
-
 def X_navigation_buttons():
     left_button_column, right_button_column = st.columns(2)
     with left_button_column:
