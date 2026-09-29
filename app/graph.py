@@ -3,7 +3,7 @@
 import pandas as pd
 import streamlit as st
 import altair as alt
-from constants import CHART_STYLE, POLLING_INTERVAL, SECONDS
+from constants import CHART_STYLE, POLLING_INTERVAL, SECONDS, SESSION_STATE_DEFAULTS
 from backend import scale_point_wrt_current_values
 from get_live_data import Bars, get_remaining_candle_time
 from format_functions import timezone_format
@@ -13,6 +13,7 @@ class Layers:   #Can be made better. It's enough for this use case.
 
     def __init__(self):
 
+        self.empty_layer = alt.layer()
         self.base = alt.layer()
         self.candlesticks = alt.layer()
         self.bid_line = alt.layer()
@@ -26,8 +27,12 @@ class Layers:   #Can be made better. It's enough for this use case.
         self.update_pending = {}
         self.redundant_update = False
 
+        self.show_SL_TP_lines = SESSION_STATE_DEFAULTS['show_SLTP_lines']
+        self.show_closed_trades = False   #Overwritten in first_run
+
         self.load_lines_data()
         self.set_updates_to_false()
+        
 
     def load_lines_data(self):
         bid = pd.DataFrame(index = ['bid'], columns = ['line_type', 'price', 'label'])
@@ -74,12 +79,6 @@ def update_lines_data(category):
         layers.update_pending['bid_and_ask_lines'] = True
 
     if category == 'SL_TP_entry_alert':
-        if not st.session_state['show_SLTP_lines']:
-            lines_data['SL_TP_entry_alert'] = pd.DataFrame(index = ['SL', 'TP', 'entry', 'alert_price'], 
-                                                        columns = ['line_type', 'price', 'label'])
-            layers.update_pending['SL_TP_lines'] = True
-            return
-        
         levels_data = lines_data['SL_TP_entry_alert']
 
         SL = round(st.session_state['SL'], bars.shown_digits)
@@ -159,12 +158,6 @@ def update_lines_data(category):
         layers.update_pending['trades_and_alerts_lines'] = True
 
     if category == 'closed_trades':
-        if not st.session_state['settings']['show_trade_history']:
-            lines_data['closed_trades'] = pd.DataFrame(columns = ['line_type', 'open_price', 'close_price', 
-                                                                  'open_axis_label', 'close_axis_label', 'label'])
-            layers.update_pending['closed_trades_lines'] = True
-            return
-        
         data_table = st.session_state['data_table']
         PL_column_number = data_table.columns.get_loc('P/L') + 1
         time_to_category = bars.time_to_axis_label
@@ -302,9 +295,8 @@ def lines_layer(lines_data):
         fontSize = font_size, 
         baseline = baseline, 
         dx = pixels['line_labels_dx'], 
-        dy = lines_label_dy)
-
-    labels = labels.encode(
+        dy = lines_label_dy).encode(
+        
         x = alt.X(value = 'width'), 
         y = 'price:Q', 
         color = lines_color, 
@@ -346,13 +338,12 @@ def segments_layer(segments_data, x_categories):
         tooltip = None, 
         shape = 'circle', 
         filled = True, 
-        size = pixels['line_endpoints_radius'])
-    start_circles = start_circles.encode(
+        size = pixels['line_endpoints_radius']).encode(
+        
         x = 'open_axis_label:O', 
         y = 'open_price:Q', 
         color = lines_color, 
-        opacity = lines_opacity)
-    start_circles = start_circles.transform_filter(
+        opacity = lines_opacity).transform_filter(
         'datum.open_axis_label != datum.close_axis_label')
     
     end_circles = alt.Chart(segments_data).mark_point(
@@ -360,8 +351,8 @@ def segments_layer(segments_data, x_categories):
         tooltip = None, 
         shape = 'circle', 
         filled = True, 
-        size = pixels['line_endpoints_radius'])
-    end_circles = end_circles.encode(
+        size = pixels['line_endpoints_radius']).encode(
+        
         x = 'close_axis_label:O', 
         y = 'close_price:Q', 
         color = lines_color, 
@@ -374,9 +365,8 @@ def segments_layer(segments_data, x_categories):
         fontSize = pixels['line_labels_font_size_big'], 
         baseline = 'middle', 
         dx = pixels['diagonal_lines_labels_dx'], 
-        dy = 0)
-
-    labels = labels.encode(
+        dy = 0).encode(
+        
         x = 'close_axis_label:O', 
         y = 'close_price:Q', 
         color = lines_color, 
@@ -424,15 +414,17 @@ def altair_candlestick_graph(bars_data: Bars, layers: Layers, price_range):
 
     layers.set_updates_to_false()
 
+    SL_TP_entry_alert_layer = layers.SL_TP_entry_alert_lines if layers.show_SL_TP_lines else layers.empty_layer
+    closed_trades_layer = layers.closed_trades_segments if layers.show_closed_trades else layers.empty_layer
+
     chart = (layers.candlesticks 
-             + layers.closed_trades_segments 
-             + layers.SL_TP_entry_alert_lines 
+             + closed_trades_layer
+             + SL_TP_entry_alert_layer
              + layers.trades_and_alerts_lines 
              + layers.bid_line 
-             + layers.ask_line).properties(
-             title = alt.TitleParams(text = bars_data.name, 
-                                     anchor = 'middle', 
-                                     offset = CHART_STYLE['pixels']['title_offset']))
+             + layers.ask_line).properties(title = alt.TitleParams(text = bars_data.name, 
+                                                                   anchor = 'middle', 
+                                                                   offset = CHART_STYLE['pixels']['title_offset']))
 
     return(chart)
 

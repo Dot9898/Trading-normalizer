@@ -3,8 +3,9 @@ bots + manage el otro
 upd tr c cl
 
 
-move if show.. in st session state to layers, so the layer is only avoided instead of rewritten
-
+goto
+after goto, make custom y range start as true if force default setting is set
+also make setting callback to actually set the custom y range with extra step on session state
 git ignore
 symbol data defaults cleanup
 file cleanup + imports
@@ -17,12 +18,11 @@ setting to show hourly lines and open/closed market colors
 trade limit if losses (in data etc)
 alert sounds
 colores (markdown RR string y table data) test cond trades lines
-weekly and infinite display of data table
+weekly display of data table
 
 maybe just updating x categories in get live data instead of labels
 maybe layering current bar solves all the axis label bugs (closed trade on same candle goes to start, need to rerun candlesticks block)
 line priority?? a set of values maybe? do not update the dfs, just avoid rendering the labels. passing over the set can work
-after goto, make custom y range start as true if force default setting is set
 also remove goto as default, just assign them as defaults in a constant. clean up goto and first run call in frontend
 fix y navigation buttons (layering candlesticks broke them)
 remove extra shift in the process of refactoring and ''cambiar x shift según timeframe (flechitas), fix navigation callbacks''
@@ -36,8 +36,6 @@ implementación trading range según la nota
 trailing stops
 
 weekend bugs?
-
-setting to show hidden trades only if it matters after testing
 handle close by?
 
 

@@ -4,7 +4,7 @@ import streamlit as st
 from backend import init_session_state, init_session_state_functions, initialize_MetaTrader
 from constants import SESSION_STATE_DEFAULTS, LABEL_SPACING
 import widgets
-from callbacks import reload_table, set_normalization_base, goto, save_old_SLTP_then_update
+from callbacks import reload_table, set_normalization_base, goto, save_old_SLTP_then_update, set_closed_trades_history_visibility
 from format_functions import add_vertical_spacing
 from trades_data import load_trades_data
 from alerts import load_alerts
@@ -129,6 +129,7 @@ if st.session_state['dialog_data'] is not None:
 
 if st.session_state['first_run']:
     save_old_SLTP_then_update(reset = True)
+    set_closed_trades_history_visibility()
     st.session_state['first_run'] = False
     st.rerun()
 

@@ -3,7 +3,7 @@
 import pandas as pd
 import streamlit as st
 from constants import DATA_PATH, DEFAULT_SETTINGS
-from callbacks import reload_graph, save_old_SLTP_then_update, reload_table
+from callbacks import reload_graph, save_old_SLTP_then_update, reload_table, set_closed_trades_history_visibility
 
 
 def load_settings():
@@ -137,7 +137,7 @@ def show_trade_history_checkbox():
                 key = key, 
                 value = st.session_state['settings'][key], 
                 on_change = update_setting, 
-                args = [key, reload_graph], 
+                args = [key, set_closed_trades_history_visibility], 
                 wrap = True)
 
 

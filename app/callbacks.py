@@ -101,8 +101,14 @@ def Y_shift(quantity):
     st.session_state['y_max'] += quantity
 
 def switch_SL_TP_visibility():
-    st.session_state['show_SLTP_lines'] = not st.session_state['show_SLTP_lines']
-    update_lines_data('SL_TP_entry_alert')
+    layers = st.session_state['graph_layers']
+    layers.show_SL_TP_lines = not layers.show_SL_TP_lines
+    layers.update_pending['SL_TP_lines'] = True
+
+def set_closed_trades_history_visibility():
+    layers = st.session_state['graph_layers']
+    layers.show_closed_trades = st.session_state['settings']['show_trade_history']
+    layers.update_pending['closed_trades'] = True
 
 
 def update_entry():
