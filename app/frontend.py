@@ -4,7 +4,7 @@ import streamlit as st
 from backend import init_session_state, init_session_state_functions, initialize_MetaTrader
 from constants import SESSION_STATE_DEFAULTS, LABEL_SPACING
 import widgets
-from callbacks import reload_table, set_normalization_base, goto, save_old_SLTP_then_update, set_closed_trades_history_visibility
+from callbacks import reload_table, set_normalization_base, save_old_SLTP_then_update, set_closed_trades_history_visibility
 from format_functions import add_vertical_spacing
 from trades_data import load_trades_data
 from alerts import load_alerts
@@ -17,10 +17,6 @@ SESSION_STATE_DEFAULT_FUNCTIONS = {'mt5_initialized': {'function': initialize_Me
                                                        'value': 'return_value'}, 
                                    'settings': {'function': load_settings, 
                                                 'assign': False}, 
-                                   'first_run': {'function': goto, 
-                                                 'args': ['now'], 
-                                                 'assign': True, 
-                                                 'value': True}, 
                                    'trades_data': {'function': load_trades_data, 
                                                    'assign': False}, 
                                    'alerts': {'function': load_alerts, 
@@ -29,7 +25,10 @@ SESSION_STATE_DEFAULT_FUNCTIONS = {'mt5_initialized': {'function': initialize_Me
                                                     'assign': True, 
                                                     'value': 'return_value'}, 
                                    'selected_normalization_base_name': {'function': set_normalization_base, 
-                                                                        'assign': False}}
+                                                                        'assign': False}, 
+                                   'custom_y_range': {'function': lambda: st.session_state['settings']['force_default_y_range'], 
+                                                      'assign': True, 
+                                                      'value': 'return_value'}}
 
 
 st.set_page_config(layout = 'wide')

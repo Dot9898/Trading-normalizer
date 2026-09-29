@@ -1,13 +1,13 @@
 
 
 import MetaTrader5 as mt5
-from constants import SYMBOL_DATA, DEFAULTS
+from constants import SYMBOL_DATA
 from math import floor
 from trades_data import get_trade_data_to_edit, edit_trade_data
 
 
 def get_deviation(symbol):
-    display = (SYMBOL_DATA[symbol]['display'] if symbol in SYMBOL_DATA else DEFAULTS['display'])
+    display = SYMBOL_DATA.get(symbol, SYMBOL_DATA['defaults'])['display']
     max_deviation_percentage = 0.05 if display == 'basis' else 0.5
     current_price = mt5.symbol_info_tick(symbol).bid
     absolute_deviation = current_price * max_deviation_percentage * 0.01

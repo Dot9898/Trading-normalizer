@@ -12,62 +12,62 @@ TRADES_UPDATE_INTERVAL = 5.0
 WINDOW_WHEN_DATA_IS_CONSIDERED_LOCAL = 30
 WINDOW_WHEN_MARKET_IS_CONSIDERED_OPEN = 300
 
-
-#To remove
-
-SHOW_ORDER_TYPES = True #make it a setting??
-
-DEFAULTS = {'ideal_ppb': None, #move this to symbol data
-            'display': 'basis', 
-            'digits': 1, 
-            'power': 4}
-
-
-
-
 #Dynamic defaults
-SHOWN_SYMBOLS = ['US500', 'BTCUSD', 'ETHUSD']
+SHOWN_SYMBOLS = ['US500', 'BTCUSD']
 SYMBOL_DATA = {'US500': {'ideal_ppb': 0.75, 
                          'margin_req': 0.005, 
                          'display': 'basis', 
-                         'digits': 1, 
-                         'power': 4},
+                         'digits': 1},          #Digits are for normalized data
                          
                'BTCUSD': {'ideal_ppb': None,
                           'margin_req': 0.05, 
                           'display': 'percent', 
-                          'digits': 2, 
-                          'power': 2}, 
+                          'digits': 2}, 
 
                'ETHUSD': {'ideal_ppb': None,
                           'margin_req': 0.05, 
                           'display': 'percent', 
-                          'digits': 2, 
-                          'power': 2}}
+                          'digits': 2}, 
+
+               'defaults': {'ideal_ppb': None, 
+                            'margin_req': 0.1, 
+                            'display': 'basis', 
+                            'digits': 1}}
 RR = [(1, 1), (2, 3), (1, 2), (1, 3), 'custom']
 SHOWN_TIMEZONES = ['Chile', 'New York', 'server', 'France']
-SESSION_STATE_DEFAULTS = {'data_table': None, 
-                          'update_data_table': True, 
-                          'alerts_pending_notification': [], 
-                          'orders_to_delete': set(), 
-                          'dialog_open': False, 
-                          'bars_data': None, 
-                          'reload_Bars': True, 
-                          'reload_table': True, 
-                          'update_maxes': True, 
-                          'selected_timezone': 'New York', 
-                          'selected_symbol': 'US500', 
-                          'selected_scale': 'normalized', 
-                          'maxloss': -10.0, 
-                          'RR': (1, 2), 
-                          'custom_y_range': False, 
-                          'risk': 0, 
-                          'reward': 0, 
-                          'dialog_data': None, 
-                          'update_SLTP': False, 
-                          'update_trades_lines': False, 
-                          'show_SLTP_lines': True, 
-                          'alerts_checkbox': False}
+
+OBJECTS_DEFAULTS = {'bars_data': None, 
+                    'reload_Bars': True, 
+                    'data_table': None, 
+                    'update_data_table': True, 
+                    'alerts_pending_notification': [], 
+                    'orders_to_delete': set()}
+FLAGS_DEFAULTS = {'first_run': True, 
+                  'update_SLTP': False, 
+                  'update_maxes': True, 
+                  'update_trades_lines': False, 
+                  'show_SLTP_lines': True,
+                  'dialog_open': False, 
+                  'dialog_data': None, 
+                  'update_custom_y_range_checkbox': False}
+WIDGETS_DEFAULTS = {'selected_timezone': 'New York', 
+                    'selected_timeframe': mt5.TIMEFRAME_M5, 
+                    'selected_scale': 'normalized', 
+                    'selected_symbol': 'US500', 
+                    'maxloss': -10.0, 
+                    'RR': (1, 2), 
+                    'risk': 0, 
+                    'reward': 0, 
+                    'alerts_checkbox': False}
+GRAPH_NAVIGATION_DEFAULTS = {'first_bar': 'now', 
+                             'last_bar': 'now', 
+                             'left_shift': -8, 
+                             'left_shift_unit': 'hours', 
+                             'right_shift': 0, 
+                             'right_shift_unit': 'hours', 
+                             'extra_shift': 0, 
+                             'extra_shift_unit': 'hours'}
+SESSION_STATE_DEFAULTS = OBJECTS_DEFAULTS | FLAGS_DEFAULTS | WIDGETS_DEFAULTS | GRAPH_NAVIGATION_DEFAULTS
 
 #Fixed defaults
 DEFAULT_SETTINGS = {'show_hidden_trades': False, 
@@ -100,8 +100,7 @@ INTERESTING_TIMES = ['now',
 ZOOM_FIXED_SETTINGS = {'first_bar': 'now', 
                        'last_bar': 'now', 
                        'right_shift': 0, 
-                       'extra_shift': 0, 
-                       'custom_y_range': False} #Overwritten in callback
+                       'extra_shift': 0}
 ZOOM_VARIABLE_SETTINGS = {'selected_timeframe': {'hour': mt5.TIMEFRAME_M1, 
                                                 'now': mt5.TIMEFRAME_M5, 
                                                 'day': mt5.TIMEFRAME_M5, 

@@ -4,7 +4,7 @@ from numpy import log10
 import streamlit as st
 import pandas as pd
 import MetaTrader5 as mt5
-from constants import SYMBOL_DATA, DEFAULTS
+from constants import SYMBOL_DATA
 from decimal import Decimal, ROUND_FLOOR
 from risk_calculation import get_lotsize_from_ppb_or_pppt, get_current_ppb_from_lotsize
 
@@ -34,10 +34,11 @@ def include_symbol(symbol):
     mt5.symbol_select(symbol, True)
 
 def initialize_MetaTrader():
-    mt5.initialize('D:/Dot/FX/Pepperstone MT5/terminal64.exe')
+    result = mt5.initialize('D:/Dot/FX/Pepperstone MT5/terminal64.exe')
     for symbol in SYMBOL_DATA:
-        #if symbol != 'defaul'
-        include_symbol(symbol)
+        if symbol != 'defaults':
+            include_symbol(symbol)
+    return(result)
 
 
 @st.cache_data
@@ -48,7 +49,7 @@ def get_rounding_digits(symbol, scale):
     if scale == 'absolute':
         return(get_symbol_digits(symbol))
     elif scale == 'normalized':
-        return(SYMBOL_DATA[symbol]['digits'] if symbol in SYMBOL_DATA else DEFAULTS['digits'])
+        return(SYMBOL_DATA.get(symbol, SYMBOL_DATA['defaults'])['digits'])
     elif scale == 'logarithmic':
         return(6)
 
@@ -70,8 +71,8 @@ def scale_point(value, data_scale, normalization_base = None, symbol = None, tru
     if data_scale == 'normalized':
         if normalization_base is None:
             return
-        power = SYMBOL_DATA[symbol]['power'] if symbol in SYMBOL_DATA else DEFAULTS['power']
-        normalization_factor = 10 ** power
+        display = SYMBOL_DATA.get(symbol, SYMBOL_DATA['defaults'])['display']
+        normalization_factor = 10000 if display == 'basis' else 100
         unit = 1
         if true_normalization:
             unit = 0
@@ -205,7 +206,7 @@ def get_used_ppb_and_margin_req(include_pending):   #Gives approximate ppb to av
                            else None)
 
         ppb = get_current_ppb_from_lotsize(lotsize, current_price = execution_price, equity = equity)
-        margin_req = SYMBOL_DATA[trade.symbol]['margin_req']
+        margin_req = SYMBOL_DATA.get(trade.symbol, SYMBOL_DATA['defaults'])['margin_req']
         data[trade.Index] = {'ppb': ppb, 'margin_req': margin_req}
 
     return(data)

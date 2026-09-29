@@ -263,7 +263,7 @@ def get_trade_data_to_edit(ticket, data_source, operation_type): #Need to fix th
                 'open_timestamp': get_actual_timestamp(position.time), 
                 'open_price': open_price, 
                 
-                'display': SYMBOL_DATA[symbol]['display']}
+                'display': SYMBOL_DATA.get(symbol, SYMBOL_DATA['defaults'])['display']}
         
         if data_source == 'local':
             data['balance_at_set'] = round(current_account_info.balance)
@@ -312,7 +312,7 @@ def get_trade_data_to_edit(ticket, data_source, operation_type): #Need to fix th
                 'points_bp': round(scale_point(close_price - open_price, 'normalized', open_price, symbol, true_normalization = True), 1), 
                 'P/L_abs': PL, 
 
-                'display': SYMBOL_DATA[symbol]['display']}
+                'display': SYMBOL_DATA.get(symbol, SYMBOL_DATA['defaults'])['display']}
     
         if operation_type == 'market_opened_and_closed':
             data['order_type'] = 'market'
@@ -345,7 +345,7 @@ def get_trade_data_to_edit(ticket, data_source, operation_type): #Need to fix th
                 'balance_at_set': round(current_account_info.balance), 
                 'equity_at_set': round(current_account_info.equity), 
                 
-                'display': SYMBOL_DATA[symbol]['display']}
+                'display': SYMBOL_DATA.get(symbol, SYMBOL_DATA['defaults'])['display']}
         
         data = update_SL_TP(data, data_source, 'set', SL, TP, set_price, lots, symbol, current_account_info)
 
@@ -461,7 +461,7 @@ def get_trade_data_to_edit(ticket, data_source, operation_type): #Need to fix th
                 'open_timestamp': get_actual_timestamp(position.time), 
                 'open_price': open_price, 
                 
-                'display': SYMBOL_DATA[symbol]['display']}
+                'display': SYMBOL_DATA.get(symbol, SYMBOL_DATA['defaults'])['display']}
         
         data = update_SL_TP(data, data_source, 'set', set_SL, set_TP, set_price, lots, symbol, current_account_info)
         data = update_SL_TP(data, data_source, 'open', SL, TP, open_price, lots, symbol, current_account_info)
@@ -503,7 +503,7 @@ def get_trade_data_to_edit(ticket, data_source, operation_type): #Need to fix th
                 'open_timestamp': get_actual_timestamp(entry_deal.time), 
                 'open_price': open_price, 
                 
-                'display': SYMBOL_DATA[symbol]['display']}
+                'display': SYMBOL_DATA.get(symbol, SYMBOL_DATA['defaults'])['display']}
         
         data = update_SL_TP(data, data_source, 'set', set_SL, set_TP, set_price, lots, symbol, current_account_info)
         data = update_SL_TP(data, data_source, 'open', SL, TP, open_price, lots, symbol, current_account_info)

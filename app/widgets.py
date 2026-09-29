@@ -139,9 +139,8 @@ def X_range_widgets(what_widgets):
 
 def get_y_step():
 
-    display = (constants.SYMBOL_DATA[st.session_state['selected_symbol']]['display'] if 
-               st.session_state['selected_symbol'] in constants.SYMBOL_DATA else 
-               constants.DEFAULTS['display'])
+    display = constants.SYMBOL_DATA.get(st.session_state['selected_symbol'], 
+                                        constants.SYMBOL_DATA['defaults'])['display']
     
     if st.session_state['selected_scale'] == 'logarithmic':
         y_step = 0.2
@@ -160,6 +159,11 @@ def get_y_step():
     return(float(y_step))
 
 def Y_range_widgets():
+
+    if st.session_state['update_custom_y_range_checkbox']:
+        st.session_state['update_custom_y_range_checkbox'] = False
+        st.session_state['custom_y_range'] = st.session_state['settings']['force_default_y_range']
+        callbacks.reload_candlesticks_layer()
     
     if st.session_state['custom_y_range']:
 
@@ -182,7 +186,7 @@ def Y_range_widgets():
                             step = step, 
                             disabled = disabled, 
                             label_visibility = 'collapsed', 
-                            on_change = callbacks.reload_graph)
+                            on_change = callbacks.reload_candlesticks_layer)
         
         with top_column:
             st.number_input('Top', 
@@ -190,11 +194,11 @@ def Y_range_widgets():
                             step = step, 
                             disabled = disabled, 
                             label_visibility = 'collapsed', 
-                            on_change = callbacks.reload_graph)
+                            on_change = callbacks.reload_candlesticks_layer)
     
     st.checkbox('Custom Y range', 
                 key = 'custom_y_range', 
-                on_change = callbacks.reload_graph, 
+                on_change = callbacks.reload_candlesticks_layer, 
                 wrap = True)
 
 def X_navigation_buttons():
@@ -300,9 +304,8 @@ def get_SL_TP_step():
         step = 0.00001
     
     elif st.session_state['selected_scale'] == 'normalized':
-        display = (constants.SYMBOL_DATA[st.session_state['selected_symbol']]['display'] 
-                   if st.session_state['selected_symbol'] in constants.SYMBOL_DATA 
-                   else constants.DEFAULTS['display'])
+        display = constants.SYMBOL_DATA.get(st.session_state['selected_symbol'], 
+                                            constants.SYMBOL_DATA['defaults'])['display']
         step = 0.1 if display == 'basis' else 0.01
 
     elif st.session_state['selected_scale'] == 'absolute':
@@ -408,8 +411,7 @@ def settings_button():
 
 def ppb_display():
     symbol = st.session_state['selected_symbol']
-    warning_number = constants.SYMBOL_DATA[symbol]['ideal_ppb'] if symbol in constants.SYMBOL_DATA else None
-
+    warning_number = constants.SYMBOL_DATA.get(symbol, constants.SYMBOL_DATA['defaults'])['ideal_ppb']
     if st.session_state['settings']['graph_width'] > 50:
         if warning_number is None:
             label = ''

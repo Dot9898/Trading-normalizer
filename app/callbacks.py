@@ -12,8 +12,14 @@ from alerts import Alert
 from graph import update_lines_data
 
 
+def set_session_state(key, value):
+    st.session_state[key] = value
+
 def reload_graph():
     st.session_state['reload_Bars'] = True
+
+def reload_candlesticks_layer():
+    st.session_state['graph_layers'].update_pending['candlesticks'] = True
 
 def reload_table():
     st.session_state['update_data_table'] = True
@@ -36,20 +42,18 @@ def set_normalization_base():
 
 
 def goto(when):
-    if 'first_run' in st.session_state:            # Specific edge case of initialization: 
-        save_old_SLTP_then_update(reset = False)   # goto function is called during the 
-                                                   # initialization of first_run to True)
+    save_old_SLTP_then_update(reset = False)
 
     for key, setting in constants.ZOOM_FIXED_SETTINGS.items():
         st.session_state[key] = setting
     for key, settings_dict in constants.ZOOM_VARIABLE_SETTINGS.items():
         st.session_state[key] = settings_dict[when]
     if when in ['now', 'hour']:
-        st.session_state['selected_normalization_base_name'] = 'market_open' if is_0930_to_1800() else 'server_1:00'
-    if (st.session_state['settings']['force_default_y_range'] 
-        and when in ['day', 'now', 'hour'] 
-        and 'first_run' in st.session_state): ########
-        st.session_state['custom_y_range'] = True
+        set_normalization_base()
+
+    if not st.session_state['settings']['force_default_y_range']:
+        st.session_state['custom_y_range'] = False
+
 
     reload_graph()
 
@@ -64,7 +68,8 @@ def force_set_y_range():
         top = bid * (1 + default_y_range / 100)
 
     if scale == 'normalized':
-        factor = 100 if constants.SYMBOL_DATA[symbol]['display'] == 'basis' else 1
+        display = constants.SYMBOL_DATA.get(symbol, constants.SYMBOL_DATA['defaults'])['display']
+        factor = 100 if display == 'basis' else 1
         bottom = -default_y_range * factor
         top = default_y_range * factor
 
@@ -99,6 +104,7 @@ def Y_shift(quantity):
     
     st.session_state['y_min'] += quantity
     st.session_state['y_max'] += quantity
+    reload_candlesticks_layer()
 
 def switch_SL_TP_visibility():
     layers = st.session_state['graph_layers']
@@ -165,7 +171,7 @@ def update_pppt(): #Always used right after update_ppb
 def update_max_ppb():
     pending_and_open_data = get_used_ppb_and_margin_req(include_pending = True)
     symbol = st.session_state['selected_symbol']
-    margin_req = constants.SYMBOL_DATA[symbol]['margin_req'] if symbol in constants.SYMBOL_DATA else None
+    margin_req = constants.SYMBOL_DATA.get(symbol, constants.SYMBOL_DATA['defaults'])['margin_req']
     if margin_req in [0, None]:
         max_ppb = 0
     else:

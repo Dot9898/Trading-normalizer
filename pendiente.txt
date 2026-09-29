@@ -3,12 +3,8 @@ bots + manage el otro
 upd tr c cl
 
 
-goto
-after goto, make custom y range start as true if force default setting is set
-also make setting callback to actually set the custom y range with extra step on session state
-git ignore
-symbol data defaults cleanup
 file cleanup + imports
+git ignore
 cambiar path mt5
 
 tinker with chart graphic and spacing constants
@@ -20,12 +16,13 @@ alert sounds
 colores (markdown RR string y table data) test cond trades lines
 weekly display of data table
 
+
 maybe just updating x categories in get live data instead of labels
 maybe layering current bar solves all the axis label bugs (closed trade on same candle goes to start, need to rerun candlesticks block)
 line priority?? a set of values maybe? do not update the dfs, just avoid rendering the labels. passing over the set can work
-also remove goto as default, just assign them as defaults in a constant. clean up goto and first run call in frontend
-fix y navigation buttons (layering candlesticks broke them)
+
 remove extra shift in the process of refactoring and ''cambiar x shift según timeframe (flechitas), fix navigation callbacks''
+base y shift step on timeframe
 REFACTOR GRAPH WITHOUT CHANGING THE INNER LOGIC: USE THE GRAPH RANGE CLASS
 if too slow, refactor graph (load all from backmost timestamp to now, reload on.. change of scale? change of timeframe?
 set polling interval to 0.5 or less?

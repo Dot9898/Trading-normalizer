@@ -203,7 +203,7 @@ def get_base_chart(bars_data, x_categories):
     colors = CHART_STYLE['colors']['candlesticks']
     chart_values = CHART_STYLE['others']
     bars = bars_data.bars
-    date_label = bars_data.date_label
+    date_label = bars_data.date_label if bars_data.date_label is not None else ''
     timezone = bars_data.timezone
 
     candlestick_color = (

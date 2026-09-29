@@ -6,7 +6,7 @@ from numpy import log10
 from time import time
 import MetaTrader5 as mt5
 from backend import include_symbol
-from constants import SECONDS, TIMEZONES, CHART_AXIS_TIME_FORMAT, HOUR, DAY, WEEK, OFFSET_SECONDS, EMPTY_SPACE, EMPTY_SPACE_2, MAX_BARS_IN_GRAPH, SYMBOL_DATA, DEFAULTS, REMAINING_CANDLE_TIME_FORMAT, DATA_PATH, EMPTY_SPACE_3, WINDOW_WHEN_MARKET_IS_CONSIDERED_OPEN
+from constants import SECONDS, TIMEZONES, CHART_AXIS_TIME_FORMAT, HOUR, DAY, WEEK, OFFSET_SECONDS, EMPTY_SPACE, EMPTY_SPACE_2, MAX_BARS_IN_GRAPH, SYMBOL_DATA, REMAINING_CANDLE_TIME_FORMAT, DATA_PATH, EMPTY_SPACE_3, WINDOW_WHEN_MARKET_IS_CONSIDERED_OPEN
 
 
 class Graph_range:
@@ -157,15 +157,16 @@ class Bars:
         if self.data_scale == 'absolute':
             return(self.digits)
         elif self.data_scale == 'normalized':
-            return(SYMBOL_DATA[self.symbol]['digits'] if self.symbol in SYMBOL_DATA else DEFAULTS['digits'])
+            return(SYMBOL_DATA.get(self.symbol, SYMBOL_DATA['defaults'])['digits'])
         elif self.data_scale == 'logarithmic':
             return(6)
 
     def get_normalization_factor(self):
         if self.data_scale == 'normalized':
-            power = SYMBOL_DATA[self.symbol]['power'] if self.symbol in SYMBOL_DATA else DEFAULTS['power']
-            return(10 ** power)
-        else:
+            display = SYMBOL_DATA.get(self.symbol, SYMBOL_DATA['defaults'])['display']
+            factor = 10000 if display == 'basis' else 100
+            return(factor)
+        else: 
             return(None)
 
     def update_range(self):
