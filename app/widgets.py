@@ -255,25 +255,29 @@ def zoom_buttons():
                   key = 'go_year', 
                   on_click = callbacks.goto, 
                   args = ['year'], 
-                  width = 'stretch')
+                  width = 'stretch', 
+                  wrap = True)
     with month_column:
         st.button('Month', 
                   key = 'go_month', 
                   on_click = callbacks.goto, 
                   args = ['month'], 
-                  width = 'stretch')
+                  width = 'stretch', 
+                  wrap = True)
     with week_column:
         st.button('Week', 
                   key = 'go_week', 
                   on_click = callbacks.goto, 
                   args = ['week'], 
-                  width = 'stretch')
+                  width = 'stretch', 
+                  wrap = True)
     with day_column:
         st.button('Day', 
                   key = 'go_day', 
                   on_click = callbacks.goto, 
                   args = ['day'], 
-                  width = 'stretch')
+                  width = 'stretch', 
+                  wrap = True)
 
 
 def symbol_dropdown():

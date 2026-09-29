@@ -159,6 +159,12 @@ def update_lines_data(category):
         layers.update_pending['trades_and_alerts_lines'] = True
 
     if category == 'closed_trades':
+        if not st.session_state['settings']['show_trade_history']:
+            lines_data['closed_trades'] = pd.DataFrame(columns = ['line_type', 'open_price', 'close_price', 
+                                                                  'open_axis_label', 'close_axis_label', 'label'])
+            layers.update_pending['closed_trades_lines'] = True
+            return
+        
         data_table = st.session_state['data_table']
         PL_column_number = data_table.columns.get_loc('P/L') + 1
         time_to_category = bars.time_to_axis_label
@@ -197,6 +203,7 @@ def update_lines_data(category):
                                                              orient = 'index')
 
         layers.update_pending['closed_trades_lines'] = True
+
 
 def get_base_chart(bars_data, x_categories):
 

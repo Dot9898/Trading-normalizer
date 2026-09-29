@@ -3,15 +3,7 @@ bots + manage el otro
 upd tr c cl
 
 
-
-fix closed trades max (half)
-wrap on month etc
-add >, add label
 move if show.. in st session state to layers, so the layer is only avoided instead of rewritten
-add setting to show history
-
-order history in graph
-order history style (mainly line width)
 
 git ignore
 symbol data defaults cleanup

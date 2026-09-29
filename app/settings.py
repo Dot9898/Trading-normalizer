@@ -131,6 +131,15 @@ def show_order_types_checkbox():
                 args = [key, reload_table], 
                 wrap = True)
 
+def show_trade_history_checkbox():
+    key = 'show_trade_history'
+    st.checkbox('Show closed trades on the chart', 
+                key = key, 
+                value = st.session_state['settings'][key], 
+                on_change = update_setting, 
+                args = [key, reload_graph], 
+                wrap = True)
+
 
 @st.dialog(' ', width = 'medium', dismissible = True, on_dismiss = save_settings_to_file)
 def open_settings():
@@ -145,6 +154,7 @@ def open_settings():
     with settings_columns[1]:
         graph_empty_space_input()
         default_TP_deviation()
+        show_trade_history_checkbox()
         show_order_types_checkbox()
     with settings_columns[2]:
         max_closed_trades_input()
