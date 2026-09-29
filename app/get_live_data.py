@@ -292,7 +292,7 @@ class Bars:
             return(pd.DataFrame({'time': [], 'axis_label': []}))
         if len(bars) > MAX_BARS_IN_GRAPH:
             self.too_many_bars = True
-            return(pd.DataFrame())
+            return(pd.DataFrame({'time': [], 'axis_label': []}))
         else:
             self.too_many_bars = False
         

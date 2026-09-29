@@ -168,9 +168,9 @@ def lmocallback():
 st.button('reload table', 
           on_click = reload_table)
 
-from callbacks import update_max_ppb_and_lotsize
-st.button('update max ppb and lotsize', 
-          on_click = update_max_ppb_and_lotsize)
+from graph import update_lines_data
+st.button('update closed trades lines history', 
+          on_click = update_lines_data('closed_trades'))
 
 if 'order_return' in st.session_state:
     st.write(st.session_state['order_return'])

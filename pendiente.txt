@@ -4,12 +4,14 @@ upd tr c cl
 
 
 
-type is currently wrong, add >, add label
+fix closed trades max (half)
+wrap on month etc
+add >, add label
 move if show.. in st session state to layers, so the layer is only avoided instead of rewritten
 add setting to show history
 
 order history in graph
-order history style
+order history style (mainly line width)
 
 git ignore
 symbol data defaults cleanup
@@ -25,6 +27,8 @@ alert sounds
 colores (markdown RR string y table data) test cond trades lines
 weekly and infinite display of data table
 
+maybe just updating x categories in get live data instead of labels
+maybe layering current bar solves all the axis label bugs (closed trade on same candle goes to start, need to rerun candlesticks block)
 line priority?? a set of values maybe? do not update the dfs, just avoid rendering the labels. passing over the set can work
 after goto, make custom y range start as true if force default setting is set
 also remove goto as default, just assign them as defaults in a constant. clean up goto and first run call in frontend

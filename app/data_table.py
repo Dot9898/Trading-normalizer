@@ -92,9 +92,6 @@ def generate_trades_data_table(timezone, max_closed_trades_shown, show_order_typ
         action_button_2_text = pd.NA
 
         if trade.status == 'closed':
-            closed_trades_counter = closed_trades_counter + 1
-            if closed_trades_counter > max_closed_trades_shown:
-                continue
             points = trade.points_bp if trade.direction == 'buy' else -trade.points_bp
             progress = add_sign(points)
             PL_percent = (trade[PL_equity_column_number] if not pd.isna(trade[PL_equity_column_number]) 

@@ -184,8 +184,7 @@ def update_lines_data(category):
 
             ticket = trade.Index
             PL_percent = row[PL_column_number]
-            PL = float(PL_percent[1:-1])
-            line_type = 'positive_trade' if PL >= 0 else 'negative_trade'
+            line_type = 'positive_trade' if PL_percent[0] == '+' else 'negative_trade'
             open_price = scale_point_wrt_current_values(trade.open_price, rounded = True)
             close_price = scale_point_wrt_current_values(trade.close_price, rounded = True)
 
@@ -198,7 +197,6 @@ def update_lines_data(category):
                                                              orient = 'index')
 
         layers.update_pending['closed_trades_lines'] = True
-
 
 def get_base_chart(bars_data, x_categories):
 
@@ -291,13 +289,13 @@ def lines_layer(lines_data):
 
     labels = alt.Chart(lines_data).mark_text(
         clip = True, 
-        lineBreak = '\n',
+        tooltip = None, 
+        lineBreak = '\n', 
         align = 'right', 
         fontSize = font_size, 
         baseline = baseline, 
         dx = pixels['line_labels_dx'], 
-        dy = lines_label_dy, 
-        tooltip = None)
+        dy = lines_label_dy)
 
     labels = labels.encode(
         x = alt.X(value = 'width'), 
@@ -310,6 +308,7 @@ def lines_layer(lines_data):
 
 def segments_layer(segments_data, x_categories):
 
+    pixels = CHART_STYLE['pixels']
     colors = CHART_STYLE['colors']['lines']
     opacity = CHART_STYLE['opacity']['lines']
 
@@ -332,9 +331,52 @@ def segments_layer(segments_data, x_categories):
         y = 'open_price:Q', 
         y2 = 'close_price:Q', 
         color = lines_color, 
+        opacity = lines_opacity, 
+        strokeWidth = alt.value(pixels['diagonal_lines_width']))
+
+    start_circles = alt.Chart(segments_data).mark_point(
+        clip = True, 
+        tooltip = None, 
+        shape = 'circle', 
+        filled = True, 
+        size = pixels['line_endpoints_radius'])
+    start_circles = start_circles.encode(
+        x = 'open_axis_label:O', 
+        y = 'open_price:Q', 
+        color = lines_color, 
+        opacity = lines_opacity)
+    start_circles = start_circles.transform_filter(
+        'datum.open_axis_label != datum.close_axis_label')
+    
+    end_circles = alt.Chart(segments_data).mark_point(
+        clip = True, 
+        tooltip = None, 
+        shape = 'circle', 
+        filled = True, 
+        size = pixels['line_endpoints_radius'])
+    end_circles = end_circles.encode(
+        x = 'close_axis_label:O', 
+        y = 'close_price:Q', 
+        color = lines_color, 
         opacity = lines_opacity)
 
-    return(lines)
+    labels = alt.Chart(segments_data).mark_text(
+        clip = True, 
+        tooltip = None, 
+        align = 'left', 
+        fontSize = pixels['line_labels_font_size_big'], 
+        baseline = 'middle', 
+        dx = pixels['diagonal_lines_labels_dx'], 
+        dy = 0)
+
+    labels = labels.encode(
+        x = 'close_axis_label:O', 
+        y = 'close_price:Q', 
+        color = lines_color, 
+        opacity = lines_opacity, 
+        text = 'label:N')
+
+    return(lines + start_circles + end_circles + labels)
 
 
 def altair_candlestick_graph(bars_data: Bars, layers: Layers, price_range):
@@ -416,6 +458,8 @@ def generate_graph_in_fragment(symbol,
         st.subheader('')
         st.subheader('Candlestick count is too big to load', text_alignment = 'center')
         st.subheader('Please select a smaller window or a larger timeframe', text_alignment = 'center')
+        st.subheader('')
+        st.subheader('')
     else:
         graph = altair_candlestick_graph(bars_data, layers, price_range)
         st.altair_chart(graph, width = 'stretch', height = CHART_STYLE['pixels']['height'], key = 'graph')
