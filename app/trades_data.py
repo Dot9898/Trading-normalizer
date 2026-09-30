@@ -5,7 +5,7 @@ import streamlit as st
 import MetaTrader5 as mt5
 from constants import DATA_PATH, TRADE_DATA_COLUMNS_TO_TYPES, SYMBOL_DATA, OUT_DEAL_REASONS, WINDOW_WHEN_DATA_IS_CONSIDERED_LOCAL
 from backend import scale_point, is_equivalent
-from get_live_data import get_current_server_time, get_actual_timestamp, get_last_update_server_time, register_update_time
+from get_live_data import get_current_server_time, get_actual_timestamp
 from time import time
 
 
@@ -30,21 +30,6 @@ def save_trades_data_to_file():
     st.session_state['trades_data'].to_csv(tmp_path, index = True)
     tmp_path.replace(trades_data_path)
 
-def sort_trades_data():
-    trades_data = st.session_state['trades_data']
-
-    trades_data.sort_index(inplace = True)
-
-    open_trades = trades_data[trades_data['status'] == 'open'].sort_values('open_server_time', 
-                                                                           ascending = False, 
-                                                                           kind = 'stable')
-    pending_trades = trades_data[trades_data['status'] == 'pending']
-    closed_trades = trades_data[trades_data['status'] == 'closed'].sort_values('close_server_time', 
-                                                                               ascending = False, 
-                                                                               kind = 'stable')
-
-    st.session_state['trades_data'] = pd.concat([open_trades, pending_trades, closed_trades])
-
 def edit_trade_data(ticket, data_to_edit: dict | None = None, delete = False):
 
     trades_data = st.session_state['trades_data']
@@ -64,6 +49,7 @@ def edit_trade_data(ticket, data_to_edit: dict | None = None, delete = False):
 
     save_trades_data_to_file()
     st.session_state['update_data_table'] = True
+
 
 def has_changed(ticket, ticket_type):
     trades_data = st.session_state['trades_data']
@@ -525,6 +511,36 @@ def get_trade_data_to_edit(ticket, data_source, operation_type): #Need to fix th
         data = update_closing_PL(data, data_source, PL, ticket, trades_data, current_account_info)
 
     return(data)
+
+
+def get_last_update_server_time():
+    last_update_server_time_path = DATA_PATH / 'last_update_server_time.txt'
+    if last_update_server_time_path.exists():
+        last_update_server_time = int(last_update_server_time_path.read_text())
+    else:
+        last_update_server_time = get_current_server_time()
+    return(last_update_server_time)
+
+def register_update_time():
+    last_update_server_time_path = DATA_PATH / 'last_update_server_time.txt'
+    update_time = get_current_server_time()
+    st.session_state['last_update_timestamp'] = time()
+    last_update_server_time_path.write_text(str(update_time))
+
+def sort_trades_data():
+    trades_data = st.session_state['trades_data']
+
+    trades_data.sort_index(inplace = True)
+
+    open_trades = trades_data[trades_data['status'] == 'open'].sort_values('open_server_time', 
+                                                                           ascending = False, 
+                                                                           kind = 'stable')
+    pending_trades = trades_data[trades_data['status'] == 'pending']
+    closed_trades = trades_data[trades_data['status'] == 'closed'].sort_values('close_server_time', 
+                                                                               ascending = False, 
+                                                                               kind = 'stable')
+
+    st.session_state['trades_data'] = pd.concat([open_trades, pending_trades, closed_trades])
 
 def update_ticket_data(ticket, data_source, category):
     

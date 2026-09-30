@@ -6,6 +6,7 @@ import constants
 import format_functions
 import callbacks
 from numpy import log10
+from time import time
 from format_functions import as_percent, round_balance, small_linebreak_caption
 from trades_data import update_all_trades_data
 from alerts import alert_check, notify_executions_in_serie
@@ -593,7 +594,8 @@ def alerts_and_conditional_trades_widgets():
 
 @st.fragment(run_every = constants.TRADES_UPDATE_INTERVAL)
 def update_trades_data():
-    update_all_trades_data(data_source = 'local')
+    if time() - st.session_state['last_update_timestamp'] >= constants.TRADES_UPDATE_INTERVAL - 0.5:
+        update_all_trades_data(data_source = 'local')
 
 @st.fragment(run_every = constants.POLLING_INTERVAL)
 def data_table():

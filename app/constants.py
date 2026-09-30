@@ -41,14 +41,15 @@ OBJECTS_DEFAULTS = {'bars_data': None,
                     'data_table': None, 
                     'update_data_table': True, 
                     'alerts_pending_notification': [], 
-                    'orders_to_delete': set()}
+                    'orders_to_delete': set(), 
+                    'dialog_data': None, 
+                    'last_update_timestamp': 0}
 FLAGS_DEFAULTS = {'first_run': True, 
                   'update_SLTP': False, 
                   'update_maxes': True, 
                   'update_trades_lines': False, 
                   'show_SLTP_lines': True,
                   'dialog_open': False, 
-                  'dialog_data': None, 
                   'update_custom_y_range_checkbox': False}
 WIDGETS_DEFAULTS = {'selected_timezone': 'New York', 
                     'selected_timeframe': mt5.TIMEFRAME_M5, 

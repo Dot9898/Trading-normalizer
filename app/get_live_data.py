@@ -395,18 +395,6 @@ def get_remaining_candle_time(timeframe):
 def get_actual_timestamp(server_time):
     return(Bars.get_actual_timestamp(server_time))
 
-def get_last_update_server_time():
-    last_update_server_time_path = DATA_PATH / 'last_update_server_time.txt'
-    if last_update_server_time_path.exists():
-        last_update_server_time = int(last_update_server_time_path.read_text())
-    else:
-        last_update_server_time = get_current_server_time()
-    return(last_update_server_time)
-
-def register_update_time():
-    last_update_server_time_path = DATA_PATH / 'last_update_server_time.txt'
-    update_time = get_current_server_time()
-    last_update_server_time_path.write_text(str(update_time))
 
 
 

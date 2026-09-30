@@ -3,19 +3,25 @@ bots + manage el otro
 upd tr c cl
 
 
+
+
+show last 16h PL percent in account data
+trade limit if -30% in last 16h (in data table even if hidden). disable B/S buttons.
+add backup data dialog in startup if monday
+
 file cleanup + imports
 git ignore
 cambiar path mt5
 
 tinker with chart graphic and spacing constants
+alert sounds
+colores (markdown RR string y table data) test cond trades lines
+
+
 hourly lines
 colores open n closed market. maybe add an is market open row to live data
 setting to show hourly lines and open/closed market colors
-trade limit if losses (in data etc)
-alert sounds
-colores (markdown RR string y table data) test cond trades lines
 weekly display of data table
-
 
 maybe just updating x categories in get live data instead of labels
 maybe layering current bar solves all the axis label bugs (closed trade on same candle goes to start, need to rerun candlesticks block)
