@@ -4,11 +4,6 @@ upd tr c cl
 
 
 test empty data bug and remove comment from graph file
-
-file cleanup + imports
-git ignore
-cambiar path mt5
-
 alert sounds
 table and chart heights
 colores (markdown RR string y table data)

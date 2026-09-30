@@ -1,2 +1,0 @@
-show_hidden_trades,show_account_balance,show_order_types,show_trade_history,max_closed_trades_shown,graph_width,empty_graph_percent,SL_deviation,TP_deviation,force_default_y_range,default_y_range
-False,False,True,False,30,55,20,-0.15,0.3,True,0.5
