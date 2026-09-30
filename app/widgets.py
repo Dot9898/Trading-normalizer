@@ -1,22 +1,23 @@
 
 
-import streamlit as st
-import MetaTrader5 as mt5
-import constants
-import format_functions
-import callbacks
 from numpy import log10
 from time import time
-from format_functions import as_percent, add_sign, round_balance, small_linebreak_caption
-from trades_data import update_all_trades_data
-from alerts import alert_check, notify_executions_in_serie
-from data_table import update_data_table
+
+import MetaTrader5 as mt5
+import streamlit as st
+
+import constants
+import callbacks
 import dialog_boxes
+import format_functions
+from alerts import alert_check, notify_executions_in_serie
+from backend import init_session_state
+from data_table import update_data_table
 from get_live_data import Graph_range
 from graph import generate_graph_in_fragment, update_lines_data
-from settings import open_settings
-from backend import init_session_state
 from order_execution import delete_all_pending_orders
+from settings import open_settings
+from trades_data import update_all_trades_data
 
 
 def timezone_dropdown():
@@ -529,19 +530,19 @@ def alert_and_account_checkboxes():
                     wrap = True)
 
 def account_data_info():
-    available_percent = as_percent(st.session_state['available_fraction_of_account'])
-    recent_PL_percent = add_sign(st.session_state['recent_PL_percent'], percent = True)
+    available_percent = format_functions.as_percent(st.session_state['available_fraction_of_account'])
+    recent_PL_percent = format_functions.add_sign(st.session_state['recent_PL_percent'], percent = True)
     account_info = st.session_state['bars_data'].current_account_info
-    rounded_balance = round_balance(account_info.balance)
+    rounded_balance = format_functions.round_balance(account_info.balance)
     
     margin_text = f'Margin available: {available_percent}'
     PL_text = f'Recent P/L: {recent_PL_percent}'
     balance_text = f'Balance: ${rounded_balance}'
 
     if st.session_state['settings']['show_account_balance']:
-        small_linebreak_caption([margin_text, PL_text, balance_text], alignment = 'right')
+        format_functions.small_linebreak_caption([margin_text, PL_text, balance_text], alignment = 'right')
     else:
-        small_linebreak_caption([margin_text, PL_text], alignment = 'right')
+        format_functions.small_linebreak_caption([margin_text, PL_text], alignment = 'right')
 
 def alert_price_input():
     disabled = st.session_state['selected_scale'] == 'logarithmic'
@@ -656,50 +657,6 @@ def open_dialog():
     
     if reason == 'error':
         dialog_boxes.bare_text(reason, data['error_code'])
-
-
-
-
-
-
-
-@st.fragment(run_every = constants.POLLING_INTERVAL)
-def print_prices_test():
-    bars = st.session_state['bars_data']
-    bid, ask = bars.current_bid, bars.current_ask
-    bcol, acol = st.columns([1, 1])
-    with bcol:
-        st.header(0 if bid is None else bid, text_alignment = 'center')
-    with acol:
-        st.header(0 if ask is None else ask, text_alignment = 'center')
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

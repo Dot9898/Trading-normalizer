@@ -1,14 +1,17 @@
 
 
+from datetime import datetime
+from math import prod
+from time import time
+
+import MetaTrader5 as mt5
 import pandas as pd
 import streamlit as st
-import MetaTrader5 as mt5
-from constants import DATA_PATH, TRADE_DATA_COLUMNS_TO_TYPES, SYMBOL_DATA, OUT_DEAL_REASONS, WINDOW_WHEN_DATA_IS_CONSIDERED_LOCAL, BACKUP_FILES_NAME_FORMAT, BACKUP_FREQUENCY
+
 from backend import scale_point, is_equivalent
+from constants import (DATA_PATH, TRADE_DATA_COLUMNS_TO_TYPES, SYMBOL_DATA, OUT_DEAL_REASONS, 
+                       WINDOW_WHEN_DATA_IS_CONSIDERED_LOCAL, BACKUP_FILES_NAME_FORMAT, BACKUP_FREQUENCY)
 from get_live_data import get_current_server_time, get_actual_timestamp
-from datetime import datetime
-from time import time
-from math import prod
 
 
 def load_trades_data():
@@ -86,7 +89,7 @@ def has_changed(ticket, ticket_type):
         current_entry = operation.price_open
         if not is_equivalent(old_entry, current_entry):
             changed = True
-    #print('changed', changed)
+    
     return(changed)
 
 def get_update_categories(from_server_time):
@@ -155,7 +158,7 @@ def get_update_categories(from_server_time):
             category[ticket] = 'closed'
 
     for ticket in current_orders_tickets:
-        if ticket not in (pending_tickets + open_tickets): #open tickets kept for clarity
+        if ticket not in (pending_tickets + open_tickets): #Open tickets kept for clarity
             category[ticket] = 'set'
 
     for ticket in current_positions_tickets:
@@ -220,7 +223,7 @@ def update_closing_PL(data, data_source, PL, ticket, trades_data, current_accoun
         last_known_account_value = None
         if ticket in trades_data.index:
             for key in ['equity_at_open', 'balance_at_open', 'equity_at_set', 'balance_at_set']:
-                if not pd.isna(trades_data.at[ticket, key]): #includes None
+                if not pd.isna(trades_data.at[ticket, key]):
                     last_known_account_value = trades_data.at[ticket, key]
                     break
         if last_known_account_value is None:
@@ -229,15 +232,15 @@ def update_closing_PL(data, data_source, PL, ticket, trades_data, current_accoun
     
     return(data)
 
-def get_trade_data_to_edit(ticket, data_source, operation_type): #Need to fix this flow, break it down in more functions
+def get_trade_data_to_edit(ticket, data_source, operation_type):
     trades_data = st.session_state['trades_data']
     if 'bars_data' in st.session_state:
         current_account_info = st.session_state['bars_data'].current_account_info
     else:
         current_account_info = mt5.account_info()
     current_timestamp = time()
-    #print('edit category', operation_type)
     data = {}
+    #print('edit category', operation_type)
 
     if operation_type == 'market_opened':
 
@@ -325,8 +328,9 @@ def get_trade_data_to_edit(ticket, data_source, operation_type): #Need to fix th
         order = mt5.orders_get(ticket = ticket)[0]
         if order.type not in [mt5.ORDER_TYPE_BUY_LIMIT, mt5.ORDER_TYPE_BUY_STOP, 
                               mt5.ORDER_TYPE_SELL_LIMIT, mt5.ORDER_TYPE_SELL_STOP]:
-            return(None)   #Market order not yet executed, and other order types
-
+            return(None) #Fake positive called by a market order not yet executed, 
+                         #or other order type (close by, buy stop limit, etc)
+        
         SL = None if order.sl == 0 else order.sl
         TP = None if order.tp == 0 else order.tp
         set_price = order.price_open
@@ -483,8 +487,8 @@ def get_trade_data_to_edit(ticket, data_source, operation_type): #Need to fix th
 
         set_SL = None if order.sl == 0 else order.sl
         set_TP = None if order.tp == 0 else order.tp
-        SL = set_SL   #We asssume the TP and SL did not change between opened and closed.
-        TP = set_TP   #This is a MQL5 limitation: it doesn't expose the "last TP/SL before closing".
+        SL = set_SL #We asssume the TP and SL did not change between opened and closed.
+        TP = set_TP #This is a MQL5 limitation: it doesn't expose the "last TP/SL before closing".
         set_price = order.price_open
         open_price = entry_deal.price
         symbol = entry_deal.symbol

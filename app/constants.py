@@ -1,10 +1,10 @@
 
 
-from pathlib import Path
 from datetime import datetime, timezone
+from pathlib import Path
 from zoneinfo import ZoneInfo
-import MetaTrader5 as mt5
 
+import MetaTrader5 as mt5
 
 MINUTE = 60
 HOUR = MINUTE * 60
@@ -23,7 +23,7 @@ SHOWN_SYMBOLS = ['US500', 'BTCUSD']
 SYMBOL_DATA = {'US500': {'ideal_ppb': 0.75, 
                          'margin_req': 0.005, 
                          'display': 'basis', 
-                         'digits': 1},          #Digits are for normalized data
+                         'digits': 1}, #Digits are for normalized data
                          
                'BTCUSD': {'ideal_ppb': None,
                           'margin_req': 0.05, 

@@ -1,13 +1,14 @@
 
 
-import streamlit as st
-import pandas as pd
 import MetaTrader5 as mt5
-from constants import OUT_DEAL_REASONS, ALERT_REASON_TEXT, SHOWN_ALERTS_DATA_COLUMNS
-from order_execution import limit_or_stop_order
+import pandas as pd
+import streamlit as st
+
 from backend import include_symbol, scale_point
-from get_live_data import get_current_server_time
+from constants import OUT_DEAL_REASONS, ALERT_REASON_TEXT, SHOWN_ALERTS_DATA_COLUMNS
 from format_functions import format_timestamp
+from get_live_data import get_current_server_time
+from order_execution import limit_or_stop_order
 
 
 def set_dialog_closed():
@@ -81,8 +82,8 @@ class Alert:
         @st.dialog(ALERT_REASON_TEXT[self.reason], width = 'medium', on_dismiss = set_dialog_closed)
         def notification_dialog(reason):
             st.session_state['dialog_open'] = True
-            display_data = data.drop('source_object', errors = 'ignore')   #Object can't be converted by st.dataframe
-            display_data = display_data.to_frame().T   #Cast the series to single colum df, take its transpose
+            display_data = data.drop('source_object', errors = 'ignore') #Object can't be converted by st.dataframe
+            display_data = display_data.to_frame().T #Cast the series to single colum df, take its transpose
             
             st.dataframe(display_data, 
                          hide_index = True, 
@@ -131,8 +132,8 @@ def notify_executions_in_serie():   #Used inside a fragment
 def get_execution_data(alert):
     if alert.ticket in st.session_state['data_table'].index:
         data = st.session_state['data_table'].loc[alert.ticket].copy()
-    else:                     #The alert was instantly executed and didn't make it to the table
-        data = pd.Series()    #That should only be possible with manual and conditional trade alerts
+    else:                  #The alert was instantly executed and didn't make it to the table
+        data = pd.Series() #That should only be possible with manual and conditional trade alerts
 
     bars = st.session_state['bars_data']
 

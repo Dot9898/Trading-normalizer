@@ -1,8 +1,10 @@
 
 
-import MetaTrader5 as mt5
-from constants import SYMBOL_DATA
 from math import floor
+
+import MetaTrader5 as mt5
+
+from constants import SYMBOL_DATA
 from trades_data import get_trade_data_to_edit, edit_trade_data
 
 

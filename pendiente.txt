@@ -3,19 +3,25 @@ bots + manage el otro
 upd tr c cl
 
 
+test empty data bug and remove comment from graph file
+
 file cleanup + imports
 git ignore
 cambiar path mt5
 
-tinker with chart graphic and spacing constants
 alert sounds
-colores (markdown RR string y table data) test cond trades lines
-
+table and chart heights
+colores (markdown RR string y table data)
+tinker with chart graphic and spacing constants
+chart lines colors and opacity, test cond trades lines
+config file. maybe styles file
 
 hourly lines
 colores open n closed market. maybe add an is market open row to live data
 setting to show hourly lines and open/closed market colors
 weekly display of data table
+remove leading zeroes of progress?? or smth in data table
+add setting to show RR as ratio: return(f'{round(risk / (risk + reward), 2)}')
 
 maybe just updating x categories in get live data instead of labels
 maybe layering current bar solves all the axis label bugs (closed trade on same candle goes to start, need to rerun candlesticks block)

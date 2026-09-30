@@ -2,8 +2,10 @@
 
 import pandas as pd
 import streamlit as st
+
+from callbacks import (reload_graph, save_old_SLTP_then_update, reload_table, 
+                       set_closed_trades_history_visibility, set_session_state)
 from constants import DATA_PATH, DEFAULT_SETTINGS
-from callbacks import reload_graph, save_old_SLTP_then_update, reload_table, set_closed_trades_history_visibility, set_session_state
 
 
 def load_settings():

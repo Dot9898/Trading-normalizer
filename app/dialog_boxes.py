@@ -1,9 +1,10 @@
 
 
 import streamlit as st
+
+from backend import scale_point_wrt_current_values
 from callbacks import execute_action_and_dismiss_dialog
 from constants import SHOWN_ACTIONS_DATA_COLUMNS, ERROR_CODE_TO_DETAILS
-from backend import scale_point_wrt_current_values
 
 
 def get_data_row(ticket):
@@ -122,7 +123,7 @@ def place_order(reason, direction):
 def modify_trade_data(reason, ticket):
     display_data = get_data_row(ticket)
 
-    if display_data is None:   #Shouldn't ever happen for closed trades
+    if display_data is None: #Shouldn't ever happen for closed trades
         st.header('Unable to find this trade\'s data', text_alignment = 'center')
         st.subheader('')
         mid_column = st.columns(3)[1]
@@ -196,28 +197,5 @@ def bare_text(reason, error_code = None):
 
 
 
-
-
-
-
-
-
-
-
-
-def fake():
-    if False:
-        @st.dialog(ALERT_REASON_TEXT[self.reason], width = 'medium', on_dismiss = set_dialog_closed)
-        def notification_dialog(reason):
-            st.session_state['dialog_open'] = True
-            display_data = data.drop('source_object', errors = 'ignore')   #Object can't be converted by st.dataframe
-            display_data = display_data.to_frame().T   #Cast the series to single colum df, take its transpose
-            
-            st.dataframe(display_data, 
-                         hide_index = True, 
-                         column_order = SHOWN_ALERTS_DATA_COLUMNS[reason], 
-                         placeholder = '-')
-
-        notification_dialog(self.reason)
 
 

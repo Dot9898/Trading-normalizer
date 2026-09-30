@@ -1,16 +1,17 @@
 
 
 import streamlit as st
-from backend import init_session_state, init_session_state_functions, initialize_MetaTrader
-from constants import SESSION_STATE_DEFAULTS, LABEL_SPACING
-import widgets
-from callbacks import reload_table, set_normalization_base, save_old_SLTP_then_update, set_closed_trades_history_visibility, is_friday
-from format_functions import add_vertical_spacing
-from trades_data import load_trades_data, get_last_backup_time
-from alerts import load_alerts
-from settings import load_settings
-from graph import Layers
 
+import widgets
+from alerts import load_alerts
+from backend import init_session_state, init_session_state_functions, initialize_MetaTrader
+from callbacks import (set_normalization_base, save_old_SLTP_then_update, 
+                       set_closed_trades_history_visibility, is_friday)
+from constants import SESSION_STATE_DEFAULTS, LABEL_SPACING
+from format_functions import add_vertical_spacing
+from graph import Layers
+from settings import load_settings
+from trades_data import load_trades_data, get_last_backup_time
 
 SESSION_STATE_DEFAULT_FUNCTIONS = {'mt5_initialized': {'function': initialize_MetaTrader, 
                                                        'assign': True, 
@@ -138,64 +139,5 @@ if st.session_state['first_run']:
     st.rerun()
 
 
-
-
-
-#---------------------------------------------------------------------------------------------
-
-
-
-
-
-
-st.write('')
-st.write('')
-st.write('test')
-st.write(f'dialog open {st.session_state['dialog_open']}')
-
-st.write(f"Streamlit version: {st.__version__}")
-st.write(st.session_state['alerts'])
-
-import MetaTrader5 as mt5
-from order_execution import change_SLTP_open, market_order, close_position, delete_pending_order, change_price_and_SLTP_pending, limit_or_stop_order
-from get_live_data import get_current_server_time
-from trades_data import update_all_trades_data
-def lmocallback():
-    #st.session_state['order_return'] = market_order('BTCUSD', 0.01, 'buy', TP = 79000)
-    #st.session_state['order_return'] = change_SLTP_open(304969852, TP = 80000)
-    #st.session_state['order_return'] = limit_or_stop_order('BTCUSD', 0.01, 'buy', 5000, TP = 200000)
-    #st.session_state['order_return'] = change_price_and_SLTP_pending(304970240, execution_price = 4000, TP = 30000)
-    #st.session_state['order_return'] = delete_pending_order(304969813)
-    #st.session_state['order_return'] = close_position(325121823)
-    pass
-#mt5.positions_get(ticket = ticket)
-
-st.button('reload table', 
-          on_click = reload_table)
-
-from graph import update_lines_data
-st.button('update closed trades lines history', 
-          on_click = update_lines_data('closed_trades'))
-
-if 'order_return' in st.session_state:
-    st.write(st.session_state['order_return'])
-
-current_time = get_current_server_time()
-ord = mt5.orders_get()
-pos = mt5.positions_get()
-hord = mt5.history_orders_get(current_time - 120, current_time)
-hdls = mt5.history_deals_get(current_time - 120, current_time)
-st.write('orders')
-for i in ord:
-    st.write(i)
-st.write('positions')
-for i in pos:
-    st.write(i)
-st.write('orders history')
-for i in hord:
-    st.write(i)
-st.write('deals history')
-for i in hdls:
-    st.write(i)
 
 

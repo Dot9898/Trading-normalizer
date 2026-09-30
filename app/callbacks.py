@@ -1,15 +1,17 @@
 
 
 from datetime import datetime
-import streamlit as st
+
 import MetaTrader5 as mt5
+import streamlit as st
+
+import backend
 import constants
-import risk_calculation
 import order_execution
-from backend import scale_point_wrt_current_values, normalize_point_wrt_current_price, unscale_point_wrt_current_values, get_usable_price_level, get_usable_lotsize, get_used_ppb_and_margin_req
-from trades_data import edit_trade_data
+import risk_calculation
 from alerts import Alert
 from graph import update_lines_data
+from trades_data import edit_trade_data
 
 
 def set_session_state(key, value):
@@ -130,8 +132,8 @@ def update_entry():
     st.session_state['entry'] = entry
 
 def update_SLTP():
-    st.session_state['SL'] = scale_point_wrt_current_values(st.session_state['old_SL_abs'], rounded = True)
-    st.session_state['TP'] = scale_point_wrt_current_values(st.session_state['old_TP_abs'], rounded = True)
+    st.session_state['SL'] = backend.scale_point_wrt_current_values(st.session_state['old_SL_abs'], rounded = True)
+    st.session_state['TP'] = backend.scale_point_wrt_current_values(st.session_state['old_TP_abs'], rounded = True)
     update_risk()
     st.session_state['update_SLTP'] = False
 
@@ -144,15 +146,16 @@ def save_old_SLTP_then_update(reset):
         SL_abs = bid * (1 + default_SL_deviation / 100)
         TP_abs = bid * (1 + default_TP_deviation / 100)
     else:
-        SL_abs = unscale_point_wrt_current_values(st.session_state['SL'])
-        TP_abs = unscale_point_wrt_current_values(st.session_state['TP'])
+        SL_abs = backend.unscale_point_wrt_current_values(st.session_state['SL'])
+        TP_abs = backend.unscale_point_wrt_current_values(st.session_state['TP'])
     st.session_state['old_SL_abs'] = SL_abs
     st.session_state['old_TP_abs'] = TP_abs
     st.session_state['update_SLTP'] = True
 
 def update_ppb():
     displayed_tp, displayed_sl = st.session_state['TP'], st.session_state['SL']
-    tp, sl = normalize_point_wrt_current_price(displayed_tp), normalize_point_wrt_current_price(displayed_sl)
+    tp = backend.normalize_point_wrt_current_price(displayed_tp)
+    sl = backend.normalize_point_wrt_current_price(displayed_sl)
     max_loss = st.session_state['maxloss']
     risk, reward = st.session_state['risk'], st.session_state['reward']
     if tp is None or sl is None or risk == 0 or reward == 0:
@@ -163,7 +166,7 @@ def update_ppb():
 
     st.session_state['ppb'] = ppb
 
-def update_pppt(): #Always used right after update_ppb
+def update_pppt():   #Always used right after update_ppb
     ppb = st.session_state['ppb']
     current_price = st.session_state['bars_data'].current_bid
     if ppb == 0 or current_price in [0, None]:
@@ -173,7 +176,7 @@ def update_pppt(): #Always used right after update_ppb
     st.session_state['pppt'] = pppt
 
 def update_max_ppb():
-    pending_and_open_data = get_used_ppb_and_margin_req(include_pending = True)
+    pending_and_open_data = backend.get_used_ppb_and_margin_req(include_pending = True)
     symbol = st.session_state['selected_symbol']
     margin_req = constants.SYMBOL_DATA.get(symbol, constants.SYMBOL_DATA['defaults'])['margin_req']
     if margin_req in [0, None]:
@@ -185,11 +188,11 @@ def update_max_ppb():
     available = risk_calculation.get_available_fraction_of_account(pending_and_open_data)
     st.session_state['available_fraction_of_account'] = available
 
-def update_lotsize(): #Always used right after update_ppb
+def update_lotsize():   #Always used right after update_ppb
     entry = st.session_state['entry']
-    st.session_state['lotsize'] = get_usable_lotsize(execution_price_abs = entry)
+    st.session_state['lotsize'] = backend.get_usable_lotsize(execution_price_abs = entry)
 
-def update_max_lotsize(): #Always used right after update_max_ppb
+def update_max_lotsize():   #Always used right after update_max_ppb
     current_price = st.session_state['bars_data'].current_bid
     equity = st.session_state['bars_data'].current_account_info.equity
     max_ppb = st.session_state['max_ppb']
@@ -234,7 +237,7 @@ def set_alert():
     price = st.session_state['alert_price']
     bid = st.session_state['bars_data'].current_bid
     more_or_less = 'more' if bid <= price else 'less'
-    absolute_price = unscale_point_wrt_current_values(price)
+    absolute_price = backend.unscale_point_wrt_current_values(price)
     alert = Alert('manual', symbol = symbol, absolute_price = absolute_price, more_or_less = more_or_less)
     st.session_state['alerts'].add(alert)
     reload_table()
@@ -245,15 +248,15 @@ def set_conditional_trade(direction):
     trigger_price = st.session_state['alert_price']
     bid = st.session_state['bars_data'].current_bid
     more_or_less = 'more' if bid <= trigger_price else 'less'
-    trigger_price_abs = unscale_point_wrt_current_values(trigger_price)
-    lots = get_usable_lotsize(trigger_price_abs)
+    trigger_price_abs = backend.unscale_point_wrt_current_values(trigger_price)
+    lots = backend.get_usable_lotsize(trigger_price_abs)
     
     execution_price = st.session_state['entry']
-    execution_price_abs = get_usable_price_level(execution_price)
+    execution_price_abs = backend.get_usable_price_level(execution_price)
     SL = st.session_state['SL']
-    SL_abs =  get_usable_price_level(SL)
+    SL_abs = backend.get_usable_price_level(SL)
     TP = st.session_state['TP']
-    TP_abs = get_usable_price_level(TP)
+    TP_abs = backend.get_usable_price_level(TP)
 
     if direction == 'buy':
         order_type = 'stop' if execution_price_abs > trigger_price_abs else 'limit'
@@ -351,34 +354,34 @@ def execute_action_and_dismiss_dialog(reason, direction = None, ticket = None):
 
     if reason == 'open':
         symbol = st.session_state['selected_symbol']
-        lots = get_usable_lotsize(execution_price_abs = 'current')
+        lots = backend.get_usable_lotsize(execution_price_abs = 'current')
         if lots == 0:
             result = 'null_lotsize'
         else:
-            SL = get_usable_price_level(st.session_state['SL'])
-            TP = get_usable_price_level(st.session_state['TP'])
+            SL = backend.get_usable_price_level(st.session_state['SL'])
+            TP = backend.get_usable_price_level(st.session_state['TP'])
             result = order_execution.market_order(symbol, lots, direction, SL, TP)
 
     if reason == 'set':
         symbol = st.session_state['selected_symbol']
-        entry_abs = get_usable_price_level(st.session_state['entry'])
-        lots = get_usable_lotsize(execution_price_abs = entry_abs)
+        entry_abs = backend.get_usable_price_level(st.session_state['entry'])
+        lots = backend.get_usable_lotsize(execution_price_abs = entry_abs)
         if lots == 0:
             result = 'null_lotsize'
         else:
-            SL = get_usable_price_level(st.session_state['SL'])
-            TP = get_usable_price_level(st.session_state['TP'])
+            SL = backend.get_usable_price_level(st.session_state['SL'])
+            TP = backend.get_usable_price_level(st.session_state['TP'])
             result = order_execution.limit_or_stop_order(symbol, lots, direction, entry_abs, SL, TP)
 
     if reason == 'edit':
-        new_SL = get_usable_price_level(st.session_state['SL'])
-        new_TP = get_usable_price_level(st.session_state['TP'])
+        new_SL = backend.get_usable_price_level(st.session_state['SL'])
+        new_TP = backend.get_usable_price_level(st.session_state['TP'])
         result = order_execution.change_SLTP_open(ticket, new_SL, new_TP)
 
     if reason == 'modify':
-        new_SL = get_usable_price_level(st.session_state['SL'])
-        new_TP = get_usable_price_level(st.session_state['TP'])
-        new_entry = get_usable_price_level(st.session_state['entry'])
+        new_SL = backend.get_usable_price_level(st.session_state['SL'])
+        new_TP = backend.get_usable_price_level(st.session_state['TP'])
+        new_entry = backend.get_usable_price_level(st.session_state['entry'])
         result = order_execution.change_price_and_SLTP_pending(ticket, new_entry, new_SL, new_TP)
 
     if check_execution:

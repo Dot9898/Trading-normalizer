@@ -1,14 +1,15 @@
 
 
-import streamlit as st
-import pandas as pd
 import MetaTrader5 as mt5
-from constants import WINDOW_WHEN_TRADE_IS_CONSIDERED_RECENT
-from backend import scale_point, unscale_point_wrt_current_values
-from format_functions import add_sign, capitalize_first, format_timestamp
+import pandas as pd
+import streamlit as st
+
 from alerts import update_open_and_close_alerts
-from trades_data import update_all_trades_data, update_recent_realized_PL_mult
+from backend import scale_point, unscale_point_wrt_current_values
+from constants import WINDOW_WHEN_TRADE_IS_CONSIDERED_RECENT
+from format_functions import add_sign, capitalize_first, format_timestamp
 from graph import update_lines_data
+from trades_data import update_all_trades_data, update_recent_realized_PL_mult
 
 
 def get_RR_string(price, SL, TP):
@@ -193,24 +194,10 @@ def update_alerts_data_table(table):
             table.at[row.Index, 'Progress'] = pd.NA
 
         continue
-        if row.Status == 'Conditional trade':
-            conditional_trade = row.source_object
-            direction = conditional_trade.conditional_trade_data['direction']
-            order_type = conditional_trade.conditional_trade_data['order_type']
-            operation = f'Set {direction} {order_type} {conditional_trade.symbol}'
-            
-            if bars.data_scale == 'normalized' and bars.symbol == conditional_trade.symbol:
-                execution_price_abs = conditional_trade.conditional_trade_data['execution_price']
-                execution_price_bp = scale_point(execution_price_abs, 'normalized', bars.normalization_base, conditional_trade.symbol, rounded = True)
-                #operation = f'{operation} at {execution_price_bp}'   #show execution prices? and with pending orders?
-                table.at[row.Index, 'Operation'] = operation
-            else:
-                table.at[row.Index, 'Operation'] = operation
-
 
 def update_data_table():
 
-    if st.session_state['update_data_table']:   #Full update
+    if st.session_state['update_data_table']: #Full update
         st.session_state['update_data_table'] = False
         update_all_trades_data(data_source = 'local')
         update_recent_realized_PL_mult(WINDOW_WHEN_TRADE_IS_CONSIDERED_RECENT)

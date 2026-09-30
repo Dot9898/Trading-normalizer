@@ -1,7 +1,9 @@
 
 
-import streamlit as st
 from datetime import datetime, timezone
+
+import streamlit as st
+
 from backend import floor_with_step
 from constants import TIMEZONES, DATA_TABLE_DATE_FORMAT
 from get_live_data import get_actual_timestamp
@@ -18,7 +20,7 @@ def RR_format(rr):
         return('Custom')
     else:
         risk, reward = rr
-        return(f'{risk}:{reward}') #({round(risk / (risk + reward), 2)})')
+        return(f'{risk}:{reward}')
 
 def add_sign(number, percent = False):
     if number > 0:

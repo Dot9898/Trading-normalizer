@@ -1,12 +1,13 @@
 
 
+import altair as alt
 import pandas as pd
 import streamlit as st
-import altair as alt
-from constants import CHART_STYLE, POLLING_INTERVAL, SECONDS
+
 from backend import scale_point_wrt_current_values
-from get_live_data import Bars, get_remaining_candle_time
+from constants import CHART_STYLE, POLLING_INTERVAL, SECONDS
 from format_functions import timezone_format
+from get_live_data import Bars, get_remaining_candle_time
 
 
 class Layers:   #Can be made better. It's enough for this use case.
@@ -28,7 +29,7 @@ class Layers:   #Can be made better. It's enough for this use case.
         self.redundant_update = False
 
         self.show_SL_TP_lines = True
-        self.show_closed_trades = False   #Overwritten in first_run
+        self.show_closed_trades = False #Overwritten in first_run
 
         self.load_lines_data()
         self.set_updates_to_false()
