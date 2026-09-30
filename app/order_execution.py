@@ -185,7 +185,10 @@ def close_position(ticket):
     return(result)
 
 
-
+def delete_all_pending_orders():
+    
+    for order in mt5.orders_get():
+        delete_pending_order(order.ticket)
 
 
 

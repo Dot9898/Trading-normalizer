@@ -3,10 +3,11 @@
 import streamlit as st
 import pandas as pd
 import MetaTrader5 as mt5
+from constants import WINDOW_WHEN_TRADE_IS_CONSIDERED_RECENT
 from backend import scale_point, unscale_point_wrt_current_values
 from format_functions import add_sign, capitalize_first, format_timestamp
 from alerts import update_open_and_close_alerts
-from trades_data import update_all_trades_data
+from trades_data import update_all_trades_data, update_recent_realized_PL_mult
 from graph import update_lines_data
 
 
@@ -53,6 +54,7 @@ def get_progress_string(row):   #Format leading zeroes here
         conditional_trade = row.source_object
         trigger_price_bp = scale_point(conditional_trade.absolute_price, 'normalized', bars.normalization_base, conditional_trade.symbol, rounded = True)
         return(f'{current_price} / {trigger_price_bp}')
+
 
 def generate_trades_data_table(timezone, max_closed_trades_shown, show_order_types):
     trades_data = st.session_state['trades_data']
@@ -211,6 +213,7 @@ def update_data_table():
     if st.session_state['update_data_table']:   #Full update
         st.session_state['update_data_table'] = False
         update_all_trades_data(data_source = 'local')
+        update_recent_realized_PL_mult(WINDOW_WHEN_TRADE_IS_CONSIDERED_RECENT)
         update_open_and_close_alerts()
         timezone = st.session_state['selected_timezone']
         max_closed_trades = st.session_state['settings']['max_closed_trades_shown']

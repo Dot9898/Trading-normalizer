@@ -190,6 +190,8 @@ def bare_text(reason, error_code = None):
         st.header('The request has been sent to the server, but it hasn\'t been executed due to the following error:', text_alignment = 'center')
         st.subheader(ERROR_CODE_TO_DETAILS[error_code]['name'])
         st.write(ERROR_CODE_TO_DETAILS[error_code]['description'])
+    if reason == 'backup':
+        st.header('Backup trades data!', text_alignment = 'center')
     st.subheader('')
 
 

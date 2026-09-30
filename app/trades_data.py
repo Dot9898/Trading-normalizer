@@ -3,10 +3,12 @@
 import pandas as pd
 import streamlit as st
 import MetaTrader5 as mt5
-from constants import DATA_PATH, TRADE_DATA_COLUMNS_TO_TYPES, SYMBOL_DATA, OUT_DEAL_REASONS, WINDOW_WHEN_DATA_IS_CONSIDERED_LOCAL
+from constants import DATA_PATH, TRADE_DATA_COLUMNS_TO_TYPES, SYMBOL_DATA, OUT_DEAL_REASONS, WINDOW_WHEN_DATA_IS_CONSIDERED_LOCAL, BACKUP_FILES_NAME_FORMAT, BACKUP_FREQUENCY
 from backend import scale_point, is_equivalent
 from get_live_data import get_current_server_time, get_actual_timestamp
+from datetime import datetime
 from time import time
+from math import prod
 
 
 def load_trades_data():
@@ -23,12 +25,22 @@ def load_trades_data():
     st.session_state['trades_data'] = trades_data
     update_all_trades_data(data_source = 'server')
 
+def backup_trades_data_to_file():
+    dt_string = datetime.fromtimestamp(time()).strftime(BACKUP_FILES_NAME_FORMAT)
+    backup_data_path = DATA_PATH / 'backups' / f'trades_data_backup_{dt_string}.csv'
+
+    st.session_state['trades_data'].to_csv(backup_data_path, index = True)
+    register_backup_time()
+
 def save_trades_data_to_file():
     trades_data_path = DATA_PATH / 'trades_data.csv'
     tmp_path = DATA_PATH / 'trades_data.csv.tmp'
 
     st.session_state['trades_data'].to_csv(tmp_path, index = True)
     tmp_path.replace(trades_data_path)
+
+    if time() - st.session_state['last_backup_timestamp'] > BACKUP_FREQUENCY:
+        backup_trades_data_to_file()
 
 def edit_trade_data(ticket, data_to_edit: dict | None = None, delete = False):
 
@@ -513,6 +525,20 @@ def get_trade_data_to_edit(ticket, data_source, operation_type): #Need to fix th
     return(data)
 
 
+def get_last_backup_time():
+    last_backup_time_path = DATA_PATH / 'backups' / 'last_backup_time.txt'
+    if last_backup_time_path.exists():
+        last_backup_time = int(last_backup_time_path.read_text())
+    else:
+        last_backup_time = 0
+    return(last_backup_time)
+
+def register_backup_time():
+    last_backup_time_path = DATA_PATH / 'backups' / 'last_backup_time.txt'
+    backup_time = int(time())
+    st.session_state['last_backup_timestamp'] = backup_time
+    last_backup_time_path.write_text(str(backup_time))
+
 def get_last_update_server_time():
     last_update_server_time_path = DATA_PATH / 'last_update_server_time.txt'
     if last_update_server_time_path.exists():
@@ -542,6 +568,7 @@ def sort_trades_data():
 
     st.session_state['trades_data'] = pd.concat([open_trades, pending_trades, closed_trades])
 
+
 def update_ticket_data(ticket, data_source, category):
     
     if category == 'deleted':
@@ -561,7 +588,28 @@ def update_all_trades_data(data_source, from_server_time = None):
     register_update_time()
 
 
+def update_recent_realized_PL_mult(max_elapsed_time):
+    trades_data = st.session_state['trades_data']
+    PL_equity_column_number = trades_data.columns.get_loc('P/L_acc_percent_(equity)') + 1
+    PL_estimate_column_number = trades_data.columns.get_loc('P/L_acc_percent_(estimate)') + 1
+    current_timestamp = time()
 
+    recent_PL_mults = []
+    for trade in trades_data.itertuples():
+        if not trade.status == 'closed':
+            continue
+        if current_timestamp - trade.close_timestamp >= max_elapsed_time:
+            continue
+
+        PL_percent = (trade[PL_equity_column_number] if not pd.isna(trade[PL_equity_column_number]) 
+                      else trade[PL_estimate_column_number])
+        PL_mult = 1 + PL_percent/100
+        recent_PL_mults.append(PL_mult)
+
+    recent_PL = prod(recent_PL_mults)
+    recent_PL_percent = round((recent_PL - 1) * 100, 1)
+    st.session_state['recent_PL_mult'] = recent_PL
+    st.session_state['recent_PL_percent'] = recent_PL_percent
 
 
 

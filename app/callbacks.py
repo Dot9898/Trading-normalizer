@@ -31,6 +31,10 @@ def reload_graph_and_table():
     reload_graph()
     reload_table()
 
+def is_friday():
+    local_time = datetime.now()
+    return(local_time.weekday() == 4)
+
 def is_0930_to_1800():
     ny_time = datetime.now(tz = constants.TIMEZONES['New York'])
     if (10 <= ny_time.hour <= 17) or ny_time.hour == 9 and ny_time.minute > 30:

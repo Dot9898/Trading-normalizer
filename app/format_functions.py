@@ -60,8 +60,8 @@ def capitalize_first(string):
 def add_vertical_spacing(pixels):
     st.markdown(f"<div style='height: {pixels}px;'></div>", unsafe_allow_html = True)
 
-def small_linebreak_caption(first_line, second_line, alignment = 'left'):
-    st.caption(f'{first_line}<br>{second_line}', 
+def small_linebreak_caption(lines, alignment = 'left'):
+    st.caption('<br>'.join(lines), 
                unsafe_allow_html = True, 
                text_alignment = alignment)
 

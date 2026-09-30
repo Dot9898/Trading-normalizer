@@ -7,7 +7,7 @@ import format_functions
 import callbacks
 from numpy import log10
 from time import time
-from format_functions import as_percent, round_balance, small_linebreak_caption
+from format_functions import as_percent, add_sign, round_balance, small_linebreak_caption
 from trades_data import update_all_trades_data
 from alerts import alert_check, notify_executions_in_serie
 from data_table import update_data_table
@@ -16,6 +16,7 @@ from get_live_data import Graph_range
 from graph import generate_graph_in_fragment, update_lines_data
 from settings import open_settings
 from backend import init_session_state
+from order_execution import delete_all_pending_orders
 
 
 def timezone_dropdown():
@@ -293,7 +294,7 @@ def symbol_dropdown():
                 args = [True, True, False])
 
 def show_SL_TP_lines_button():
-    label = 'Hide' if st.session_state['show_SLTP_lines'] else 'Show'
+    label = 'Hide' if st.session_state['graph_layers'].show_SL_TP_lines else 'Show'
     st.button(label, 
               key = 'SL_TP_visibility_button', 
               on_click = callbacks.switch_SL_TP_visibility, 
@@ -354,6 +355,8 @@ def entry_display():
 
 def is_order_button_disabled(direction):
     if st.session_state['first_run']:
+        return(True)
+    if st.session_state['disable_trading']:
         return(True)
     if st.session_state['selected_scale'] == 'logarithmic':
         return(True)
@@ -527,16 +530,18 @@ def alert_and_account_checkboxes():
 
 def account_data_info():
     available_percent = as_percent(st.session_state['available_fraction_of_account'])
+    recent_PL_percent = add_sign(st.session_state['recent_PL_percent'], percent = True)
     account_info = st.session_state['bars_data'].current_account_info
     rounded_balance = round_balance(account_info.balance)
-
+    
     margin_text = f'Margin available: {available_percent}'
+    PL_text = f'Recent P/L: {recent_PL_percent}'
     balance_text = f'Balance: ${rounded_balance}'
 
     if st.session_state['settings']['show_account_balance']:
-        small_linebreak_caption(margin_text, balance_text, alignment = 'right')
+        small_linebreak_caption([margin_text, PL_text, balance_text], alignment = 'right')
     else:
-        st.caption(margin_text, text_alignment = 'right')
+        small_linebreak_caption([margin_text, PL_text], alignment = 'right')
 
 def alert_price_input():
     disabled = st.session_state['selected_scale'] == 'logarithmic'
@@ -594,8 +599,15 @@ def alerts_and_conditional_trades_widgets():
 
 @st.fragment(run_every = constants.TRADES_UPDATE_INTERVAL)
 def update_trades_data():
+
+    if st.session_state['recent_PL_percent'] <= constants.RECENT_ACCOUNT_PERCENT_PL_LIMIT:
+        st.session_state['disable_trading'] = True
+
     if time() - st.session_state['last_update_timestamp'] >= constants.TRADES_UPDATE_INTERVAL - 0.5:
         update_all_trades_data(data_source = 'local')
+        
+        if st.session_state['disable_trading']:
+            delete_all_pending_orders()
 
 @st.fragment(run_every = constants.POLLING_INTERVAL)
 def data_table():
@@ -639,13 +651,11 @@ def open_dialog():
     if reason in ['edit', 'modify', 'erase']:
         dialog_boxes.modify_trade_data(reason, data['ticket'])
     
-    if reason in ['success', 'not_found', 'null_lotsize']:
+    if reason in ['success', 'not_found', 'null_lotsize', 'backup']:
         dialog_boxes.bare_text(reason)
     
     if reason == 'error':
         dialog_boxes.bare_text(reason, data['error_code'])
-
-
 
 
 

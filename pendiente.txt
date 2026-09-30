@@ -3,12 +3,6 @@ bots + manage el otro
 upd tr c cl
 
 
-
-
-show last 16h PL percent in account data
-trade limit if -30% in last 16h (in data table even if hidden). disable B/S buttons.
-add backup data dialog in startup if monday
-
 file cleanup + imports
 git ignore
 cambiar path mt5

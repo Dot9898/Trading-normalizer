@@ -6,11 +6,17 @@ from zoneinfo import ZoneInfo
 import MetaTrader5 as mt5
 
 
+MINUTE = 60
+HOUR = MINUTE * 60
+
 #Parameters
 POLLING_INTERVAL = 1.0
 TRADES_UPDATE_INTERVAL = 5.0
+BACKUP_FREQUENCY = HOUR * 6
+RECENT_ACCOUNT_PERCENT_PL_LIMIT = -30
+WINDOW_WHEN_TRADE_IS_CONSIDERED_RECENT = HOUR * 16
 WINDOW_WHEN_DATA_IS_CONSIDERED_LOCAL = 30
-WINDOW_WHEN_MARKET_IS_CONSIDERED_OPEN = 300
+WINDOW_WHEN_MARKET_IS_CONSIDERED_OPEN = MINUTE * 5
 
 #Dynamic defaults
 SHOWN_SYMBOLS = ['US500', 'BTCUSD']
@@ -36,19 +42,22 @@ SYMBOL_DATA = {'US500': {'ideal_ppb': 0.75,
 RR = [(1, 1), (2, 3), (1, 2), (1, 3), 'custom']
 SHOWN_TIMEZONES = ['Chile', 'New York', 'server', 'France']
 
+#Fixed defaults
 OBJECTS_DEFAULTS = {'bars_data': None, 
-                    'reload_Bars': True, 
                     'data_table': None, 
-                    'update_data_table': True, 
                     'alerts_pending_notification': [], 
                     'orders_to_delete': set(), 
                     'dialog_data': None, 
-                    'last_update_timestamp': 0}
+                    'last_update_timestamp': 0, 
+                    'recent_PL_mult': 1, 
+                    'recent_PL_percent': 100}
 FLAGS_DEFAULTS = {'first_run': True, 
+                  'reload_Bars': True, 
+                  'update_data_table': True, 
+                  'disable_trading': False, 
                   'update_SLTP': False, 
                   'update_maxes': True, 
                   'update_trades_lines': False, 
-                  'show_SLTP_lines': True,
                   'dialog_open': False, 
                   'update_custom_y_range_checkbox': False}
 WIDGETS_DEFAULTS = {'selected_timezone': 'New York', 
@@ -69,8 +78,6 @@ GRAPH_NAVIGATION_DEFAULTS = {'first_bar': 'now',
                              'extra_shift': 0, 
                              'extra_shift_unit': 'hours'}
 SESSION_STATE_DEFAULTS = OBJECTS_DEFAULTS | FLAGS_DEFAULTS | WIDGETS_DEFAULTS | GRAPH_NAVIGATION_DEFAULTS
-
-#Fixed defaults
 DEFAULT_SETTINGS = {'show_hidden_trades': False, 
                     'show_account_balance': False, 
                     'show_order_types': True, 
@@ -266,6 +273,7 @@ CHART_STYLE = {'colors': CHART_COLORS,
                'others': CHART_OTHER_VALUES}
 
 #Formatted labels
+BACKUP_FILES_NAME_FORMAT = '%Y-%m-%d_%H-%M-%S'
 TIMEFRAME_LABEL = {mt5.TIMEFRAME_M1: '1 Minute', 
                    mt5.TIMEFRAME_M5: '5 Minutes', 
                    mt5.TIMEFRAME_M15: '15 Minutes', 
@@ -391,18 +399,17 @@ ERROR_CODE_TO_DETAILS = {None: {'name': 'UNKNOWN',
 }
 
 #Time
-HOUR = 3600
-DAY = 3600 * 24
-WEEK = 3600 * 24 * 7
-MONTH = 3600 * 24 * 30
-SECONDS = {mt5.TIMEFRAME_M1: 60, 
-           mt5.TIMEFRAME_M5: 300, 
-           mt5.TIMEFRAME_M15: 900, 
-           mt5.TIMEFRAME_H1: 3600, 
-           mt5.TIMEFRAME_H4: 3600 * 4, 
-           mt5.TIMEFRAME_D1: 3600 * 24, 
-           mt5.TIMEFRAME_W1: 3600 * 24 * 7, 
-           mt5.TIMEFRAME_MN1: 3600 * 24 * 30}
+DAY = HOUR * 24
+WEEK = DAY * 7
+MONTH = DAY * 30
+SECONDS = {mt5.TIMEFRAME_M1: MINUTE, 
+           mt5.TIMEFRAME_M5: MINUTE * 5, 
+           mt5.TIMEFRAME_M15: MINUTE * 15, 
+           mt5.TIMEFRAME_H1: HOUR, 
+           mt5.TIMEFRAME_H4: HOUR * 4, 
+           mt5.TIMEFRAME_D1: DAY, 
+           mt5.TIMEFRAME_W1: WEEK, 
+           mt5.TIMEFRAME_MN1: MONTH}
 SHIFT_UNITS = ['bars', 'hours', 'days', 'weeks', 'months']
 OFFSET_SECONDS = {'hours': HOUR, 
                   'days': DAY, 

@@ -4,9 +4,9 @@ import streamlit as st
 from backend import init_session_state, init_session_state_functions, initialize_MetaTrader
 from constants import SESSION_STATE_DEFAULTS, LABEL_SPACING
 import widgets
-from callbacks import reload_table, set_normalization_base, save_old_SLTP_then_update, set_closed_trades_history_visibility
+from callbacks import reload_table, set_normalization_base, save_old_SLTP_then_update, set_closed_trades_history_visibility, is_friday
 from format_functions import add_vertical_spacing
-from trades_data import load_trades_data
+from trades_data import load_trades_data, get_last_backup_time
 from alerts import load_alerts
 from settings import load_settings
 from graph import Layers
@@ -17,6 +17,9 @@ SESSION_STATE_DEFAULT_FUNCTIONS = {'mt5_initialized': {'function': initialize_Me
                                                        'value': 'return_value'}, 
                                    'settings': {'function': load_settings, 
                                                 'assign': False}, 
+                                   'last_backup_timestamp': {'function': get_last_backup_time, 
+                                                             'assign': True, 
+                                                             'value': 'return_value'}, 
                                    'trades_data': {'function': load_trades_data, 
                                                    'assign': False}, 
                                    'alerts': {'function': load_alerts, 
@@ -129,6 +132,8 @@ if st.session_state['dialog_data'] is not None:
 if st.session_state['first_run']:
     save_old_SLTP_then_update(reset = True)
     set_closed_trades_history_visibility()
+    if is_friday():
+        st.session_state['dialog_data'] = {'reason': 'backup'}
     st.session_state['first_run'] = False
     st.rerun()
 
