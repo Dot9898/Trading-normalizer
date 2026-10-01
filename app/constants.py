@@ -17,6 +17,7 @@ RECENT_ACCOUNT_PERCENT_PL_LIMIT = -30
 WINDOW_WHEN_TRADE_IS_CONSIDERED_RECENT = HOUR * 16
 WINDOW_WHEN_DATA_IS_CONSIDERED_LOCAL = 30
 WINDOW_WHEN_MARKET_IS_CONSIDERED_OPEN = MINUTE * 5
+DELAY_BEFORE_NEW_SESSION = 1 #Hours
 
 #Dynamic defaults
 SHOWN_SYMBOLS = ['US500', 'BTCUSD']
@@ -69,9 +70,8 @@ WIDGETS_DEFAULTS = {'selected_timezone': 'New York',
                     'risk': 0, 
                     'reward': 0, 
                     'alerts_checkbox': False}
-GRAPH_NAVIGATION_DEFAULTS = {'first_bar': 'now', 
-                             'last_bar': 'now', 
-                             'left_shift': -8, 
+GRAPH_NAVIGATION_DEFAULTS = {'last_bar': 'now', 
+                             'left_shift': 0, 
                              'left_shift_unit': 'hours', 
                              'right_shift': 0, 
                              'right_shift_unit': 'hours', 
@@ -105,12 +105,13 @@ INTERESTING_TIMES = ['now',
                      'New_York_week_start', 
                      'server_1:00', 
                      'server_week_1:00']
-ZOOM_FIXED_SETTINGS = {'first_bar': 'now', 
+ZOOM_FIXED_SETTINGS = {'first_bar': 'now', #Overwritten in callback
                        'last_bar': 'now', 
                        'right_shift': 0, 
                        'extra_shift': 0}
 ZOOM_VARIABLE_SETTINGS = {'selected_timeframe': {'hour': mt5.TIMEFRAME_M1, 
                                                 'now': mt5.TIMEFRAME_M5, 
+                                                'session': mt5.TIMEFRAME_M5, 
                                                 'day': mt5.TIMEFRAME_M5, 
                                                 'week': mt5.TIMEFRAME_H1, 
                                                 'month': mt5.TIMEFRAME_H1, 
@@ -118,6 +119,7 @@ ZOOM_VARIABLE_SETTINGS = {'selected_timeframe': {'hour': mt5.TIMEFRAME_M1,
 
                         'left_shift': {'hour': -1.5, 
                                     'now': -8, 
+                                    'session': 0, 
                                     'day': -1, 
                                     'week': -1, 
                                     'month': -1, 
@@ -125,6 +127,7 @@ ZOOM_VARIABLE_SETTINGS = {'selected_timeframe': {'hour': mt5.TIMEFRAME_M1,
 
                         'left_shift_unit': {'hour': 'hours', 
                                             'now': 'hours', 
+                                            'session': 'hours', 
                                             'day': 'days', 
                                             'week': 'weeks', 
                                             'month': 'months', 
@@ -132,6 +135,7 @@ ZOOM_VARIABLE_SETTINGS = {'selected_timeframe': {'hour': mt5.TIMEFRAME_M1,
 
                         'right_shift_unit': {'hour': 'hours', 
                                             'now': 'hours', 
+                                            'session': 'hours', 
                                             'day': 'days', 
                                             'week': 'weeks', 
                                             'month': 'months', 
@@ -139,6 +143,7 @@ ZOOM_VARIABLE_SETTINGS = {'selected_timeframe': {'hour': mt5.TIMEFRAME_M1,
                         
                         'extra_shift_unit': {'hour': 'bars', 
                                             'now': 'hours', 
+                                            'session': 'hours', 
                                             'day': 'hours', 
                                             'week': 'days', 
                                             'month': 'weeks', 
@@ -146,6 +151,7 @@ ZOOM_VARIABLE_SETTINGS = {'selected_timeframe': {'hour': mt5.TIMEFRAME_M1,
                         
                         'selected_normalization_base_name': {'hour': 'market_open', #Overwritten in callback
                                                             'now': 'market_open', #Overwritten in callback
+                                                            'session': 'market_open', #Overwritten in callback
                                                             'day': 'market_open', 
                                                             'week': 'first_bar', 
                                                             'month': 'first_bar', 
@@ -207,56 +213,93 @@ SHOWN_ALERTS_DATA_COLUMNS = {'manual': ['Time', 'Status', 'Operation', 'Progress
 SHOWN_ACTIONS_DATA_COLUMNS = {'modify': ['Status', 'Operation', 'Current entry', 'Current SL', 'Current TP'], 
                               'edit': ['Time', 'Status', 'Operation', 'Progress', 'P/L', 'Current SL', 'Current TP'], 
                               'erase': ['Time', 'Status', 'Operation', 'Progress', 'P/L', 'Close reason']}
-DATA_TABLE_HEIGHT = 452
+DATA_TABLE_HEIGHT = 420
 
-#Colors #make this a single constant (?)
-BLACK = '#1f1f1f'
-WHITE = '#E6E6E6'
-RED = '#FF4D4D'
-BLUE = '#3B82F6'
-GREEN = '#4CAF50'
+#Chart ###tinker pixels and values
 
-#Chart ###add green and red theme (or just different themes), tinker pixels and values
-CHART_PARAMETERS = {'?'} #
+#'#E6E6E6'
+#'#3B82F6'
+#'#4CAF50'
+#'#FF4D4D'
+#'#1f1f1f'
+
+#White	#E6E6E6
+#Blue	#4A90E2
+#Bright blue	#38BDF8
+#Dark blue	#315A8A
+#Green	#4CAF78
+#Dark green	#2F6B4F
+#Grayish green	#718F82
+#Yellow	#E5C454
+#Orange	#E8944A
+#Grayish orange	#A98268
+#Red	#D85C5C
+#Strong red	#FF4D4D
+#Dark red	#8F3838
+#Gray	#9A9AA0
+#Black	#1111117
 MAX_BARS_IN_GRAPH = 1000
+COLORS = {'white': '#E6E6E6', 
+          'blue_bright': '#2496E8', 
+          'blue': '#4A90E2', 
+          'blue_dark': '#315A8A', 
+          'green_gray': '#82958C', 
+          'green_dark': '#3A9186', 
+          'green': '#4CAF78', 
+          'yellow': '#E5C454', 
+          'orange': '#E8944A', 
+          'orange_gray': '#A89583', 
+          'red': '#D85C5C', 
+          'red_strong': '#E83D3D', 
+          'red_dark': '#8F3838', 
+          'gray': '#9A9AA0', 
+          'black': '#1f1f1f'}
+CHART_COLORS = {'candlesticks': {'fill_positive': COLORS['white'], 
+                                 'fill_negative': COLORS['black'], 
+                                 'stroke_positive': COLORS['white'], 
+                                 'stroke_negative': COLORS['white']}, 
 
-CHART_COLORS = {'candlesticks': {'fill_positive': WHITE, 
-                                 'fill_negative': BLACK, 
-                                 'stroke_positive': WHITE, 
-                                 'stroke_negative': WHITE}, 
-
-                'lines': {'bid': BLUE, 
-                          'ask': RED, 
-                          'SL': RED, 
-                          'TP': GREEN, 
-                          'entry': GREEN, 
-                          'alert_price': GREEN, 
-                          'open_SL': RED, 
-                          'open_TP': GREEN, 
-                          'pending_entry': GREEN, 
-                          'pending_SL': GREEN, 
-                          'pending_TP': GREEN, 
-                          'placed_alert': GREEN, 
-                          'conditonal_trade_trigger': GREEN, 
-                          'positive_trade': BLUE, 
-                          'negative_trade': RED}}
+                'lines': {'bid': COLORS['blue_dark'], 
+                          'ask': COLORS['red_dark'], 
+                          'SL': COLORS['orange_gray'], 
+                          'TP': COLORS['green_gray'], 
+                          'entry_buy': COLORS['blue'], 
+                          'entry_sell': COLORS['yellow'], 
+                          'alert_price': COLORS['green_dark'], 
+                          'open_SL': COLORS['orange'], 
+                          'open_TP': COLORS['green'], 
+                          'pending_entry_buy': COLORS['blue'], 
+                          'pending_entry_sell': COLORS['yellow'], 
+                          'pending_SL': COLORS['orange'], 
+                          'pending_TP': COLORS['green'], 
+                          'placed_alert': COLORS['green_dark'], 
+                          'conditional_trade_trigger': COLORS['green_dark'], 
+                          'positive_trade': COLORS['blue_bright'], 
+                          'negative_trade': COLORS['red_strong'], 
+                          'neutral_trade': COLORS['gray']}, 
+                
+                'labels': {'bid': COLORS['gray'], 
+                           'ask': COLORS['gray']}}
 CHART_OPACITY = {'lines': {'bid': 1.0, 
                            'ask': 1.0, 
                            'SL': 1.0, 
                            'TP': 1.0, 
-                           'entry': 0.8, 
-                           'alert_price': 1.0, #?
-                           'open_SL': 0.8, 
-                           'open_TP': 0.8, 
-                           'pending_entry': 0.6, 
+                           'entry_buy': 0.8, 
+                           'entry_sell': 0.8, 
+                           'alert_price': 0.8, 
+                           'open_SL': 1.0, 
+                           'open_TP': 1.0, 
+                           'pending_entry_buy': 0.6, 
+                           'pending_entry_sell': 0.6, 
                            'pending_SL': 0.6,  
                            'pending_TP': 0.6, 
                            'placed_alert': 1.0, 
-                           'conditonal_trade_trigger': 0.4, 
+                           'conditional_trade_trigger': 0.6, 
                            'positive_trade': 1.0, 
-                           'negative_trade': 1.0}}
-CHART_PIXELS = {'height': 550, 
-                'line_labels_font_size_big': 15, 
+                           'negative_trade': 1.0, 
+                           'neutral_trade': 1.0}}
+CHART_PIXELS = {'height': DATA_TABLE_HEIGHT + 98, 
+                'line_labels_font_size_big': 15.5, 
                 'line_labels_font_size': 13, 
                 'line_labels_dx': -4, 
                 'line_labels_dy': -3, 

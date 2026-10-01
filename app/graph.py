@@ -20,6 +20,7 @@ class Layers:   #Can be made better. It's enough for this use case.
         self.bid_line = alt.layer()
         self.ask_line = alt.layer()
         self.SL_TP_entry_alert_lines = alt.layer()
+        self.alert_line = alt.layer()
         self.trades_and_alerts_lines = alt.layer()
         self.closed_trades_segments = alt.layer()
 
@@ -36,17 +37,18 @@ class Layers:   #Can be made better. It's enough for this use case.
         
 
     def load_lines_data(self):
-        bid = pd.DataFrame(index = ['bid'], columns = ['line_type', 'price', 'label'])
-        ask = pd.DataFrame(index = ['ask'], columns = ['line_type', 'price', 'label'])
-        SL_TP_entry_alert = pd.DataFrame(index = ['SL', 'TP', 'entry', 'alert_price'], 
-                                    columns = ['line_type', 'price', 'label'])
-        trades_and_alerts_levels = pd.DataFrame(columns = ['line_type', 'price', 'label'])
-        closed_trades = pd.DataFrame(columns = ['line_type', 'open_price', 'close_price', 
-                                                'open_axis_label', 'close_axis_label', 'label'])
+        columns = ['line_type', 'price', 'label']
+        bid = pd.DataFrame(index = ['bid'], columns = columns)
+        ask = pd.DataFrame(index = ['ask'], columns = columns)
+        SL_TP_entry = pd.DataFrame(index = ['SL', 'TP', 'entry'], columns = columns)
+        alert = pd.DataFrame(index = ['alert_price'], columns = columns)
+        trades_and_alerts_levels = pd.DataFrame(columns = columns)
+        closed_trades = pd.DataFrame(columns = columns + ['open_axis_label', 'close_axis_label', 'label'])
 
         lines_data = {'bid': bid, 
                       'ask': ask, 
-                      'SL_TP_entry_alert': SL_TP_entry_alert, 
+                      'SL_TP_entry': SL_TP_entry, 
+                      'alert': alert, 
                       'trades_and_alerts_levels': trades_and_alerts_levels, 
                       'closed_trades': closed_trades}
 
@@ -56,6 +58,7 @@ class Layers:   #Can be made better. It's enough for this use case.
         self.update_pending = {'candlesticks': False, 
                                'bid_and_ask_lines': False, 
                                'SL_TP_lines': False, 
+                               'alert_line': False, 
                                'trades_and_alerts_lines': False, 
                                'closed_trades_lines': False}
 
@@ -79,27 +82,33 @@ def update_lines_data(category):
 
         layers.update_pending['bid_and_ask_lines'] = True
 
-    if category == 'SL_TP_entry_alert':
-        levels_data = lines_data['SL_TP_entry_alert']
+    if category == 'SL_TP_entry':
+        levels_data = lines_data['SL_TP_entry']
 
         SL = round(st.session_state['SL'], bars.shown_digits)
         TP = round(st.session_state['TP'], bars.shown_digits)
         entry = round(st.session_state['entry'], bars.shown_digits)
+        direction = 'buy' if TP >= SL else 'sell'
 
         levels_data.loc['SL'] = ['SL', SL, f'SL {SL}']
         levels_data.loc['TP'] = ['TP', TP, f'TP {TP}']
-        levels_data.loc['entry'] = ['entry', entry, f'Entry {entry}']
-        
+        levels_data.loc['entry'] = [f'entry_{direction}', entry, f'Entry {entry}']
+
+        layers.update_pending['SL_TP_lines'] = True
+
+    if category == 'alert':
+        alert_data = lines_data['alert']
+
         if st.session_state['alerts_checkbox']:
             if 'alert_price' in st.session_state:
                 alert_price = round(st.session_state['alert_price'], bars.shown_digits)
             else:
                 alert_price = bars.current_bid
-            levels_data.loc['alert_price'] = ['alert_price', alert_price, f'Set alert at {alert_price}']
+            alert_data.loc['alert_price'] = ['alert_price', alert_price, f'Set alert at {alert_price}']
         else:
-            levels_data.loc['alert_price'] = ['alert_price', None, '']
+            alert_data.loc['alert_price'] = ['alert_price', None, '']
 
-        layers.update_pending['SL_TP_lines'] = True
+        layers.update_pending['alert_line'] = True
 
     if category == 'trades_and_alerts_levels':
         data_table = st.session_state['data_table']
@@ -128,7 +137,7 @@ def update_lines_data(category):
                 ticket = alert.ticket
 
                 alert_price = scale_point_wrt_current_values(source.absolute_price, rounded = True)
-                table_levels_data[ticket] = ['placed_alert', alert_price, f'Alert {alert_price}']
+                table_levels_data[f'{ticket}'] = ['placed_alert', alert_price, f'Alert {alert_price}']
 
             if status == 'Pending':
                 trade = source
@@ -141,16 +150,17 @@ def update_lines_data(category):
                 entry = scale_point_wrt_current_values(trade.set_price, rounded = True)
                 table_levels_data[f'{ticket}_SL'] = ['pending_SL', SL, f'{direction} {order_type} SL {SL}']
                 table_levels_data[f'{ticket}_TP'] = ['pending_TP', TP, f'{direction} {order_type} TP {TP}']
-                table_levels_data[f'{ticket}_entry'] = ['pending_entry', entry, f'{direction} {order_type} {entry}']
+                table_levels_data[f'{ticket}_entry'] = [f'pending_entry_{trade.direction}', entry, f'{direction} {order_type} {entry}']
 
             if status == 'Conditional trade':
                 alert = source
                 ticket = alert.ticket
                 direction = alert.conditional_trade_data['direction']
-                order_type = alert.order_type
+                order_type = alert.conditional_trade_data['order_type']
 
                 trigger_price = scale_point_wrt_current_values(source.absolute_price, rounded = True)
-                table_levels_data[ticket] = ['placed_alert', trigger_price, f'Set {direction} {order_type} {trigger_price}']
+                table_levels_data[f'{ticket}'] = ['conditional_trade_trigger', trigger_price, 
+                                                  f'Set {direction} {order_type} {trigger_price}']
         
         lines_data['trades_and_alerts_levels'] = pd.DataFrame.from_dict(table_levels_data,
                                                                         columns = ['line_type', 'price', 'label'], 
@@ -183,13 +193,16 @@ def update_lines_data(category):
                 continue
 
             ticket = trade.Index
-            PL_percent = row[PL_column_number]
-            line_type = 'positive_trade' if PL_percent[0] == '+' else 'negative_trade'
+            PL_percent_string = row[PL_column_number]
+            PL_percent = float(PL_percent_string[:-1])
+            line_type = ('positive_trade' if PL_percent > 0 
+                         else 'negative_trade' if PL_percent < 0 
+                         else 'neutral_trade')
             open_price = scale_point_wrt_current_values(trade.open_price, rounded = True)
             close_price = scale_point_wrt_current_values(trade.close_price, rounded = True)
 
-            closed_trades_data[ticket] = [line_type, open_price, close_price, 
-                                          open_axis_label, close_axis_label, PL_percent]
+            closed_trades_data[f'{ticket}'] = [line_type, open_price, close_price, 
+                                               open_axis_label, close_axis_label, PL_percent_string]
 
         lines_data['closed_trades'] = pd.DataFrame.from_dict(closed_trades_data,
                                                              columns = ['line_type', 'open_price', 'close_price', 
@@ -264,7 +277,10 @@ def lines_layer(lines_data):
     pixels = CHART_STYLE['pixels']
     colors = CHART_STYLE['colors']['lines']
     opacity = CHART_STYLE['opacity']['lines']
+    labels_colors = colors.copy()
 
+    labels_colors['bid'] = CHART_STYLE['colors']['labels']['bid']
+    labels_colors['ask'] = CHART_STYLE['colors']['labels']['ask']
     font_size = (pixels['line_labels_font_size_big'] if ('bid' in lines_data.index or 'ask' in lines_data.index) 
                  else pixels['line_labels_font_size'])
     baseline = 'top' if 'bid' in lines_data.index else 'bottom'
@@ -277,11 +293,20 @@ def lines_layer(lines_data):
             range = list(colors.values())), 
         legend = None)
 
+    labels_color = alt.Color(
+        'line_type:N', 
+        scale = alt.Scale(
+            domain = list(labels_colors.keys()), 
+            range = list(labels_colors.values())), 
+        legend = None)
+
     lines_opacity = alt.Opacity(
         'line_type:N', 
         scale = alt.Scale(
             domain = list(opacity.keys()), 
-            range = list(opacity.values())))
+            range = list(opacity.values()), 
+            type = 'ordinal'), 
+        legend = None)
 
     lines = alt.Chart(lines_data).mark_rule(clip = True, tooltip = None).encode(
         y = 'price:Q',
@@ -300,11 +325,12 @@ def lines_layer(lines_data):
         
         x = alt.X(value = 'width'), 
         y = 'price:Q', 
-        color = lines_color, 
+        color = labels_color, 
         opacity = lines_opacity, 
         text = 'label:N')
 
-    return(lines + labels)
+    lines_and_labels = (lines + labels).resolve_scale(color = 'independent')
+    return(lines_and_labels)
 
 def segments_layer(segments_data, x_categories):
 
@@ -312,26 +338,28 @@ def segments_layer(segments_data, x_categories):
     colors = CHART_STYLE['colors']['lines']
     opacity = CHART_STYLE['opacity']['lines']
 
-    lines_color = alt.Color(
+    segments_color = alt.Color(
         'line_type:N',
         scale = alt.Scale(
             domain = list(colors.keys()),
             range = list(colors.values())),
         legend = None)
 
-    lines_opacity = alt.Opacity(
+    segments_opacity = alt.Opacity(
         'line_type:N',
         scale = alt.Scale(
             domain = list(opacity.keys()),
-            range = list(opacity.values())))
+            range = list(opacity.values()), 
+            type = 'ordinal'), 
+        legend = None)
 
-    lines = alt.Chart(segments_data).mark_rule(clip = True, tooltip = None).encode(
+    segments = alt.Chart(segments_data).mark_rule(clip = True, tooltip = None).encode(
         x = alt.X('open_axis_label:O', scale = alt.Scale(domain = x_categories)), 
         x2 = 'close_axis_label:O', 
         y = 'open_price:Q', 
         y2 = 'close_price:Q', 
-        color = lines_color, 
-        opacity = lines_opacity, 
+        color = segments_color, 
+        opacity = segments_opacity, 
         strokeWidth = alt.value(pixels['diagonal_lines_width']))
 
     start_circles = alt.Chart(segments_data).mark_point(
@@ -343,8 +371,8 @@ def segments_layer(segments_data, x_categories):
         
         x = 'open_axis_label:O', 
         y = 'open_price:Q', 
-        color = lines_color, 
-        opacity = lines_opacity).transform_filter(
+        color = segments_color, 
+        opacity = segments_opacity).transform_filter(
         'datum.open_axis_label != datum.close_axis_label')
     
     end_circles = alt.Chart(segments_data).mark_point(
@@ -356,8 +384,8 @@ def segments_layer(segments_data, x_categories):
         
         x = 'close_axis_label:O', 
         y = 'close_price:Q', 
-        color = lines_color, 
-        opacity = lines_opacity)
+        color = segments_color, 
+        opacity = segments_opacity)
 
     labels = alt.Chart(segments_data).mark_text(
         clip = True, 
@@ -370,30 +398,22 @@ def segments_layer(segments_data, x_categories):
         
         x = 'close_axis_label:O', 
         y = 'close_price:Q', 
-        color = lines_color, 
-        opacity = lines_opacity, 
+        color = segments_color, 
+        opacity = segments_opacity, 
         text = 'label:N')
 
-    return(lines + start_circles + end_circles + labels)
+    return(segments + start_circles + end_circles + labels)
 
 
 def altair_candlestick_graph(bars_data: Bars, layers: Layers, price_range):
 
-    if layers.update_pending['candlesticks'] or layers.redundant_update:   #This block has to run twice when
-        layers.redundant_update = not layers.redundant_update              #the candlesticks layer is updated.
-                                                                           #It fixes an extremely weird bug.
-        #x_categories = pd.concat([bars_data.bars[['axis_label', 'time']], 
-        #                          bars_data.dummy_bars[['axis_label', 'time']]])
-        #layers.x_categories = x_categories.sort_values('time')['axis_label']
-        #------------------
-        try:
-            ctgrs = pd.concat([bars_data.bars[['axis_label', 'time']], bars_data.dummy_bars[['axis_label', 'time']]])
-        except:
-            print('bars', bars_data.bars)
-            print('dbars', bars_data.dummy_bars)
-            raise KeyError
-        layers.x_categories = ctgrs.sort_values('time')['axis_label']
-        #------------------
+    if layers.update_pending['candlesticks'] or layers.redundant_update: #This block has to run twice when
+        layers.redundant_update = not layers.redundant_update            #the candlesticks layer is updated.
+                                                                         #It fixes an extremely weird bug.
+        
+        x_categories = pd.concat([bars_data.bars[['axis_label', 'time']], 
+                                  bars_data.dummy_bars[['axis_label', 'time']]])
+        layers.x_categories = x_categories.sort_values('time')['axis_label']
 
         base = get_base_chart(bars_data, layers.x_categories)
         if price_range == 'auto':
@@ -405,7 +425,10 @@ def altair_candlestick_graph(bars_data: Bars, layers: Layers, price_range):
         layers.ask_line = lines_layer(layers.lines_data['ask'])
 
     if layers.update_pending['SL_TP_lines']:
-        layers.SL_TP_entry_alert_lines = lines_layer(layers.lines_data['SL_TP_entry_alert'])
+        layers.SL_TP_entry_alert_lines = lines_layer(layers.lines_data['SL_TP_entry'])
+
+    if layers.update_pending['alert_line']:
+        layers.alert_line = lines_layer(layers.lines_data['alert'])
 
     if layers.update_pending['trades_and_alerts_lines']:
         layers.trades_and_alerts_lines = lines_layer(layers.lines_data['trades_and_alerts_levels'])
@@ -419,9 +442,10 @@ def altair_candlestick_graph(bars_data: Bars, layers: Layers, price_range):
     closed_trades_layer = layers.closed_trades_segments if layers.show_closed_trades else layers.empty_layer
 
     chart = (layers.candlesticks 
-             + closed_trades_layer
-             + SL_TP_entry_alert_layer
+             + closed_trades_layer 
+             + SL_TP_entry_alert_layer 
              + layers.trades_and_alerts_lines 
+             + layers.alert_line 
              + layers.bid_line 
              + layers.ask_line).properties(title = alt.TitleParams(text = bars_data.name, 
                                                                    anchor = 'middle', 

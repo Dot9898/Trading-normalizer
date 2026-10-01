@@ -23,7 +23,6 @@ class Alert:
         self.ticket = ticket
         self.more_or_less = more_or_less
         self.conditional_trade_data = conditional_trade_data
-        self.order_type = None
 
         include_symbol(symbol)
 

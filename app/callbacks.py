@@ -14,9 +14,6 @@ from graph import update_lines_data
 from trades_data import edit_trade_data
 
 
-def set_session_state(key, value):
-    st.session_state[key] = value
-
 def reload_graph():
     st.session_state['reload_Bars'] = True
 
@@ -29,6 +26,9 @@ def reload_table():
 def update_trades_and_alerts_lines():
     st.session_state['update_graph_lines'] = True
 
+def update_y_range_checkbox():
+    st.session_state['update_custom_y_range_checkbox'] = True
+
 def reload_graph_and_table():
     reload_graph()
     reload_table()
@@ -37,14 +37,20 @@ def is_friday():
     local_time = datetime.now()
     return(local_time.weekday() == 4)
 
-def is_0930_to_1800():
+def is_0930_to_1800(shift_hours = 0):
     ny_time = datetime.now(tz = constants.TIMEZONES['New York'])
-    if (10 <= ny_time.hour <= 17) or ny_time.hour == 9 and ny_time.minute > 30:
+    if ((10 + shift_hours <= ny_time.hour <= 17 + shift_hours) 
+        or ny_time.hour == 9 + shift_hours and ny_time.minute > 30):
         return(True)
     return(False)
 
 def set_normalization_base():
-    st.session_state['selected_normalization_base_name'] = 'market_open' if is_0930_to_1800() else 'server_1:00'
+    st.session_state['selected_normalization_base_name'] = ('market_open' if is_0930_to_1800() 
+                                                            else 'server_1:00')
+
+def set_session_first_bar():
+    st.session_state['first_bar'] = ('market_open' if is_0930_to_1800(shift_hours = constants.DELAY_BEFORE_NEW_SESSION) 
+                                     else 'server_1:00')
 
 
 def goto(when):
@@ -54,8 +60,10 @@ def goto(when):
         st.session_state[key] = setting
     for key, settings_dict in constants.ZOOM_VARIABLE_SETTINGS.items():
         st.session_state[key] = settings_dict[when]
-    if when in ['now', 'hour']:
+    if when in ['now', 'hour', 'session']:
         set_normalization_base()
+    if when == 'session':
+        set_session_first_bar()
 
     if not st.session_state['settings']['force_default_y_range']:
         st.session_state['custom_y_range'] = False
@@ -213,7 +221,8 @@ def update_risk():
     update_ppb()
     update_pppt()
     update_lotsize()
-    update_lines_data('SL_TP_entry_alert')
+    update_lines_data('SL_TP_entry')
+    update_lines_data('alert')
 
 def update_max_ppb_and_lotsize():
     update_max_ppb()
@@ -229,6 +238,7 @@ def full_update(reset_SLTP, update_maxes, force_set_normalization_base):
     if update_maxes:
         update_max_ppb_and_lotsize()
     update_trades_and_alerts_lines()
+    update_y_range_checkbox()
 
 
 def set_alert():
@@ -309,6 +319,7 @@ def execute_table_action(button_number):
     if label == 'Delete' and status in ['Alert', 'Conditional trade']:
         alert = st.session_state['data_table'].loc[ticket, 'source_object']
         st.session_state['alerts'].discard(alert)
+        reload_table()
 
     if label == 'Close':
         assert status == 'Open'

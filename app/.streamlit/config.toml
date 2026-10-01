@@ -5,29 +5,13 @@ showErrorDetails = 'full'
 [theme]
 base = 'dark'
 
-primaryColor = '#2A4365'
+primaryColor = '#303F55'
 backgroundColor = '#1f1f1f'
 secondaryBackgroundColor = '#3a3a3f'
 
 
 baseFontSize = 16
 baseFontWeight = 500
-
-
-
-
-
-
-#2D3748 #azulitos
-#374151
-
-#2E8B7D
-#2E8B7D
-
-#ff00f0
-
-
-
 
 
 

@@ -240,45 +240,54 @@ def Y_navigation_buttons():
 
 def zoom_buttons():
 
-    now_column, zoom_column = st.columns(2)
-    with now_column:
+    left_column, right_column = st.columns(2)
+    with right_column:
+        right_subcolumns = st.columns(2)
+    with left_column:
+        st.button('Session', 
+                  key = 'go_session', 
+                  on_click = callbacks.goto, 
+                  args = ['session'], 
+                  width = 'stretch', 
+                  wrap = True)
+    with right_subcolumns[0]:
         st.button('Now', 
                   key = 'go_now', 
                   on_click = callbacks.goto, 
                   args = ['now'], 
                   width = 'stretch', 
                   wrap = True)
-    with zoom_column:
+    with right_subcolumns[1]:
         st.button('Zoom', 
                   key = 'go_zoom', 
                   on_click = callbacks.goto, 
                   args = ['hour'], 
                   width = 'stretch', 
                   wrap = True)
-        
-    year_column, month_column, week_column, day_column = st.columns(4)
-    with year_column:
+    
+    zoom_subcolumns = st.columns(4)
+    with zoom_subcolumns[0]:
         st.button('Year', 
                   key = 'go_year', 
                   on_click = callbacks.goto, 
                   args = ['year'], 
                   width = 'stretch', 
                   wrap = True)
-    with month_column:
+    with zoom_subcolumns[1]:
         st.button('Month', 
                   key = 'go_month', 
                   on_click = callbacks.goto, 
                   args = ['month'], 
                   width = 'stretch', 
                   wrap = True)
-    with week_column:
+    with zoom_subcolumns[2]:
         st.button('Week', 
                   key = 'go_week', 
                   on_click = callbacks.goto, 
                   args = ['week'], 
                   width = 'stretch', 
                   wrap = True)
-    with day_column:
+    with zoom_subcolumns[3]:
         st.button('Day', 
                   key = 'go_day', 
                   on_click = callbacks.goto, 
@@ -522,7 +531,7 @@ def alert_and_account_checkboxes():
         st.checkbox('Set alert', 
                     key = 'alerts_checkbox', 
                     on_change = update_lines_data, 
-                    args = ['SL_TP_entry_alert'], 
+                    args = ['alert'], 
                     wrap = True)
     with account_data_column:
         st.checkbox('Show account data', 
@@ -558,7 +567,7 @@ def alert_price_input():
                     step = step, 
                     format = format, 
                     on_change = update_lines_data, 
-                    args = ['SL_TP_entry_alert'])
+                    args = ['alert'])
 
 def set_alert_button():
     disabled = st.session_state['selected_scale'] == 'logarithmic'

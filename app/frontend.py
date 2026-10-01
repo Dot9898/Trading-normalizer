@@ -5,7 +5,7 @@ import streamlit as st
 import widgets
 from alerts import load_alerts
 from backend import init_session_state, init_session_state_functions, initialize_MetaTrader
-from callbacks import (set_normalization_base, save_old_SLTP_then_update, 
+from callbacks import (set_normalization_base, set_session_first_bar, save_old_SLTP_then_update, 
                        set_closed_trades_history_visibility, is_friday)
 from constants import SESSION_STATE_DEFAULTS, LABEL_SPACING
 from format_functions import add_vertical_spacing
@@ -30,6 +30,8 @@ SESSION_STATE_DEFAULT_FUNCTIONS = {'mt5_initialized': {'function': initialize_Me
                                                     'value': 'return_value'}, 
                                    'selected_normalization_base_name': {'function': set_normalization_base, 
                                                                         'assign': False}, 
+                                   'first_bar': {'function': set_session_first_bar, 
+                                                 'assign': False}, 
                                    'custom_y_range': {'function': lambda: st.session_state['settings']['force_default_y_range'], 
                                                       'assign': True, 
                                                       'value': 'return_value'}}

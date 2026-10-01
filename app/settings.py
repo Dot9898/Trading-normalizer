@@ -4,7 +4,7 @@ import pandas as pd
 import streamlit as st
 
 from callbacks import (reload_graph, save_old_SLTP_then_update, reload_table, 
-                       set_closed_trades_history_visibility, set_session_state)
+                       set_closed_trades_history_visibility, update_y_range_checkbox)
 from constants import DATA_PATH, DEFAULT_SETTINGS
 
 
@@ -68,7 +68,7 @@ def force_default_y_range_checkbox():
                 key = key, 
                 value = st.session_state['settings'][key], 
                 on_change = update_setting, 
-                args = [key, set_session_state, ['update_custom_y_range_checkbox', True]], 
+                args = [key, update_y_range_checkbox], 
                 wrap = True)
 
 def default_y_range_input():

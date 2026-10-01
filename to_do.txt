@@ -1,15 +1,10 @@
 
-bots + manage el otro
-upd tr c cl
 
-
-test empty data bug and remove comment from graph file
-alert sounds
-table and chart heights
-colores (markdown RR string y table data)
+add show rr ratio of closed trades setting
+styles file
+colores (markdown whole file and table data, white -> other)
 tinker with chart graphic and spacing constants
-chart lines colors and opacity, test cond trades lines
-config file. maybe styles file
+alert sounds
 
 hourly lines
 colores open n closed market. maybe add an is market open row to live data
@@ -18,6 +13,7 @@ weekly display of data table
 remove leading zeroes of progress?? or smth in data table
 add setting to show RR as ratio: return(f'{round(risk / (risk + reward), 2)}')
 
+add set x and y range when full update just like changing sltp
 maybe just updating x categories in get live data instead of labels
 maybe layering current bar solves all the axis label bugs (closed trade on same candle goes to start, need to rerun candlesticks block)
 line priority?? a set of values maybe? do not update the dfs, just avoid rendering the labels. passing over the set can work

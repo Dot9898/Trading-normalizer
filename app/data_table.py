@@ -98,7 +98,7 @@ def generate_trades_data_table(timezone, max_closed_trades_shown, show_order_typ
             points = trade.points_bp if trade.direction == 'buy' else -trade.points_bp
             progress = add_sign(points)
             PL_percent = (trade[PL_equity_column_number] if not pd.isna(trade[PL_equity_column_number]) 
-                        else trade[PL_estimate_column_number])
+                          else trade[PL_estimate_column_number])
             PL_percent = add_sign(PL_percent, percent = True)
             action_button_1_text = 'Hide' if trade.is_shown else 'Unhide'
             action_button_2_text = 'Erase'
