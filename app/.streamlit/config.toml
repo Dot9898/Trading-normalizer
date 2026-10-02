@@ -1,4 +1,5 @@
 
+
 [client]
 showErrorDetails = 'full'
 
@@ -8,7 +9,7 @@ base = 'dark'
 primaryColor = '#303F55'
 backgroundColor = '#1f1f1f'
 secondaryBackgroundColor = '#3a3a3f'
-
+textColor = '#DCDCE0'
 
 baseFontSize = 16
 baseFontWeight = 500

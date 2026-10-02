@@ -57,7 +57,7 @@ def get_progress_string(row):   #Format leading zeroes here
         return(f'{current_price} / {trigger_price_bp}')
 
 
-def generate_trades_data_table(timezone, max_closed_trades_shown, show_order_types):
+def generate_trades_data_table(timezone, max_closed_trades_shown, show_order_types, show_RR):
     trades_data = st.session_state['trades_data']
     current_symbol = st.session_state['selected_symbol']
     PL_equity_column_number = trades_data.columns.get_loc('P/L_acc_percent_(equity)') + 1
@@ -84,9 +84,9 @@ def generate_trades_data_table(timezone, max_closed_trades_shown, show_order_typ
         order_type = ('' if (trade.status == 'closed' and not show_order_types) 
                       or trade.order_type == 'market' 
                       else f'{trade.order_type} ')
-
-        price = trade.set_price if trade.status == 'pending' else trade.open_price
-        RR = get_RR_string(price, trade.SL_abs, trade.TP_abs)
+        RR = ('' if not show_RR 
+              else get_RR_string(trade.set_price, trade.SL_abs, trade.TP_abs) if trade.status == 'pending' 
+              else get_RR_string(trade.open_price, trade.SL_abs, trade.TP_abs))
 
         time = pd.NA if pd.isna(timestamp) else format_timestamp(timestamp, timezone)
         operation = f'{trade.direction.capitalize()} {order_type}{trade.symbol} {RR}'.strip()
@@ -205,9 +205,11 @@ def update_data_table():
         timezone = st.session_state['selected_timezone']
         max_closed_trades = st.session_state['settings']['max_closed_trades_shown']
         show_order_types = st.session_state['settings']['show_order_types']
+        show_RR = st.session_state['settings']['show_RR_in_table']
         st.session_state['trades_data_table'] = generate_trades_data_table(timezone, 
                                                                            max_closed_trades, 
-                                                                           show_order_types)
+                                                                           show_order_types, 
+                                                                           show_RR)
         st.session_state['alerts_data_table'] = generate_alerts_data_table()
         st.session_state['update_trades_lines'] = True
         st.session_state['update_maxes'] = True

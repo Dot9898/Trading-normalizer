@@ -305,11 +305,13 @@ def symbol_dropdown():
 
 def show_SL_TP_lines_button():
     label = 'Hide' if st.session_state['graph_layers'].show_SL_TP_lines else 'Show'
+    wrap_cutoff = 60 if label == 'Hide' else 55
+    wrap = True if st.session_state['settings']['graph_width'] <= wrap_cutoff else False
     st.button(label, 
               key = 'SL_TP_visibility_button', 
               on_click = callbacks.switch_SL_TP_visibility, 
               width = 'stretch', 
-              wrap = True)
+              wrap = wrap)
 
 def get_SL_TP_step():
     if st.session_state['selected_scale'] == 'logarithmic':
@@ -447,7 +449,8 @@ def ppb_display():
 def max_ppb_display():
     if st.session_state['update_maxes']:
         callbacks.update_max_ppb_and_lotsize()
-    st.number_input('Max PPB', 
+    label = 'Max PPB' if st.session_state['settings']['graph_width'] <= 60 else 'Max'
+    st.number_input(label, 
                     key = 'max_ppb', 
                     step = 0.00001, 
                     format = '%0.2f', 
@@ -476,7 +479,8 @@ def lotsize_display():
 def max_lotsize_display():
     if st.session_state['update_maxes']:
         callbacks.update_max_ppb_and_lotsize()
-    st.number_input('Max lotsize', 
+    label = 'Max lotsize' if st.session_state['settings']['graph_width'] <= 50 else 'Max LS'
+    st.number_input(label, 
                     key = 'max_lotsize', 
                     step = get_lotsize_step(), 
                     format = '%0.2f', 

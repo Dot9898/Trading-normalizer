@@ -214,7 +214,7 @@ def update_lines_data(category):
 
 def get_base_chart(bars_data, x_categories):
 
-    colors = CHART_STYLE['colors']['candlesticks']
+    colors = CHART_STYLE['colors']
     chart_values = CHART_STYLE['others']
     bars = bars_data.bars
     date_label = bars_data.date_label if bars_data.date_label is not None else ''
@@ -222,18 +222,20 @@ def get_base_chart(bars_data, x_categories):
 
     candlestick_color = (
         alt.when('datum.is_positive')
-        .then(alt.value(colors['fill_positive']))
-        .otherwise(alt.value(colors['fill_negative'])))   
+        .then(alt.value(colors['candlesticks']['fill_positive']))
+        .otherwise(alt.value(colors['candlesticks']['fill_negative'])))   
 
     stroke_color = (
         alt.when('datum.is_positive')
-        .then(alt.value(colors['stroke_positive']))
-        .otherwise(alt.value(colors['stroke_negative'])))
+        .then(alt.value(colors['candlesticks']['stroke_positive']))
+        .otherwise(alt.value(colors['candlesticks']['stroke_negative'])))
 
     x_axis = alt.X(
         'axis_label:O', 
         axis = alt.Axis(labelAngle = chart_values['x_labels_angle'], 
-                        title = [date_label, f'{timezone_format(timezone)} time']), 
+                        labelColor = colors['labels']['x_axis'], 
+                        title = [date_label, f'{timezone_format(timezone)} time'], 
+                        titleColor = colors['labels']['x_axis']), 
         scale = alt.Scale(domain = x_categories, 
                         paddingInner = chart_values['candlesticks_inner_padding'], 
                         paddingOuter = chart_values['candlesticks_outer_padding']), 
@@ -250,6 +252,8 @@ def get_base_chart(bars_data, x_categories):
 
 def candlesticks_layer(base: alt.Chart, price_range, data_scale):
 
+    colors = CHART_STYLE['colors']
+
     candlesticks_tooltips = [
         alt.Tooltip('date_label:N', title = 'Date'),
         alt.Tooltip('time_label:N', title = 'Time'),
@@ -260,7 +264,9 @@ def candlesticks_layer(base: alt.Chart, price_range, data_scale):
     
     candles = base.mark_bar(clip = True).encode(
         alt.Y('open:Q', 
-            axis = alt.Axis(title = f'Price ({data_scale})'), 
+            axis = alt.Axis(title = f'Price ({data_scale})', 
+                            titleColor = colors['labels']['y_axis'], 
+                            labelColor = colors['labels']['y_axis']), 
             scale = alt.Scale(domain = price_range, zero = False)), 
         alt.Y2('close:Q'), 
         tooltip = candlesticks_tooltips)

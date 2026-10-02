@@ -81,6 +81,7 @@ SESSION_STATE_DEFAULTS = OBJECTS_DEFAULTS | FLAGS_DEFAULTS | WIDGETS_DEFAULTS | 
 DEFAULT_SETTINGS = {'show_hidden_trades': False, 
                     'show_account_balance': False, 
                     'show_order_types': True, 
+                    'show_RR_in_table': False, 
                     'show_trade_history': False, 
                     'max_closed_trades_shown': 30, 
                     'graph_width': 50, 
@@ -213,33 +214,12 @@ SHOWN_ALERTS_DATA_COLUMNS = {'manual': ['Time', 'Status', 'Operation', 'Progress
 SHOWN_ACTIONS_DATA_COLUMNS = {'modify': ['Status', 'Operation', 'Current entry', 'Current SL', 'Current TP'], 
                               'edit': ['Time', 'Status', 'Operation', 'Progress', 'P/L', 'Current SL', 'Current TP'], 
                               'erase': ['Time', 'Status', 'Operation', 'Progress', 'P/L', 'Close reason']}
-DATA_TABLE_HEIGHT = 420
+DATA_TABLE_HEIGHT = 440
 
-#Chart ###tinker pixels and values
-
-#'#E6E6E6'
-#'#3B82F6'
-#'#4CAF50'
-#'#FF4D4D'
-#'#1f1f1f'
-
-#White	#E6E6E6
-#Blue	#4A90E2
-#Bright blue	#38BDF8
-#Dark blue	#315A8A
-#Green	#4CAF78
-#Dark green	#2F6B4F
-#Grayish green	#718F82
-#Yellow	#E5C454
-#Orange	#E8944A
-#Grayish orange	#A98268
-#Red	#D85C5C
-#Strong red	#FF4D4D
-#Dark red	#8F3838
-#Gray	#9A9AA0
-#Black	#1111117
+#Chart
 MAX_BARS_IN_GRAPH = 1000
 COLORS = {'white': '#E6E6E6', 
+          'white_text': '#DCDCE0', 
           'blue_bright': '#2496E8', 
           'blue': '#4A90E2', 
           'blue_dark': '#315A8A', 
@@ -248,7 +228,7 @@ COLORS = {'white': '#E6E6E6',
           'green': '#4CAF78', 
           'yellow': '#E5C454', 
           'orange': '#E8944A', 
-          'orange_gray': '#A89583', 
+          'orange_gray': '#9A9188', 
           'red': '#D85C5C', 
           'red_strong': '#E83D3D', 
           'red_dark': '#8F3838', 
@@ -279,7 +259,9 @@ CHART_COLORS = {'candlesticks': {'fill_positive': COLORS['white'],
                           'neutral_trade': COLORS['gray']}, 
                 
                 'labels': {'bid': COLORS['gray'], 
-                           'ask': COLORS['gray']}}
+                           'ask': COLORS['gray'], 
+                           'x_axis': COLORS['white_text'], 
+                           'y_axis': COLORS['white_text']}}
 CHART_OPACITY = {'lines': {'bid': 1.0, 
                            'ask': 1.0, 
                            'SL': 1.0, 
@@ -289,8 +271,8 @@ CHART_OPACITY = {'lines': {'bid': 1.0,
                            'alert_price': 0.8, 
                            'open_SL': 1.0, 
                            'open_TP': 1.0, 
-                           'pending_entry_buy': 0.6, 
-                           'pending_entry_sell': 0.6, 
+                           'pending_entry_buy': 1.0, 
+                           'pending_entry_sell': 1.0, 
                            'pending_SL': 0.6,  
                            'pending_TP': 0.6, 
                            'placed_alert': 1.0, 
@@ -468,7 +450,8 @@ BARS_PER_HOUR = {mt5.TIMEFRAME_M1: 60,
                  mt5.TIMEFRAME_MN1: 1.0/(24 * 30)}
 
 #Graphic constants
-LABEL_SPACING = 28
+LABEL_SPACING_FOR_BUTTON = 28
+LABEL_SPACING_FOR_CHECKBOX = 17
 WHITE_SPACE = ' '
 LARGER_WHITE_SPACE = ' '
 EMPTY_SPACE = '\u200b'

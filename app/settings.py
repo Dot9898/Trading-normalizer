@@ -31,7 +31,7 @@ def update_setting(key, callback = None, args = []):
 
 def graph_empty_space_input():
     key = 'empty_graph_percent'
-    st.number_input('Empty graph space (%)', 
+    st.number_input('Empty chart space (%)', 
                     key = key, 
                     value = st.session_state['settings'][key], 
                     step = 5, 
@@ -104,7 +104,7 @@ def show_account_balance_checkbox():
 
 def graph_width_input():
     key = 'graph_width'
-    st.number_input('Graph portion of the screen (%)', 
+    st.number_input('Chart portion of the screen (%)', 
                     key = key, 
                     value = st.session_state['settings'][key], 
                     step = 5, 
@@ -126,7 +126,7 @@ def max_closed_trades_input():
 
 def show_order_types_checkbox():
     key = 'show_order_types'
-    st.checkbox('Show order type of closed trades', 
+    st.checkbox('Show order types', 
                 key = key, 
                 value = st.session_state['settings'][key], 
                 on_change = update_setting, 
@@ -135,11 +135,21 @@ def show_order_types_checkbox():
 
 def show_trade_history_checkbox():
     key = 'show_trade_history'
-    st.checkbox('Show closed trades on the chart', 
+    st.checkbox('Show trade history on the chart', 
                 key = key, 
                 value = st.session_state['settings'][key], 
                 on_change = update_setting, 
                 args = [key, set_closed_trades_history_visibility], 
+                wrap = True)
+
+def show_RR_checkbox():
+    st.session_state['settings']['show_RR_in_table']
+    key = 'show_RR_in_table'
+    st.checkbox('Show RR ratios', 
+                key = key, 
+                value = st.session_state['settings'][key], 
+                on_change = update_setting, 
+                args = [key, reload_table], 
                 wrap = True)
 
 
@@ -151,17 +161,18 @@ def open_settings():
     with settings_columns[0]:
         graph_width_input()
         default_SL_deviation()
+        show_trade_history_checkbox()
         show_hidden_trades_checkbox()
-        show_account_balance_checkbox()
     with settings_columns[1]:
         graph_empty_space_input()
         default_TP_deviation()
-        show_trade_history_checkbox()
         show_order_types_checkbox()
+        show_RR_checkbox()
     with settings_columns[2]:
         max_closed_trades_input()
         default_y_range_input()
         force_default_y_range_checkbox()
+        show_account_balance_checkbox()
     st.subheader('')
 
 

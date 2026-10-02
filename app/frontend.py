@@ -7,10 +7,11 @@ from alerts import load_alerts
 from backend import init_session_state, init_session_state_functions, initialize_MetaTrader
 from callbacks import (set_normalization_base, set_session_first_bar, save_old_SLTP_then_update, 
                        set_closed_trades_history_visibility, is_friday)
-from constants import SESSION_STATE_DEFAULTS, LABEL_SPACING
+from constants import SESSION_STATE_DEFAULTS, LABEL_SPACING_FOR_BUTTON, LABEL_SPACING_FOR_CHECKBOX
 from format_functions import add_vertical_spacing
 from graph import Layers
 from settings import load_settings
+from style import set_style
 from trades_data import load_trades_data, get_last_backup_time
 
 SESSION_STATE_DEFAULT_FUNCTIONS = {'mt5_initialized': {'function': initialize_MetaTrader, 
@@ -38,6 +39,7 @@ SESSION_STATE_DEFAULT_FUNCTIONS = {'mt5_initialized': {'function': initialize_Me
 
 
 st.set_page_config(layout = 'wide')
+set_style()
 
 init_session_state_functions(SESSION_STATE_DEFAULT_FUNCTIONS)
 init_session_state(SESSION_STATE_DEFAULTS)
@@ -69,7 +71,7 @@ with graph_column:
             widgets.X_range_widgets('last_bar')
         widgets.Y_range_widgets()
     with range_buttons_column:
-        add_vertical_spacing(LABEL_SPACING)
+        add_vertical_spacing(LABEL_SPACING_FOR_BUTTON)
         range_buttons_subcolumns = st.columns(2)
         with range_buttons_subcolumns[0]:
             widgets.X_navigation_buttons()
@@ -122,6 +124,8 @@ with trade_column:
         widgets.RR_and_maxloss_widgets()
         if st.session_state['alerts_checkbox']:
             widgets.alerts_and_conditional_trades_widgets()
+        else:
+            add_vertical_spacing(LABEL_SPACING_FOR_CHECKBOX)
         widgets.alert_and_account_checkboxes()
         if st.session_state['account_data_checkbox']:
             widgets.account_data_info()

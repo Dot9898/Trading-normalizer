@@ -1,8 +1,5 @@
 
 
-add show rr ratio of closed trades setting
-styles file
-colores (markdown whole file and table data, white -> other)
 tinker with chart graphic and spacing constants
 alert sounds
 
