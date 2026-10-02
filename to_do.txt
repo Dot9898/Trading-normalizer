@@ -1,8 +1,5 @@
 
 
-tinker with chart graphic and spacing constants
-alert sounds
-
 hourly lines
 colores open n closed market. maybe add an is market open row to live data
 setting to show hourly lines and open/closed market colors

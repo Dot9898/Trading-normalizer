@@ -3,6 +3,8 @@
 import MetaTrader5 as mt5
 import pandas as pd
 import streamlit as st
+from time import sleep
+from winsound import Beep
 
 from backend import include_symbol, scale_point
 from constants import OUT_DEAL_REASONS, ALERT_REASON_TEXT, SHOWN_ALERTS_DATA_COLUMNS
@@ -43,38 +45,55 @@ class Alert:
                 if deal.entry == mt5.DEAL_ENTRY_OUT:
                     return(True)
             return(False)
-    
-    def execute(self):
 
+    def make_sound(self):
+        
         if self.reason == 'manual':
-            pass #MAKE SOUND
-        
+            Beep(660, 400)
+            for i in range(6):
+                sleep(0.15)
+                Beep(660, 400)
+
         if self.reason == 'open':
-            pass #MAKE SOUND
-        
+            Beep(660, 400)
+            for j in range(2):
+                sleep(0.15)
+                Beep(660, 400)
+
         if self.reason == 'close':
             for deal in mt5.history_deals_get(position = self.ticket):
                 if deal.entry == mt5.DEAL_ENTRY_OUT:
-                    reason = OUT_DEAL_REASONS
-                    if reason == 'SL':
-                        #MAKE SOUND
-                        pass
-                    if reason == 'TP':
-                        #MAKE SOUND
-                        pass
-                    if reason == 'SO':
-                        #MAKE SOUND
-                        pass
-        
+                    close_reason = OUT_DEAL_REASONS.get(deal.reason)
+
+                    if close_reason == 'SL':
+                        Beep(440, 2000)
+                        for j in range(3):
+                            sleep(0.2)
+                            Beep(440, 700)
+
+                    if close_reason == 'TP':
+                        Beep(880, 2000)
+                        for j in range(3):
+                            sleep(0.2)
+                            Beep(880, 700)
+
+                    if close_reason == 'SO':
+                        Beep(880*4, 2500)
+                        for j in range(7):
+                            sleep(0.3)
+                            Beep(880*4, 700)
+
+    def execute(self):
+        self.make_sound()
+
         if self.reason == 'conditional_trade':
             trade_data = self.conditional_trade_data
-            ordd = limit_or_stop_order(trade_data['symbol'], 
-                                    trade_data['lots'], 
-                                    trade_data['direction'], 
-                                    trade_data['execution_price'], 
-                                    trade_data['SL'], 
-                                    trade_data['TP'])
-            st.session_state['order_return'] = ordd
+            limit_or_stop_order(trade_data['symbol'], 
+                                trade_data['lots'], 
+                                trade_data['direction'], 
+                                trade_data['execution_price'], 
+                                trade_data['SL'], 
+                                trade_data['TP'])
     
     def notify_execution(self, data):
 
