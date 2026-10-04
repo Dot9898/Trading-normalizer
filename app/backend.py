@@ -2,11 +2,10 @@
 
 import MetaTrader5 as mt5
 import pandas as pd
+import pylnk3
 import streamlit as st
-import win32com.client
 from decimal import Decimal, ROUND_FLOOR
 from numpy import log10
-from pathlib import Path
 
 from constants import ROOT_PATH, SYMBOL_DATA
 from risk_calculation import get_lotsize_from_ppb_or_pppt, get_current_ppb_from_lotsize
@@ -32,18 +31,17 @@ def init_session_state_functions(default_funcs: dict):
                     st.session_state[key] = return_value
                 else:
                     st.session_state[key] = value_to_assign
-
+\
 
 def get_real_path(shortcut_path):
-    shell = win32com.client.Dispatch('WScript.Shell')
-    return(Path(shell.CreateShortcut(str(shortcut_path)).TargetPath))
+    return(pylnk3.parse(str(shortcut_path)).path)
 
 def include_symbol(symbol):
     mt5.symbol_select(symbol, True)
 
 def initialize_MetaTrader():
     MT5_shortcut_path = ROOT_PATH / 'mt5.lnk'
-    MT5_path = str(get_real_path(MT5_shortcut_path))
+    MT5_path = get_real_path(MT5_shortcut_path)
     result = mt5.initialize(MT5_path)
 
     for symbol in SYMBOL_DATA:
