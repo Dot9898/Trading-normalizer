@@ -227,7 +227,7 @@ def update_closing_PL(data, data_source, PL, ticket, trades_data, current_accoun
                     last_known_account_value = trades_data.at[ticket, key]
                     break
         if last_known_account_value is None:
-            last_known_account_value = current_account_info.balance
+            last_known_account_value = current_account_info.balance + PL
         data['P/L_acc_percent_(estimate)'] = round(PL/(last_known_account_value - PL) * 100, 1)
     
     return(data)

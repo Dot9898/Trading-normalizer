@@ -29,7 +29,7 @@ class Layers:   #Can be made better. It's enough for this use case.
         self.update_pending = {}
         self.redundant_update = False
 
-        self.show_SL_TP_lines = True
+        self.show_SL_TP_lines = False
         self.show_closed_trades = False #Overwritten in first_run
 
         self.load_lines_data()
