@@ -79,7 +79,7 @@ def no_tag_text(text, alignment, font_size, font_weight):
     </h5>
     """)
 
-def format_timestamp(server_time, selected_timezone):
+def format_server_time_as_datetime(server_time, selected_timezone):
     if selected_timezone == 'server':
         dt = datetime.fromtimestamp(server_time, tz = timezone.utc)
     else:

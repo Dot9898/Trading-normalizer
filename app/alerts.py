@@ -7,8 +7,8 @@ from time import sleep
 from winsound import Beep
 
 from backend import include_symbol, scale_point
-from constants import OUT_DEAL_REASONS, ALERT_REASON_TEXT, SHOWN_ALERTS_DATA_COLUMNS
-from format_functions import format_timestamp
+from constants import OUT_DEAL_REASONS, ALERT_REASON_TEXT, SHOWN_ALERTS_DATA_COLUMNS, ALERTS_SOUND
+from format_functions import format_server_time_as_datetime
 from get_live_data import get_current_server_time
 from order_execution import limit_or_stop_order
 
@@ -84,7 +84,8 @@ class Alert:
                             Beep(880*4, 700)
 
     def execute(self):
-        self.make_sound()
+        if ALERTS_SOUND:
+            self.make_sound()
 
         if self.reason == 'conditional_trade':
             trade_data = self.conditional_trade_data
@@ -156,13 +157,13 @@ def get_execution_data(alert):
     bars = st.session_state['bars_data']
 
     if alert.reason == 'manual':
-        data['Time'] = format_timestamp(get_current_server_time(), st.session_state['selected_timezone'])
+        data['Time'] = format_server_time_as_datetime(get_current_server_time(), st.session_state['selected_timezone'])
         data['Status'] = 'Executed'
         data['Progress'] = bars.current_bid
         data['Operation'] = f'Alert {alert.symbol}'
 
     if alert.reason == 'conditional_trade':
-        data['Time'] = format_timestamp(get_current_server_time(), st.session_state['selected_timezone'])
+        data['Time'] = format_server_time_as_datetime(get_current_server_time(), st.session_state['selected_timezone'])
         data['Status'] = 'Set'
         direction = alert.conditional_trade_data['direction'].capitalize()
         order_type = alert.conditional_trade_data['order_type']

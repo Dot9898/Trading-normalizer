@@ -7,7 +7,7 @@ import streamlit as st
 from alerts import update_open_and_close_alerts
 from backend import scale_point, unscale_point_wrt_current_values
 from constants import WINDOW_WHEN_TRADE_IS_CONSIDERED_RECENT
-from format_functions import add_sign, capitalize_first, format_timestamp
+from format_functions import add_sign, capitalize_first, format_server_time_as_datetime
 from graph import update_lines_data
 from trades_data import update_all_trades_data, update_recent_realized_PL_mult
 
@@ -77,10 +77,6 @@ def generate_trades_data_table(timezone, max_closed_trades_shown, show_order_typ
         server_timestamp = (trade.open_server_time if trade.status == 'open' 
                             else trade.close_server_time if trade.status == 'closed' 
                             else pd.NA)
-        timestamp = (server_timestamp if timezone == 'server' 
-                     else trade.open_timestamp if trade.status == 'open' 
-                     else trade.close_timestamp if trade.status == 'closed' 
-                     else pd.NA)
         order_type = ('' if (trade.status == 'closed' and not show_order_types) 
                       or trade.order_type == 'market' 
                       else f'{trade.order_type} ')
@@ -88,7 +84,7 @@ def generate_trades_data_table(timezone, max_closed_trades_shown, show_order_typ
               else get_RR_string(trade.set_price, trade.SL_abs, trade.TP_abs) if trade.status == 'pending' 
               else get_RR_string(trade.open_price, trade.SL_abs, trade.TP_abs))
 
-        time = pd.NA if pd.isna(timestamp) else format_timestamp(timestamp, timezone)
+        time = pd.NA if pd.isna(server_timestamp) else format_server_time_as_datetime(server_timestamp, timezone)
         operation = f'{trade.direction.capitalize()} {order_type}{trade.symbol} {RR}'.strip()
         close_reason = pd.NA if pd.isna(trade.close_reason) else capitalize_first(trade.close_reason)
 

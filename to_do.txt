@@ -1,5 +1,24 @@
 
 
+
+
+Calendario ipc y wsb pic earnings
+Add update calendar to backup trades msg
+
+Alert sound on/off setting
+Standard range instead of TPSL
+Bottom margin?
+Mobile wrap
+
+Change y shift step with timeframe
+Change force y range setting to affect navigation differently
+
+Mobile layout and remove graph left side
+
+Por ahí update trades data solo si positions u orders number get cambian
+
+
+
 hourly lines
 colores open n closed market. maybe add an is market open row to live data
 setting to show hourly lines and open/closed market colors
